@@ -1,0 +1,115 @@
+import express from 'express';
+import { protect, admin } from '../middleware/authMiddleware.js';
+import { supabase } from '../config/db.js';
+
+const router = express.Router();
+
+router.get('/', async (req, res) => {
+  try {
+    const { data: videos, error } = await supabase.from('videos').select('*, products(id, name, image_url)').order('created_at', { ascending: false });
+    if (error) throw error;
+    
+    const formatted = videos.map(v => ({
+      ...v,
+      _id: v.id,
+      videoUrl: v.video_url,
+      product: v.products ? { _id: v.products.id, name: v.products.name, image: v.products.image_url } : null
+    }));
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching videos' });
+  }
+});
+
+router.post('/', protect, admin, async (req, res) => {
+  const { title, description, videoUrl, product } = req.body;
+  try {
+    const { data: video, error } = await supabase.from('videos').insert({
+      title,
+      description,
+      video_url: videoUrl,
+      product_id: product || null
+    }).select().single();
+    if (error) throw error;
+    
+    res.status(201).json({ ...video, _id: video.id });
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating video' });
+  }
+});
+
+router.put('/:id', protect, admin, async (req, res) => {
+  const { title, description, videoUrl, product } = req.body;
+  try {
+    const updateData = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (videoUrl !== undefined) updateData.video_url = videoUrl;
+    if (product !== undefined) updateData.product_id = product || null;
+
+    const { data: video, error } = await supabase.from('videos').update(updateData).eq('id', req.params.id).select().single();
+    if (error || !video) return res.status(404).json({ message: 'Video not found' });
+    
+    res.json({ ...video, _id: video.id });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating video' });
+  }
+});
+
+router.delete('/:id', protect, admin, async (req, res) => {
+  try {
+    const { error } = await supabase.from('videos').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ message: 'Video removed' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting video' });
+  }
+});
+
+router.post('/:id/like', async (req, res) => {
+  try {
+    const { data: video } = await supabase.from('videos').select('likes').eq('id', req.params.id).single();
+    if (!video) return res.status(404).json({ message: 'Video not found' });
+    
+    const { data: updated, error } = await supabase.from('videos').update({ likes: video.likes + 1 }).eq('id', req.params.id).select().single();
+    if (error) throw error;
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: 'Error liking video' });
+  }
+});
+
+router.post('/:id/comment', async (req, res) => {
+  const { name, comment } = req.body;
+  if (!comment) return res.status(400).json({ message: 'Comment is required' });
+  try {
+    const { data: video } = await supabase.from('videos').select('id').eq('id', req.params.id).single();
+    if (!video) return res.status(404).json({ message: 'Video not found' });
+    
+    const { data: updated, error } = await supabase.from('video_comments').insert({
+      video_id: req.params.id,
+      name: name || 'Anonymous',
+      comment
+    }).select().single();
+    
+    if (error) throw error;
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding comment' });
+  }
+});
+
+router.post('/:id/share', async (req, res) => {
+  try {
+    const { data: video } = await supabase.from('videos').select('shares').eq('id', req.params.id).single();
+    if (!video) return res.status(404).json({ message: 'Video not found' });
+    
+    const { data: updated, error } = await supabase.from('videos').update({ shares: video.shares + 1 }).eq('id', req.params.id).select().single();
+    if (error) throw error;
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: 'Error sharing video' });
+  }
+});
+
+export default router;

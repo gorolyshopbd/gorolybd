@@ -1,0 +1,55 @@
+# Shopio MERN E-Commerce Project
+
+## Goal
+- Build a full MERN eCommerce platform with admin panel, checkout, OTP, chat, dynamic footer, banners, pages, offers, coupons, popups, brand/category management, and flash sale scheduling.
+
+## Constraints & Preferences
+- Next.js App Router frontend with `'use client'` components, Express/MongoDB backend with mock fallback
+- Admin login: `admin@shopio.com` / `admin123`; User login: `user@shopio.com` / `user123`
+- All product clicks navigate to `/product/[id]`; modal kept as "Quick View"
+- OTP verification required before order submission; phone must be verified
+- Mobile sticky bottom nav in Footer, horizontal nav pills in Header on mobile
+- Multiple product images with thumbnail selector and file upload
+- Image paths stored as URLs; `getImageUrl()` resolves external and `/uploads/` relative paths
+- All admin features behind admin auth
+- `Facebook`, `Twitter`, `Instagram`, `Youtube` not in lucide-react — replaced with inline SVGs
+- `<script>` tags in custom HTML must be re-created as real DOM elements for execution
+
+## Done
+- **Build Fix — Missing Icon Exports**: `Footer.js` replaced `Facebook`, `Twitter`, `Instagram`, `Youtube` with inline SVGs. `AuthModal.js` already had only valid imports.
+- **Footer Removed from Admin Panel**: Admin page no longer renders Footer. "Back" button in `AdminDashboard` sidebar via `onTabChange` prop.
+- **ChatWidget Connected to Frontend**: `page.js` imports and renders `<ChatWidget />`. Chat GET endpoint made public.
+- **BannerSlider Integrated into Hero**: `Hero.js` renders `BannerSlider` with fallback default banner, `onShopClick`, flexible min-height.
+- **Chat Close / Reopen Flow**: `isClosed` field on `ChatMessage`. Admin closes chat via `POST /api/chat/close`. User sees closed banner with "Start new chat" calling `POST /api/chat/reopen`. Input hidden when closed.
+- **Custom Header Code Field**: Added to Settings model, public endpoint, admin form, and `TrackingScripts.js` (injects into `<head>` with proper script re-creation).
+- **Public Settings Endpoint Expanded**: `GET /api/settings/public` returns all footer, popup, tracking fields, and `customHeaderCode`.
+- **Category & Brand Management**: Full CRUD models, controllers, routes with image + order fields. Routes registered in server.js. Admin UI tabs with list/form/edit/delete.
+- **Flash Sale Date Scheduling**: `flashSaleStart`, `flashSaleEnd` (Date) fields on Product. Controller filters expired sales. Admin form has datetime-local inputs for start/end. Mock data includes `flashSaleEnd`.
+- **Phone Field in Registration**: Added to User model, register controller, ShopContext.register(), AuthModal register form.
+
+## Key Decisions
+- Category/Brand are separate models with image + order — enables dynamic frontend display and admin CRUD
+- Flash sale expiration uses `$or: [{ flashSaleEnd: { $exists: false } }, ...]` so existing products without end dates still show
+- Custom header scripts re-created via `document.createElement('script')` after innerHTML parsing for execution
+- Chat GET endpoint made public so ChatWidget can fetch messages without login
+- `onTabChange` prop passed to AdminDashboard for "Back" navigation to store
+
+## Next Steps
+1. Update CategorySection frontend component to fetch categories from API instead of hardcoded array
+2. Wire up "Subscribe" button in Footer to email collection API
+3. End-to-end test chat flow and flash sale filtering
+
+## Relevant Files
+- `backend/models/Category.js`, `Brand.js`, `ChatMessage.js` (isClosed), `User.js` (phone), `Product.js` (flashSaleStart/End), `Settings.js` (customHeaderCode)
+- `backend/controllers/categoryController.js`, `brandController.js`, `productController.js`
+- `backend/routes/categoryRoutes.js`, `brandRoutes.js`, `chatRoutes.js`, `settingsRoutes.js`
+- `backend/server.js` — registered category/brand routes
+- `frontend/src/components/AdminDashboard.js` — categories/brands tabs, flash sale dates, "Back" button, "Close Chat", custom header code field
+- `frontend/src/components/Footer.js` — inline SVG social icons
+- `frontend/src/components/BannerSlider.js` — fallback default banner, flexible min-height, onShopClick
+- `frontend/src/components/Hero.js` — imports and renders BannerSlider
+- `frontend/src/components/ChatWidget.js` — closed state detection, reopen button, input hidden when closed
+- `frontend/src/components/TrackingScripts.js` — custom header code injection with script re-creation
+- `frontend/src/components/AuthModal.js` — phone field in register form
+- `frontend/src/context/ShopContext.js` — register() accepts phone
+- `frontend/src/app/page.js` — admin no Footer, ChatWidget imported
