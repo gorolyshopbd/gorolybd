@@ -494,3 +494,100 @@ ON CONFLICT (email) DO NOTHING;
 -- ALTER TABLE chat_sessions  ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE chat_messages  ENABLE ROW LEVEL SECURITY;
 
+-- ============================================================
+-- 20. SELLER PACKAGES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS seller_packages (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name            TEXT NOT NULL,
+  price           NUMERIC(10,2) NOT NULL DEFAULT 0,
+  duration_days   INT NOT NULL DEFAULT 30,
+  product_limit   INT NOT NULL DEFAULT 10,
+  commission_rate NUMERIC(5,2) DEFAULT 0,
+  features        JSONB DEFAULT '[]',
+  is_active       BOOLEAN DEFAULT true,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- 21. SELLER SUBSCRIPTIONS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS seller_subscriptions (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id        UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  package_id     UUID NOT NULL REFERENCES seller_packages(id) ON DELETE CASCADE,
+  payment_method TEXT DEFAULT '',
+  status         TEXT DEFAULT 'active',
+  start_date     TIMESTAMPTZ DEFAULT NOW(),
+  end_date       TIMESTAMPTZ,
+  created_at     TIMESTAMPTZ DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- 22. SELLER SETTINGS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS seller_settings (
+  id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  category_based_commission BOOLEAN DEFAULT false,
+  seller_based_commission   BOOLEAN DEFAULT false,
+  message_to_seller_mail    BOOLEAN DEFAULT true,
+  subscription_method       TEXT DEFAULT 'Adjustable',
+  created_at                TIMESTAMPTZ DEFAULT NOW(),
+  updated_at                TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- 23. SELLER PAYOUTS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS seller_payouts (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  seller_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount          NUMERIC(10,2) NOT NULL DEFAULT 0,
+  payment_method  TEXT DEFAULT '',
+  account_details TEXT DEFAULT '',
+  status          TEXT DEFAULT 'pending',
+  transaction_id  TEXT DEFAULT '',
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- 24. REWARD SETTINGS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS reward_settings (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  is_enabled       BOOLEAN DEFAULT false,
+  earn_rate        NUMERIC(10,2) DEFAULT 1,
+  redeem_rate      NUMERIC(10,2) DEFAULT 1,
+  min_redeem_points INT DEFAULT 100,
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- 25. USER POINTS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_points (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  total_points    INT DEFAULT 0,
+  redeemed_points INT DEFAULT 0,
+  current_balance INT DEFAULT 0,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- 26. POINT LOGS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS point_logs (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  points      INT NOT NULL DEFAULT 0,
+  type        TEXT DEFAULT '',
+  description TEXT DEFAULT '',
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+

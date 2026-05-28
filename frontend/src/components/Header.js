@@ -75,7 +75,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
       {/* Top Utility Bar */}
       <div className="w-full bg-white border-b border-gray-200 text-[13px] text-gray-600 py-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center gap-2 sm:gap-5 flex-wrap">
+          <div className="flex items-center justify-center sm:justify-between gap-3 sm:gap-5 whitespace-nowrap overflow-x-auto scrollbar-hide py-1">
 
             {/* Language */}
             <div className="relative">
