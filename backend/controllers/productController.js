@@ -82,6 +82,10 @@ const getProductById = async (req, res) => {
 
     const { data: reviews } = await db.database.from('reviews').select('*').eq('product_id', product.id);
 
+    const { data: productImages } = await db.database.from('product_images').select('*').eq('product_id', product.id).order('sort_order', { ascending: true });
+
+    const imagesArr = (productImages || []).map(pi => pi.image_url).filter(Boolean);
+
     res.json({
       ...product,
       _id: product.id,
@@ -94,6 +98,7 @@ const getProductById = async (req, res) => {
       metaDescription: product.meta_description,
       youtubeUrl: product.youtube_url,
       image: product.image_url,
+      images: imagesArr,
       unit: product.unit,
       minOrderQty: product.min_order_qty,
       barcode: product.barcode,
