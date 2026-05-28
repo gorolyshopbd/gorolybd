@@ -72,7 +72,7 @@ const getProducts = async (req, res) => {
 // @access  Public
 const getProductById = async (req, res) => {
   try {
-    const { data: product, error } = await db
+    const { data: product, error } = await db.database
       .from('products')
       .select('*')
       .eq('id', req.params.id)
@@ -289,7 +289,7 @@ const getRelatedProducts = async (req, res) => {
     const { data: product } = await db.database.from('products').select('category').eq('id', req.params.id).single();
     if (!product) return res.status(404).json({ message: 'Product not found' });
 
-    const { data: related, error } = await db
+    const { data: related, error } = await db.database
       .from('products')
       .select('*')
       .neq('id', req.params.id)
