@@ -67,140 +67,112 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
 
   return (
     <>
+      {/* Top Announcement Bar */}
+      <div className="w-full bg-blue-600 text-white text-center text-[11px] sm:text-xs font-semibold py-1.5 sm:py-2 px-2 tracking-wide leading-tight">
+        {lang === 'bn' ? 'সারা বাংলাদেশে ফ্রি ডেলিভারি 🚚 | অর্ডার: ৮৮০১২৩৪৫৬৭৮৯০' : '🚚 Free Delivery Bangladesh | Call 8801234567890'}
+      </div>
+
       {/* Top Utility Bar */}
-      <div className="w-full bg-slate-50 border-b border-slate-100 text-[14px] text-slate-650 py-2.5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2.5">
-          
-          {/* Left Side: Language, Currency, Find Store, Apps */}
-          <div className="flex items-center gap-4 flex-wrap">
+      <div className="w-full bg-white border-b border-gray-200 text-[13px] text-gray-600 py-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center gap-2 sm:gap-5 flex-wrap">
+
             {/* Language */}
             <div className="relative">
-              <button 
-                onClick={() => setShowLangDropdown(!showLangDropdown)}
-                className="flex items-center gap-1.5 cursor-pointer bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-blue-100/60 text-[14px]"
+              <button onClick={() => setShowLangDropdown(!showLangDropdown)}
+                className="flex items-center gap-1 cursor-pointer bg-transparent border-0 text-gray-500 hover:text-blue-600 transition"
               >
-                <span className="text-base">{lang === 'en' ? '🇬🇧' : '🇧🇩'}</span>
-                <span>{lang === 'en' ? 'English' : 'বাংলা'}</span>
-                <ChevronDown size={14} className="stroke-[3]" />
+                <span>{lang === 'en' ? '🇬🇧' : '🇧🇩'}</span>
+                <span className="font-medium">{lang === 'en' ? 'EN' : 'বাংলা'}</span>
+                <ChevronDown size={12} />
               </button>
-              
               {showLangDropdown && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowLangDropdown(false)}></div>
-                  <div className="absolute left-0 mt-1.5 w-28 bg-white text-slate-800 rounded-lg shadow-lg border border-slate-100 py-1 z-50">
-                    <button
-                      onClick={() => {
-                        setLang('en');
-                        setShowLangDropdown(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-[14px] font-bold hover:bg-slate-50 transition flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'en' ? 'text-blue-600 bg-blue-50/20' : 'text-slate-700'}`}
-                    >
-                      <span>🇬🇧</span> English
-                    </button>
-                    <button
-                      onClick={() => {
-                        setLang('bn');
-                        setShowLangDropdown(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-[14px] font-bold hover:bg-slate-50 transition flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'bn' ? 'text-blue-600 bg-blue-50/20' : 'text-slate-700'}`}
-                    >
-                      <span>🇧🇩</span> বাংলা
-                    </button>
+                  <div className="absolute left-1/2 -translate-x-1/2 mt-1 w-24 bg-white rounded-lg shadow-lg border py-1 z-50">
+                    <button onClick={() => { setLang('en'); setShowLangDropdown(false); }}
+                      className={`w-full text-left px-3 py-1.5 text-xs font-medium hover:bg-gray-50 flex items-center gap-1.5 bg-transparent border-0 cursor-pointer ${lang === 'en' ? 'text-blue-600' : 'text-gray-700'}`}
+                    ><span>🇬🇧</span> English</button>
+                    <button onClick={() => { setLang('bn'); setShowLangDropdown(false); }}
+                      className={`w-full text-left px-3 py-1.5 text-xs font-medium hover:bg-gray-50 flex items-center gap-1.5 bg-transparent border-0 cursor-pointer ${lang === 'bn' ? 'text-blue-600' : 'text-gray-700'}`}
+                    ><span>🇧🇩</span> বাংলা</button>
                   </div>
                 </>
               )}
             </div>
 
+            <span className="text-gray-300 hidden sm:inline">|</span>
+
             {/* Currency */}
-            <div className="flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100/60 px-3 py-1 rounded-full font-bold text-[14px] cursor-pointer hover:bg-amber-600 hover:text-white transition duration-300">
-              <span className="font-semibold">{headerSettings.currency || 'BDT'}</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+            <div className="flex items-center gap-1 text-gray-500 font-medium cursor-pointer hover:text-blue-600 transition">
+              <span>{headerSettings.currency || 'BDT'}</span>
+              <ChevronDown size={12} />
             </div>
 
-            <span className="text-slate-200">|</span>
+            <span className="text-gray-300 hidden sm:inline">|</span>
 
-            {/* Find a Store */}
-            <a 
-              href={headerSettings.topBarStoreLink || '#'} 
-              target={headerSettings.topBarStoreLink && headerSettings.topBarStoreLink.startsWith('http') ? '_blank' : undefined}
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-rose-100/60 text-[14px]"
+            {/* Find Store */}
+            <a href={headerSettings.topBarStoreLink || '#'}
+              className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition font-medium no-underline"
             >
-              <MapPin size={14} />
-              {t('findStore')}
+              <MapPin size={13} /> <span>{t('findStore')}</span>
             </a>
 
-            <span className="text-slate-200">|</span>
+            <span className="text-gray-300 hidden sm:inline">|</span>
+
+            {/* Compare */}
+            <a href="#" onClick={(e) => { e.preventDefault(); setCompareOpen(true); }}
+              className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition font-medium no-underline"
+            >
+              <GitCompare size={13} /> <span>{t('compare')}</span>
+              {compareList.length > 0 && (
+                <span className="bg-blue-600 text-white text-[9px] font-black rounded-full px-1.5 py-0.5">{compareList.length}</span>
+              )}
+            </a>
+
+            <span className="text-gray-300 hidden sm:inline">|</span>
+
+            {/* Track Order */}
+            <button onClick={() => onTabChange('dashboard')}
+              className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition font-medium bg-transparent border-0 cursor-pointer"
+            >
+              <Truck size={13} /> <span>{t('trackOrder')}</span>
+            </button>
+
+            <span className="text-gray-300 hidden sm:inline">|</span>
 
             {/* Apps */}
             <div className="flex items-center gap-2">
-              <a 
-                href={headerSettings.topBarPlayStoreLink || '#'} 
-                title="Google Play Store" 
-                target={headerSettings.topBarPlayStoreLink && headerSettings.topBarPlayStoreLink !== '#' ? '_blank' : undefined}
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-650 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-emerald-100/60 text-[14px]"
+              <a href={headerSettings.topBarPlayStoreLink || '#'}
+                className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition font-medium no-underline"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M5.25 3.03v17.94c0 .33.18.63.48.78.3.15.66.12.93-.09l9.36-7.49 3.06-2.45c.42-.34.42-.98 0-1.32l-3.06-2.45-9.36-7.49C6.39.72 6.03.69 5.73.84c-0.3.15-.48.45-.48.78z"/>
                 </svg>
                 <span>Play Store</span>
               </a>
-              <a 
-                href={headerSettings.topBarAppStoreLink || '#'} 
-                title="Apple App Store" 
-                target={headerSettings.topBarAppStoreLink && headerSettings.topBarAppStoreLink !== '#' ? '_blank' : undefined}
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-650 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-indigo-100/60 text-[14px]"
+              <span className="text-gray-200">/</span>
+              <a href={headerSettings.topBarAppStoreLink || '#'}
+                className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition font-medium no-underline"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.7-1.13 1.84-.99 2.94.99.08 2.16-.52 2.82-1.33z"/>
                 </svg>
                 <span>App Store</span>
               </a>
             </div>
-          </div>
 
-          {/* Right Side: Compare, Track Order, Helpline */}
-          <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-            {/* Compare */}
-            <a 
-              href="#" 
-              onClick={(e) => { e.preventDefault(); setCompareOpen(true); }}
-              className="flex items-center gap-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-600 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-cyan-100/60 text-[14px]"
-            >
-              <GitCompare size={14} className="stroke-[3]" />
-              <span>{t('compare')}</span>
-              {compareList.length > 0 && (
-                <span className="bg-cyan-600 text-white text-[10px] font-black rounded-full px-1.5 py-0.5 ml-1">
-                  {compareList.length}
-                </span>
-              )}
-            </a>
-            
-            <span className="text-slate-200">|</span>
-            
-            {/* Track Order */}
-            <button 
-              onClick={() => onTabChange('dashboard')}
-              className="flex items-center gap-1.5 bg-violet-50 text-violet-700 hover:bg-violet-600 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-violet-100/60 text-[14px] cursor-pointer"
-            >
-              <Truck size={14} className="stroke-[3]" />
-              <span>{t('trackOrder')}</span>
-            </button>
-            
-            <span className="text-slate-200">|</span>
-            
+            <span className="text-gray-300 hidden sm:inline">|</span>
+
             {/* Helpline */}
-            <a 
-              href={`tel:${headerSettings.topBarHelpline || '8801234567890'}`}
-              className="flex items-center gap-1.5 bg-orange-50 text-orange-700 hover:bg-orange-600 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-orange-100/60 text-[14px]"
+            <a href={`tel:${headerSettings.topBarHelpline || '8801234567890'}`}
+              className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition font-semibold no-underline"
             >
-              <PhoneCall size={14} className="stroke-[3]" />
-              <span>{t('helpline')}: {headerSettings.topBarHelpline || '8801234567890'}</span>
+              <PhoneCall size={13} />
+              <span>{headerSettings.topBarHelpline || '8801234567890'}</span>
             </a>
-          </div>
 
+          </div>
         </div>
       </div>
 

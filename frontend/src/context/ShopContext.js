@@ -8,7 +8,7 @@ export const ShopContext = createContext();
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API_URL.replace('/api', '');
 
-const insforge = createClient({
+export const insforge = createClient({
   baseUrl: process.env.NEXT_PUBLIC_INSFORGE_URL,
   anonKey: process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY,
 });
@@ -1029,6 +1029,7 @@ export const ShopProvider = ({ children }) => {
         setRewardBySeller,
         setRewardByProduct,
         rtLive,
+        insforge,
       }}
     >
       {children}

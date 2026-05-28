@@ -58,7 +58,7 @@ const formatDateMDY = (dateString) => {
 
 
 export default function AdminDashboard({ onTabChange }) {
-  const { API_URL, changeUserEmail, fetchUsers, createUserByAdmin, importSellersByAdmin, updateUserByAdmin, adminResetUserPassword, deleteUserByAdmin, currencySymbol, currencyCode, payouts, fetchPayouts, requestPayout, updatePayoutStatus, sellerSettings, fetchSellerSettings, updateSellerSettings, sellerPackages, fetchSellerPackages, createSellerPackage, updateSellerPackage, deleteSellerPackage, onlineSubscriptions, offlineSubscriptions, fetchOnlineSubscriptions, fetchOfflineSubscriptions, rewardSettings, userPoints, pointLogs, fetchRewardSettings, updateRewardSettings, fetchUserPoints, fetchPointLogs, adjustUserPoints } = useContext(ShopContext);
+  const { API_URL, changeUserEmail, fetchUsers, createUserByAdmin, importSellersByAdmin, updateUserByAdmin, adminResetUserPassword, deleteUserByAdmin, currencySymbol, currencyCode, payouts, fetchPayouts, requestPayout, updatePayoutStatus, sellerSettings, fetchSellerSettings, updateSellerSettings, sellerPackages, fetchSellerPackages, createSellerPackage, updateSellerPackage, deleteSellerPackage, onlineSubscriptions, offlineSubscriptions, fetchOnlineSubscriptions, fetchOfflineSubscriptions, rewardSettings, userPoints, pointLogs, fetchRewardSettings, updateRewardSettings, fetchUserPoints, fetchPointLogs, adjustUserPoints, insforge } = useContext(ShopContext);
   const { lang, t, setLang } = useLanguage();
   const [user, setUser] = useState(null);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
@@ -730,23 +730,31 @@ export default function AdminDashboard({ onTabChange }) {
   };
 
   const uploadFile = async (file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    const res = await fetch(`${API_URL}/upload`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${user.token}` },
-      body: formData,
-    });
-    if (!res.ok) {
-      let errMsg = 'Image upload failed';
-      try {
-        const errData = await res.json();
-        errMsg = errData.message || errMsg;
-      } catch (e) {}
-      throw new Error(errMsg);
+    try {
+      const { data, error } = await insforge.storage
+        .from('product')
+        .uploadAuto(file);
+      if (error) throw new Error(error.message || 'Upload failed');
+      return data.url;
+    } catch (e) {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${user.token}` },
+        body: formData,
+      });
+      if (!res.ok) {
+        let errMsg = 'Image upload failed';
+        try {
+          const errData = await res.json();
+          errMsg = errData.message || errMsg;
+        } catch (_) {}
+        throw new Error(errMsg);
+      }
+      const responseData = await res.json();
+      return responseData.image;
     }
-    const data = await res.json();
-    return data.image;
   };
 
   const handleCreateProduct = async (e) => {
