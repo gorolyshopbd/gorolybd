@@ -3,11 +3,13 @@
 import React, { useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Star, Heart, ShoppingBag, Eye, Sparkles } from 'lucide-react';
 
 export default function FeaturedProducts({ products, onProductClick, onAddToWishlist }) {
   const router = useRouter();
   const { addToCart, currencySymbol } = useContext(ShopContext);
+  const { t } = useLanguage();
 
   const featured = products.filter((p) => !p.isFlashSale);
   const displayProducts = featured.length > 0 ? featured : products;
@@ -21,15 +23,15 @@ export default function FeaturedProducts({ products, onProductClick, onAddToWish
               <Sparkles size={20} className="text-white" />
             </div>
             <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Featured Products</h2>
-              <p className="text-slate-500 text-xs sm:text-sm">Handpicked quality collections for you.</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{t('featuredProducts')}</h2>
+              <p className="text-slate-500 text-xs sm:text-sm">{t('handpicked')}</p>
             </div>
           </div>
           <button
             onClick={() => router.push('/shop')}
             className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition"
           >
-            View All
+            {t('viewAll')}
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
           </button>
         </div>
@@ -105,7 +107,7 @@ export default function FeaturedProducts({ products, onProductClick, onAddToWish
                       className="px-3.5 py-2 bg-gradient-to-r from-slate-800 to-slate-950 text-white hover:from-slate-950 hover:to-black text-xs font-bold rounded-xl transition-all duration-300 shadow-md shadow-slate-900/15 hover:shadow-lg hover:shadow-slate-900/25 flex items-center gap-1.5"
                     >
                       <ShoppingBag size={12} />
-                      Add
+                      {t('add')}
                     </button>
                   </div>
                 </div>

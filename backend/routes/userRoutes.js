@@ -34,11 +34,11 @@ router.post('/admin-login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
 
-    const { supabase } = await import('../config/db.js');
+    const { db } = await import('../config/db.js');
     const bcrypt = (await import('bcryptjs')).default;
     const generateToken = (await import('../utils/generateToken.js')).default;
 
-    const { data: user, error } = await supabase.from('users').select('*').eq('email', username).single();
+    const { data: user, error } = await db.database.from('users').select('*').eq('email', username).single();
 
     if (error || !user) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });

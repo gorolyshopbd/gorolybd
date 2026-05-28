@@ -1,8 +1,8 @@
-import { supabase } from '../config/db.js';
+import { db } from '../config/db.js';
 
 export const getOffers = async (req, res) => {
   try {
-    const { data: offers, error } = await supabase.from('offers').select('*').order('created_at', { ascending: false });
+    const { data: offers, error } = await db.database.from('offers').select('*').order('created_at', { ascending: false });
     if (error) throw error;
     
     const formatted = offers.map(o => ({
@@ -22,7 +22,7 @@ export const createOffer = async (req, res) => {
   try {
     const { title, description, discountPercent, image, link, isActive } = req.body;
     
-    const { data: offer, error } = await supabase.from('offers').insert({
+    const { data: offer, error } = await db.database.from('offers').insert({
       title,
       description: description || '',
       discount_percent: discountPercent,
@@ -50,7 +50,7 @@ export const updateOffer = async (req, res) => {
     if (link !== undefined) updateData.link = link;
     if (isActive !== undefined) updateData.is_active = isActive;
     
-    const { data: offer, error } = await supabase.from('offers').update(updateData).eq('id', req.params.id).select().single();
+    const { data: offer, error } = await db.database.from('offers').update(updateData).eq('id', req.params.id).select().single();
     
     if (error || !offer) return res.status(404).json({ message: 'Offer not found' });
     res.json({ ...offer, _id: offer.id });
@@ -61,7 +61,7 @@ export const updateOffer = async (req, res) => {
 
 export const deleteOffer = async (req, res) => {
   try {
-    const { error } = await supabase.from('offers').delete().eq('id', req.params.id);
+    const { error } = await db.database.from('offers').delete().eq('id', req.params.id);
     if (error) throw error;
     res.json({ success: true });
   } catch (error) {

@@ -1,12 +1,12 @@
 import express from 'express';
 import { protect, admin } from '../middleware/authMiddleware.js';
-import { supabase } from '../config/db.js';
+import { db } from '../config/db.js';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const { data: videos, error } = await supabase.from('videos').select('*, products(id, name, image_url)').order('created_at', { ascending: false });
+    const { data: videos, error } = await db.database.from('videos').select('*, products(id, name, image_url)').order('created_at', { ascending: false });
     if (error) throw error;
     
     const formatted = videos.map(v => ({
@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
 router.post('/', protect, admin, async (req, res) => {
   const { title, description, videoUrl, product } = req.body;
   try {
-    const { data: video, error } = await supabase.from('videos').insert({
+    const { data: video, error } = await db.database.from('videos').insert({
       title,
       description,
       video_url: videoUrl,
@@ -47,7 +47,7 @@ router.put('/:id', protect, admin, async (req, res) => {
     if (videoUrl !== undefined) updateData.video_url = videoUrl;
     if (product !== undefined) updateData.product_id = product || null;
 
-    const { data: video, error } = await supabase.from('videos').update(updateData).eq('id', req.params.id).select().single();
+    const { data: video, error } = await db.database.from('videos').update(updateData).eq('id', req.params.id).select().single();
     if (error || !video) return res.status(404).json({ message: 'Video not found' });
     
     res.json({ ...video, _id: video.id });
@@ -58,7 +58,7 @@ router.put('/:id', protect, admin, async (req, res) => {
 
 router.delete('/:id', protect, admin, async (req, res) => {
   try {
-    const { error } = await supabase.from('videos').delete().eq('id', req.params.id);
+    const { error } = await db.database.from('videos').delete().eq('id', req.params.id);
     if (error) throw error;
     res.json({ message: 'Video removed' });
   } catch (error) {
@@ -68,10 +68,10 @@ router.delete('/:id', protect, admin, async (req, res) => {
 
 router.post('/:id/like', async (req, res) => {
   try {
-    const { data: video } = await supabase.from('videos').select('likes').eq('id', req.params.id).single();
+    const { data: video } = await db.database.from('videos').select('likes').eq('id', req.params.id).single();
     if (!video) return res.status(404).json({ message: 'Video not found' });
     
-    const { data: updated, error } = await supabase.from('videos').update({ likes: video.likes + 1 }).eq('id', req.params.id).select().single();
+    const { data: updated, error } = await db.database.from('videos').update({ likes: video.likes + 1 }).eq('id', req.params.id).select().single();
     if (error) throw error;
     res.json(updated);
   } catch (error) {
@@ -83,10 +83,10 @@ router.post('/:id/comment', async (req, res) => {
   const { name, comment } = req.body;
   if (!comment) return res.status(400).json({ message: 'Comment is required' });
   try {
-    const { data: video } = await supabase.from('videos').select('id').eq('id', req.params.id).single();
+    const { data: video } = await db.database.from('videos').select('id').eq('id', req.params.id).single();
     if (!video) return res.status(404).json({ message: 'Video not found' });
     
-    const { data: updated, error } = await supabase.from('video_comments').insert({
+    const { data: updated, error } = await db.database.from('video_comments').insert({
       video_id: req.params.id,
       name: name || 'Anonymous',
       comment
@@ -101,10 +101,10 @@ router.post('/:id/comment', async (req, res) => {
 
 router.post('/:id/share', async (req, res) => {
   try {
-    const { data: video } = await supabase.from('videos').select('shares').eq('id', req.params.id).single();
+    const { data: video } = await db.database.from('videos').select('shares').eq('id', req.params.id).single();
     if (!video) return res.status(404).json({ message: 'Video not found' });
     
-    const { data: updated, error } = await supabase.from('videos').update({ shares: video.shares + 1 }).eq('id', req.params.id).select().single();
+    const { data: updated, error } = await db.database.from('videos').update({ shares: video.shares + 1 }).eq('id', req.params.id).select().single();
     if (error) throw error;
     res.json(updated);
   } catch (error) {

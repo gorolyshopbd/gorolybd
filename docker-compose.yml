@@ -1,0 +1,27 @@
+services:
+  backend:
+    build: ./backend
+    container_name: shopio-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env.production
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - backend_uploads:/app/uploads
+
+  frontend:
+    build: ./frontend
+    container_name: shopio-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env.production
+    depends_on:
+      - backend
+
+volumes:
+  backend_uploads:

@@ -1,4 +1,4 @@
-import { supabase } from '../config/db.js';
+import { db } from '../config/db.js';
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -24,7 +24,7 @@ const addOrderItems = async (req, res) => {
 
   try {
     // 1. Create the order
-    const { data: order, error: orderError } = await supabase
+    const { data: order, error: orderError } = await db
       .from('orders')
       .insert({
         user_id: req.user._id,
@@ -63,15 +63,15 @@ const addOrderItems = async (req, res) => {
       price: item.price,
     }));
 
-    const { error: itemsError } = await supabase.from('order_items').insert(formattedItems);
+    const { error: itemsError } = await db.database.from('order_items').insert(formattedItems);
     if (itemsError) throw itemsError;
 
     // 3. Deduct Stock (Ideally should be done via an RPC or stored procedure to avoid race conditions, but simple update for now)
     for (const item of orderItems) {
       if (item.product) {
-        const { data: product } = await supabase.from('products').select('count_in_stock').eq('id', item.product).single();
+        const { data: product } = await db.database.from('products').select('count_in_stock').eq('id', item.product).single();
         if (product) {
-          await supabase.from('products').update({ count_in_stock: Math.max(0, product.count_in_stock - item.qty) }).eq('id', item.product);
+          await db.database.from('products').update({ count_in_stock: Math.max(0, product.count_in_stock - item.qty) }).eq('id', item.product);
         }
       }
     }
@@ -88,7 +88,7 @@ const addOrderItems = async (req, res) => {
 // @access  Private
 const getOrderById = async (req, res) => {
   try {
-    const { data: order, error } = await supabase
+    const { data: order, error } = await db
       .from('orders')
       .select(`
         *,
@@ -101,7 +101,7 @@ const getOrderById = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    const { data: items } = await supabase.from('order_items').select('*').eq('order_id', order.id);
+    const { data: items } = await db.database.from('order_items').select('*').eq('order_id', order.id);
 
     res.json({
       ...order,
@@ -147,7 +147,7 @@ const updateOrderStatus = async (req, res) => {
       updateData.courier_status = 'Booked';
     }
 
-    const { data: order, error } = await supabase
+    const { data: order, error } = await db
       .from('orders')
       .update(updateData)
       .eq('id', req.params.id)
@@ -167,7 +167,7 @@ const updateOrderStatus = async (req, res) => {
 // @access  Private
 const updateOrderToPaid = async (req, res) => {
   try {
-    const { data: order, error } = await supabase
+    const { data: order, error } = await db
       .from('orders')
       .update({
         is_paid: true,
@@ -194,7 +194,7 @@ const updateOrderToPaid = async (req, res) => {
 // @access  Private
 const getMyOrders = async (req, res) => {
   try {
-    const { data: orders, error } = await supabase
+    const { data: orders, error } = await db
       .from('orders')
       .select('*')
       .eq('user_id', req.user._id)
@@ -204,7 +204,7 @@ const getMyOrders = async (req, res) => {
     
     // Fetch items for each order
     const formattedOrders = await Promise.all(orders.map(async (o) => {
-      const { data: items } = await supabase.from('order_items').select('*').eq('order_id', o.id);
+      const { data: items } = await db.database.from('order_items').select('*').eq('order_id', o.id);
       return {
         ...o,
         _id: o.id,
@@ -235,17 +235,17 @@ const getOrders = async (req, res) => {
   try {
     let orderIds = null;
     if (req.user.role === 'seller') {
-      const { data: myProducts } = await supabase.from('products').select('id').eq('user_id', req.user._id);
+      const { data: myProducts } = await db.database.from('products').select('id').eq('user_id', req.user._id);
       const myProductIds = myProducts ? myProducts.map(p => p.id) : [];
       if (myProductIds.length > 0) {
-        const { data: myOrderItems } = await supabase.from('order_items').select('order_id').in('product_id', myProductIds);
+        const { data: myOrderItems } = await db.database.from('order_items').select('order_id').in('product_id', myProductIds);
         orderIds = myOrderItems ? myOrderItems.map(item => item.order_id) : [];
       } else {
         orderIds = [];
       }
     }
 
-    let query = supabase.from('orders').select('*, users:user_id(id, name)').order('created_at', { ascending: false });
+    let query = db.database.from('orders').select('*, users:user_id(id, name)').order('created_at', { ascending: false });
     if (orderIds !== null) {
       if (orderIds.length === 0) {
          return res.json([]);
@@ -278,26 +278,39 @@ const getOrders = async (req, res) => {
 const getAdminSummary = async (req, res) => {
   try {
     let orderIds = null;
-    let productsQuery = supabase.from('products').select('*', { count: 'exact', head: true });
+    let productsQuery = db.database.from('products').select('*', { count: 'exact', head: true });
     
+    // Get seller products if applicable
+    let myProductIds = [];
     if (req.user.role === 'seller') {
       productsQuery = productsQuery.eq('user_id', req.user._id);
-      
-      const { data: myProducts } = await supabase.from('products').select('id').eq('user_id', req.user._id);
-      const myProductIds = myProducts ? myProducts.map(p => p.id) : [];
+      const { data: myProducts } = await db.database.from('products').select('id').eq('user_id', req.user._id);
+      myProductIds = myProducts ? myProducts.map(p => p.id) : [];
       if (myProductIds.length > 0) {
-        const { data: myOrderItems } = await supabase.from('order_items').select('order_id').in('product_id', myProductIds);
-        orderIds = myOrderItems ? myOrderItems.map(item => item.order_id) : [];
+        const { data: myOrderItems } = await db.database.from('order_items').select('order_id').in('product_id', myProductIds);
+        orderIds = myOrderItems ? [...new Set(myOrderItems.map(item => item.order_id))] : [];
       } else {
         orderIds = [];
       }
     }
 
-    let ordersQuery = supabase.from('orders').select('*');
+    let ordersQuery = db.database.from('orders').select('*').order('created_at', { ascending: false });
     if (orderIds !== null) {
       if (orderIds.length === 0) {
         const { count: productsCount } = await productsQuery;
-        return res.json({ totalOrders: 0, totalRevenue: 0, totalCustomers: 0, pendingOrders: 0, totalProducts: productsCount || 0, orders: [] });
+        return res.json({ 
+          totalOrders: 0, 
+          totalRevenue: 0, 
+          totalCustomers: 0, 
+          pendingOrders: 0, 
+          totalProducts: productsCount || 0, 
+          orders: [],
+          revenueOverview: [],
+          orderStatistics: [],
+          salesByCategory: [],
+          topSellingProducts: [],
+          lowStockAlerts: []
+        });
       }
       ordersQuery = ordersQuery.in('id', orderIds);
     }
@@ -308,7 +321,7 @@ const getAdminSummary = async (req, res) => {
     const { count: productsCount, error: pError } = await productsQuery;
     if (pError) throw pError;
 
-    const { count: usersCount, error: uError } = await supabase.from('users').select('*', { count: 'exact', head: true });
+    const { count: usersCount, error: uError } = await db.database.from('users').select('*', { count: 'exact', head: true });
     if (uError) throw uError;
 
     const totalOrders = orders.length;
@@ -326,6 +339,105 @@ const getAdminSummary = async (req, res) => {
       status: o.status,
     }));
 
+    // Fetch order items & products for advanced analytics
+    const { data: orderItems, error: itemsError } = await db.database.from('order_items').select('*');
+    if (itemsError) throw itemsError;
+
+    const { data: allProducts, error: allPError } = await db.database.from('products').select('*');
+    if (allPError) throw allPError;
+
+    const productMap = {};
+    (allProducts || []).forEach(p => {
+      productMap[p.id] = p;
+    });
+
+    // Filter items based on seller or loaded orders
+    const targetOrderIds = new Set(orders.map(o => o.id));
+    let filteredOrderItems = (orderItems || []).filter(item => targetOrderIds.has(item.order_id));
+    if (req.user.role === 'seller') {
+      filteredOrderItems = filteredOrderItems.filter(item => myProductIds.includes(item.product_id));
+    }
+
+    // 1. Revenue Overview (Daily aggregates for past 7 days)
+    const salesMap = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      salesMap[dateStr] = { name: dateStr, Revenue: 0, Cost: 0 };
+    }
+    
+    orders.forEach(o => {
+      const dateStr = new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      if (salesMap[dateStr] && o.status !== 'Cancelled') {
+        const revenue = Number(o.total_price || 0);
+        salesMap[dateStr].Revenue += revenue;
+        salesMap[dateStr].Cost += revenue * 0.6; // standard estimated Cost of Goods Sold (60%)
+      }
+    });
+    const revenueOverview = Object.values(salesMap);
+
+    // 2. Order Statistics (Delivered, Pending, Processing, Cancelled counts)
+    const orderStatistics = [
+      { name: 'Delivered', value: orders.filter(o => o.status === 'Delivered').length },
+      { name: 'Pending', value: orders.filter(o => o.status === 'Pending').length },
+      { name: 'Processing', value: orders.filter(o => o.status === 'Processing' || o.status === 'Shipped').length },
+      { name: 'Cancelled', value: orders.filter(o => o.status === 'Cancelled').length },
+    ];
+
+    // 3. Sales by Category
+    const categorySales = {};
+    filteredOrderItems.forEach(item => {
+      const prod = productMap[item.product_id];
+      if (prod) {
+        const cat = prod.category || 'Uncategorized';
+        const sales = Number(item.price || 0) * Number(item.qty || 1);
+        if (!categorySales[cat]) {
+          categorySales[cat] = { category: cat, sales: 0 };
+        }
+        categorySales[cat].sales += sales;
+      }
+    });
+    const salesByCategory = Object.values(categorySales);
+
+    // 4. Top Selling Products
+    const productSales = {};
+    filteredOrderItems.forEach(item => {
+      const prod = productMap[item.product_id];
+      if (prod) {
+        const salesVal = Number(item.price || 0) * Number(item.qty || 1);
+        const qtyVal = Number(item.qty || 0);
+        if (!productSales[item.product_id]) {
+          productSales[item.product_id] = {
+            _id: item.product_id,
+            name: prod.name,
+            image: prod.image_url || prod.image,
+            price: prod.price,
+            soldCount: 0,
+            totalSales: 0
+          };
+        }
+        productSales[item.product_id].soldCount += qtyVal;
+        productSales[item.product_id].totalSales += salesVal;
+      }
+    });
+    const topSellingProducts = Object.values(productSales)
+      .sort((a, b) => b.soldCount - a.soldCount)
+      .slice(0, 5);
+
+    // 5. Low Stock Alerts
+    const lowStockAlerts = (allProducts || [])
+      .filter(p => {
+        if (req.user.role === 'seller') return p.user_id === req.user._id && p.count_in_stock <= 5 && !p.is_digital;
+        return p.count_in_stock <= 5 && !p.is_digital;
+      })
+      .map(p => ({
+        _id: p.id,
+        name: p.name,
+        image: p.image_url || p.image,
+        countInStock: p.count_in_stock
+      }));
+
     res.json({
       totalOrders,
       totalRevenue,
@@ -333,6 +445,11 @@ const getAdminSummary = async (req, res) => {
       pendingOrders,
       totalProducts: productsCount || 0,
       orders: formattedOrders,
+      revenueOverview,
+      orderStatistics,
+      salesByCategory,
+      topSellingProducts,
+      lowStockAlerts
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

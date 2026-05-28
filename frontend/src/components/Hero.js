@@ -2,9 +2,12 @@
 
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import BannerSlider from './BannerSlider';
 
 export default function Hero({ onShopClick }) {
+  const { lang, t } = useLanguage();
+
   return (
     <section className="relative overflow-hidden bg-slate-50 pt-6 sm:pt-10 pb-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -28,13 +31,13 @@ export default function Hero({ onShopClick }) {
               </div>
               
               <div className="relative z-10 max-w-[55%] sm:max-w-[60%] space-y-2 sm:space-y-3">
-                <span className="text-[10px] sm:text-xs font-bold text-blue-600 uppercase tracking-wider">Summer Sale</span>
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 leading-tight">50% OFF</h3>
+                <span className="text-[10px] sm:text-xs font-bold text-blue-600 uppercase tracking-wider">{lang === 'bn' ? 'গ্রীষ্মকালীন অফার' : 'Summer Sale'}</span>
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 leading-tight">{lang === 'bn' ? '৫০% ছাড়' : '50% OFF'}</h3>
                 <button
                   onClick={onShopClick}
                   className="mt-1 sm:mt-2 text-xs font-bold text-white bg-slate-900 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg hover:bg-slate-800 transition"
                 >
-                  Shop Now
+                  {lang === 'bn' ? 'এখনই কিনুন' : 'Shop Now'}
                 </button>
               </div>
             </div>
@@ -42,12 +45,12 @@ export default function Hero({ onShopClick }) {
             {/* Card 2 - Info Cards grid */}
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div className="bg-white p-3 sm:p-5 rounded-2xl border border-slate-100 text-center space-y-1 sm:space-y-2">
-                <div className="text-lg sm:text-2xl font-extrabold text-blue-600">Free</div>
-                <div className="text-[10px] sm:text-xs font-medium text-slate-500">Shipping Over $100</div>
+                <div className="text-lg sm:text-2xl font-extrabold text-blue-600">{lang === 'bn' ? 'ফ্রি' : 'Free'}</div>
+                <div className="text-[10px] sm:text-xs font-medium text-slate-500">{lang === 'bn' ? '৳১০০০ এর উপরে শিপিং ফ্রি' : 'Shipping Over $100'}</div>
               </div>
               <div className="bg-white p-3 sm:p-5 rounded-2xl border border-slate-100 text-center space-y-1 sm:space-y-2">
-                <div className="text-lg sm:text-2xl font-extrabold text-amber-500">30 Days</div>
-                <div className="text-[10px] sm:text-xs font-medium text-slate-500">Return & Money Back</div>
+                <div className="text-lg sm:text-2xl font-extrabold text-amber-500">{lang === 'bn' ? '৩০ দিন' : '30 Days'}</div>
+                <div className="text-[10px] sm:text-xs font-medium text-slate-500">{lang === 'bn' ? 'ফেরত এবং রিফান্ড গ্যারান্টি' : 'Return & Money Back'}</div>
               </div>
             </div>
           </div>

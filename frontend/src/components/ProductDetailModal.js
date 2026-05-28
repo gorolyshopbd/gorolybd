@@ -3,11 +3,13 @@
 import React, { useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShopContext, formatPrice } from '@/context/ShopContext';
-import { X, Star, Heart, ShoppingBag, Truck, RotateCcw, ShieldCheck, Plus, Minus, Phone, ExternalLink } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { X, Star, Heart, ShoppingBag, Truck, RotateCcw, ShieldCheck, Plus, Minus, Phone, ExternalLink, GitCompare } from 'lucide-react';
 
 export default function ProductDetailModal({ product, isOpen, onClose, onAddToWishlist, onBuyNow }) {
   const router = useRouter();
-  const { addToCart, currencySymbol } = useContext(ShopContext);
+  const { addToCart, currencySymbol, addToCompare, compareList = [] } = useContext(ShopContext);
+  const { lang, t } = useLanguage();
   const [qty, setQty] = useState(1);
 
   if (!isOpen || !product) return null;
@@ -63,7 +65,7 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
                 {product.category}
               </span>
               <span className={`text-xs font-semibold ${product.countInStock > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                {product.countInStock > 0 ? 'In Stock' : 'Out of Stock'}
+                {product.countInStock > 0 ? t('inStock') : t('outOfStock')}
               </span>
             </div>
             
@@ -80,7 +82,7 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
                   />
                 ))}
               </div>
-              <span className="text-slate-400 text-xs font-semibold">({product.numReviews || 35} Customer Reviews)</span>
+              <span className="text-slate-400 text-xs font-semibold">({product.numReviews || 35} {t('customerReviews')})</span>
             </div>
 
             {/* Pricing */}
@@ -91,7 +93,7 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
                   )}
             </div>
 
-            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed pt-2">{product.description}</p>
+            <p className="text-[14px] text-slate-500 leading-relaxed pt-2">{product.description}</p>
 
             <button
               onClick={() => {
@@ -101,7 +103,7 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
               className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition pt-1"
             >
               <ExternalLink size={12} />
-              View Full Details
+              {t('viewFullDetails')}
             </button>
           </div>
 
@@ -109,7 +111,7 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
           {product.countInStock > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Quantity</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('quantity')}</span>
                 <div className="flex items-center border border-slate-200 bg-white rounded-lg">
                   <button 
                     onClick={() => setQty(Math.max(1, qty - 1))} 
@@ -135,14 +137,14 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
                     className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs sm:text-sm"
                   >
                     <ShoppingBag size={16} />
-                    Add To Cart
+                    {t('addToCart')}
                   </button>
                   
                   <button
                     onClick={handleBuyNow}
                     className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs sm:text-sm"
                   >
-                    Buy Now
+                    {t('buyNow')}
                   </button>
 
                   <button 
@@ -153,6 +155,22 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
                     className="p-3 border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-red-500 transition"
                   >
                     <Heart size={16} />
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      addToCompare(product);
+                      onClose();
+                      alert(lang === 'bn' ? 'তুলনা তালিকায় যোগ করা হয়েছে!' : 'Added to comparison list!');
+                    }}
+                    className={`p-3 border rounded-xl hover:bg-slate-50 transition ${
+                      compareList.some((x) => x._id === product._id)
+                        ? 'border-cyan-200 text-cyan-600 bg-cyan-50'
+                        : 'border-slate-200 text-slate-400 hover:text-cyan-600'
+                    }`}
+                    title={t('addToCompare')}
+                  >
+                    <GitCompare size={16} fill={compareList.some((x) => x._id === product._id) ? 'currentColor' : 'none'} />
                   </button>
                 </div>
 
@@ -167,7 +185,7 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
                     <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                       <path d="M12.031 6c-3.302 0-5.991 2.691-5.991 5.993 0 1.312.427 2.526 1.155 3.514L6.3 20.3l4.908-1.286c.944.515 2.017.809 3.162.809 3.302 0 6.009-2.707 6.009-6.01 0-3.302-2.707-5.992-6.009-5.992zm3.366 8.357c-.12.338-.713.626-1.025.663-.289.034-.666.059-1.072-.119a7.35 7.35 0 0 1-3.21-2.033 6.947 6.947 0 0 1-1.845-2.804c-.172-.416-.01-.734.095-.944.077-.156.173-.263.262-.365.088-.103.14-.15.21-.245.07-.095.053-.177.025-.262-.027-.083-.262-.63-.358-.863-.095-.23-.193-.2-.262-.204h-.226c-.078 0-.21-.03-.323.095-.112.127-.432.42-.432 1.026s.443 1.192.502 1.277c.06.085.871 1.328 2.11 1.865.295.127.525.204.704.262.296.094.566.08.779.049.238-.035.733-.3.837-.59.103-.288.103-.538.072-.59-.03-.049-.111-.082-.236-.144z" />
                     </svg>
-                    WhatsApp Order
+                    {t('whatsappOrder')}
                   </a>
 
                   <a
@@ -175,7 +193,7 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
                     className="py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs"
                   >
                     <Phone size={14} />
-                    Call to Order
+                    {t('callToOrder')}
                   </a>
                 </div>
               </div>
@@ -186,18 +204,18 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
           <div className="grid grid-cols-3 gap-2.5 border-t border-slate-100 pt-4 text-[10px] sm:text-xs text-slate-500">
             <div className="flex flex-col items-center text-center space-y-1">
               <Truck size={16} className="text-blue-500" />
-              <span className="font-bold text-slate-700">Free Delivery</span>
-              <span className="text-[10px]">On orders over $100</span>
+              <span className="font-bold text-slate-700">{t('freeDelivery')}</span>
+              <span className="text-[10px]">{t('freeDeliveryNote')}</span>
             </div>
             <div className="flex flex-col items-center text-center space-y-1">
               <RotateCcw size={16} className="text-amber-500" />
-              <span className="font-bold text-slate-700">30 Days Return</span>
-              <span className="text-[10px]">Money back guarantee</span>
+              <span className="font-bold text-slate-700">{t('returnPolicy')}</span>
+              <span className="text-[10px]">{t('returnNote')}</span>
             </div>
             <div className="flex flex-col items-center text-center space-y-1">
               <ShieldCheck size={16} className="text-emerald-500" />
-              <span className="font-bold text-slate-700">Secure Checkout</span>
-              <span className="text-[10px]">100% Secure payments</span>
+              <span className="font-bold text-slate-700">{t('secureCheckout')}</span>
+              <span className="text-[10px]">{t('secureNote')}</span>
             </div>
           </div>
 

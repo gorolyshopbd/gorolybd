@@ -1,8 +1,8 @@
-import { supabase } from '../config/db.js';
+import { db } from '../config/db.js';
 
 export const getAllShippingMethods = async (req, res) => {
   try {
-    const { data: methods, error } = await supabase.from('shipping_methods').select('*').order('price', { ascending: true });
+    const { data: methods, error } = await db.database.from('shipping_methods').select('*').order('price', { ascending: true });
     if (error) throw error;
     
     const formatted = methods.map(m => ({
@@ -19,7 +19,7 @@ export const getAllShippingMethods = async (req, res) => {
 
 export const getActiveShippingMethods = async (req, res) => {
   try {
-    const { data: methods, error } = await supabase.from('shipping_methods').select('*').eq('is_active', true).order('price', { ascending: true });
+    const { data: methods, error } = await db.database.from('shipping_methods').select('*').eq('is_active', true).order('price', { ascending: true });
     if (error) throw error;
     
     const formatted = methods.map(m => ({
@@ -38,7 +38,7 @@ export const createShippingMethod = async (req, res) => {
   try {
     const { name, price, estimatedDays, description } = req.body;
     
-    const { data: method, error } = await supabase.from('shipping_methods').insert({
+    const { data: method, error } = await db.database.from('shipping_methods').insert({
       name,
       price: price || 0,
       estimated_days: estimatedDays || '',
@@ -64,7 +64,7 @@ export const updateShippingMethod = async (req, res) => {
     if (description !== undefined) updateData.description = description;
     if (isActive !== undefined) updateData.is_active = isActive;
     
-    const { data: method, error } = await supabase.from('shipping_methods').update(updateData).eq('id', req.params.id).select().single();
+    const { data: method, error } = await db.database.from('shipping_methods').update(updateData).eq('id', req.params.id).select().single();
     
     if (error || !method) return res.status(404).json({ message: 'Shipping method not found' });
     res.json({ ...method, _id: method.id });
@@ -75,7 +75,7 @@ export const updateShippingMethod = async (req, res) => {
 
 export const deleteShippingMethod = async (req, res) => {
   try {
-    const { error } = await supabase.from('shipping_methods').delete().eq('id', req.params.id);
+    const { error } = await db.database.from('shipping_methods').delete().eq('id', req.params.id);
     if (error) throw error;
     res.json({ success: true });
   } catch (error) {

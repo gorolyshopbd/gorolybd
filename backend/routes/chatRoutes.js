@@ -1,13 +1,13 @@
 import express from 'express';
 import { protect, admin } from '../middleware/authMiddleware.js';
-import { supabase } from '../config/db.js';
+import { db } from '../config/db.js';
 import { getAIResponse } from '../services/aiChatService.js';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const { data: messages, error } = await supabase.from('chat_messages').select('*').order('created_at', { ascending: true });
+    const { data: messages, error } = await db.database.from('chat_messages').select('*').order('created_at', { ascending: true });
     if (error) throw error;
     
     const formatted = messages.map(m => ({
@@ -27,7 +27,7 @@ router.post('/', async (req, res) => {
   const { username, message } = req.body;
   if (!message) return res.status(400).json({ message: 'Message is required' });
   try {
-    const { data: msg, error } = await supabase.from('chat_messages').insert({
+    const { data: msg, error } = await db.database.from('chat_messages').insert({
       username: username || 'Guest',
       message,
       is_admin: false,
@@ -45,7 +45,7 @@ router.post('/admin', protect, admin, async (req, res) => {
   const { message } = req.body;
   if (!message) return res.status(400).json({ message: 'Message is required' });
   try {
-    const { data: msg, error } = await supabase.from('chat_messages').insert({
+    const { data: msg, error } = await db.database.from('chat_messages').insert({
       username: 'Admin',
       message,
       is_admin: true,
@@ -61,7 +61,7 @@ router.post('/admin', protect, admin, async (req, res) => {
 
 router.post('/close', protect, admin, async (req, res) => {
   try {
-    const { data: msg, error } = await supabase.from('chat_messages').insert({
+    const { data: msg, error } = await db.database.from('chat_messages').insert({
       username: 'System',
       message: 'Chat closed by support',
       is_admin: true,
@@ -77,7 +77,7 @@ router.post('/close', protect, admin, async (req, res) => {
 
 router.post('/reopen', async (req, res) => {
   try {
-    const { data: msg, error } = await supabase.from('chat_messages').insert({
+    const { data: msg, error } = await db.database.from('chat_messages').insert({
       username: req.body.username || 'Guest',
       message: '--- Chat reopened ---',
       is_admin: false,
@@ -96,7 +96,7 @@ router.post('/ai', async (req, res) => {
   if (!message) return res.status(400).json({ message: 'Message is required' });
   try {
     const aiReply = getAIResponse(message);
-    const { data: msg, error } = await supabase.from('chat_messages').insert({
+    const { data: msg, error } = await db.database.from('chat_messages').insert({
       username: 'AI Assistant',
       message: aiReply,
       is_admin: true,
@@ -112,7 +112,7 @@ router.post('/ai', async (req, res) => {
 
 router.put('/:id/read', protect, admin, async (req, res) => {
   try {
-    const { error } = await supabase.from('chat_messages').update({ is_read: true }).eq('id', req.params.id);
+    const { error } = await db.database.from('chat_messages').update({ is_read: true }).eq('id', req.params.id);
     if (error) throw error;
     res.json({ success: true });
   } catch (error) {

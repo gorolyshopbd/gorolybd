@@ -1,11 +1,11 @@
-import { supabase } from '../config/db.js';
+import { db } from '../config/db.js';
 
 // @desc    Get all payouts (Admin gets all, Seller gets own)
 // @route   GET /api/payouts
 // @access  Private
 export const getPayouts = async (req, res) => {
   try {
-    let query = supabase.from('seller_payouts').select(`
+    let query = db.database.from('seller_payouts').select(`
       *,
       users:seller_id (name, store_name, email)
     `).order('created_at', { ascending: false });
@@ -39,7 +39,7 @@ export const requestPayout = async (req, res) => {
       return res.status(400).json({ message: 'Valid amount is required' });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('seller_payouts')
       .insert([
         {
@@ -73,7 +73,7 @@ export const updatePayoutStatus = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('seller_payouts')
       .update({ 
         status, 

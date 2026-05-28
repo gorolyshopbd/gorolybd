@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { getImageUrl } from '@/context/ShopContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 const API_URL = 'http://localhost:5000/api';
 
 export default function BannerSlider({ onShopClick }) {
   const [banners, setBanners] = useState([]);
   const [current, setCurrent] = useState(0);
+  const { lang, t } = useLanguage();
 
   useEffect(() => {
     fetch(`${API_URL}/banners/active`)
@@ -43,7 +45,7 @@ export default function BannerSlider({ onShopClick }) {
                 onClick={(e) => { e.preventDefault(); onShopClick?.(); }}
                 className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition hover:-translate-y-0.5 text-xs sm:text-sm"
               >
-                Shop Now <ArrowRight size={16} />
+                {lang === 'bn' ? 'এখনই কিনুন' : 'Shop Now'} <ArrowRight size={16} />
               </button>
             </div>
           </div>

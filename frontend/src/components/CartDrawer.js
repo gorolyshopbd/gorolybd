@@ -2,6 +2,7 @@
 
 import React, { useContext, useState, useEffect } from 'react';
 import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { X, Trash2, ShoppingBag, Plus, Minus, Tag, CreditCard, Ship, CheckCircle, Smartphone, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -23,6 +24,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
     API_URL,
     currencySymbol,
   } = useContext(ShopContext);
+  const { t } = useLanguage();
 
   const [couponCode, setCouponCode] = useState('');
   const [couponError, setCouponError] = useState('');
@@ -114,9 +116,9 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
 
     const res = await applyCouponCode(couponCode);
     if (res.success) {
-      setCouponSuccess(`Coupon applied! ${res.discount}% discount.`);
+      setCouponSuccess(t('couponAppliedSuccess', { discount: res.discount }));
     } else {
-      setCouponError(res.error || 'Failed to apply coupon');
+      setCouponError(res.error || t('couponApplyFailed'));
     }
   };
 
@@ -131,7 +133,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
 
   const handleSendOtp = async () => {
     if (!shippingInfo.phone || shippingInfo.phone.trim().length < 10) {
-      setOtpError('Please enter a valid phone number');
+      setOtpError(t('enterValidPhone'));
       return;
     }
     setOtpLoading(true);
@@ -142,15 +144,15 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
     setOtpLoading(false);
     if (res.success) {
       setOtpSent(true);
-      setOtpSuccess('OTP sent to your phone!');
+      setOtpSuccess(t('otpSentSuccess'));
     } else {
-      setOtpError(res.error || 'Failed to send OTP');
+      setOtpError(res.error || t('otpSendFailed'));
     }
   };
 
   const handleVerifyOtp = async () => {
     if (!otpCode || otpCode.length < 4) {
-      setOtpError('Please enter the OTP code');
+      setOtpError(t('enterOtpCode'));
       return;
     }
     setOtpLoading(true);
@@ -159,16 +161,16 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
     setOtpLoading(false);
     if (res.success) {
       setPhoneVerified(true);
-      setOtpSuccess('Phone number verified!');
+      setOtpSuccess(t('phoneVerifiedSuccess'));
       setOtpError('');
     } else {
-      setOtpError(res.error || 'Invalid OTP code');
+      setOtpError(res.error || t('invalidOtpCode'));
     }
   };
 
   const handleSubmitOrder = async () => {
     if (!phoneVerified) {
-      alert('Please verify your phone number first');
+      alert(t('verifyPhoneAlert'));
       return;
     }
     setPlacing(true);
@@ -183,7 +185,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
       setPlacedOrder(res.order);
       setCheckoutStep('success');
     } else {
-      alert(res.error || 'Error placing order');
+      alert(res.error || t('orderPlaceError'));
     }
   };
 
@@ -194,10 +196,10 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
 
   // Step indicator details
   const steps = [
-    { id: 'cart', label: 'My Cart', icon: ShoppingBag },
-    { id: 'shipping', label: 'Shipping', icon: Ship },
-    { id: 'payment', label: 'Payment', icon: CreditCard },
-    { id: 'success', label: 'Success', icon: CheckCircle },
+    { id: 'cart', label: t('myCart'), icon: ShoppingBag },
+    { id: 'shipping', label: t('shipping'), icon: Ship },
+    { id: 'payment', label: t('payment'), icon: CreditCard },
+    { id: 'success', label: t('success'), icon: CheckCircle },
   ];
 
   return (
@@ -217,9 +219,9 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                 <span className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
                   <ShoppingBag size={20} />
                 </span>
-                Secure Checkout
+                {t('secureCheckoutTitle')}
               </h2>
-              <p className="text-slate-400 text-xs font-semibold">100% encrypted checkout experience.</p>
+              <p className="text-slate-400 text-xs font-semibold">{t('encryptedCheckout')}</p>
             </div>
             
             <button 
@@ -277,15 +279,15 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                       <ShoppingBag size={56} />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-xl font-bold text-slate-800">Your cart is empty</h3>
-                      <p className="text-slate-400 text-sm max-w-xs mx-auto">Looks like you haven&apos;t added anything to your cart yet. Explore our top collections to start shopping!</p>
+                      <h3 className="text-xl font-bold text-slate-800">{t('cartEmpty')}</h3>
+                      <p className="text-slate-400 text-sm max-w-xs mx-auto">{t('cartEmptyNote')}</p>
                     </div>
                     <button 
                       onClick={onClose} 
                       className="px-6 py-3 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition duration-300 shadow-lg shadow-blue-500/25 flex items-center gap-2"
                     >
                       <ArrowLeft size={16} />
-                      Start Shopping
+                      {t('startShopping')}
                     </button>
                   </div>
                 ) : (
@@ -293,8 +295,8 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                     {/* Cart Items List */}
                     <div className="lg:col-span-2 space-y-4">
                       <div className="flex justify-between items-center bg-white px-5 py-3 rounded-2xl border border-slate-200/60">
-                        <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Product details</span>
-                        <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">{cartItems.length} Items</span>
+                        <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">{t('productDetails')}</span>
+                        <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">{cartItems.length} {t('items')}</span>
                       </div>
                       
                       <div className="space-y-3">
@@ -362,11 +364,11 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                     {/* Order summary right side */}
                     <div className="lg:col-span-1">
                       <div className="bg-white rounded-3xl border border-slate-200/60 p-6 sticky top-[200px] shadow-xs space-y-5">
-                        <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base">Order Summary</h3>
+                        <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base">{t('orderSummary')}</h3>
                         
                         {/* Coupon Selection */}
                         <div className="space-y-2">
-                          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Have a coupon code?</label>
+                          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{t('haveCoupon')}</label>
                           <div className="flex gap-2">
                             <div className="relative flex-1">
                               <Tag className="absolute left-3 top-3 text-slate-400" size={14} />
@@ -375,7 +377,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                                 onChange={(e) => setCouponCode(e.target.value)}
                                 className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 appearance-none font-bold"
                               >
-                                <option value="">Select code...</option>
+                                <option value="">{t('selectCode')}</option>
                                 {availableCoupons.map((c) => (
                                   <option key={c._id} value={c.code}>{c.code} ({c.discount}% OFF)</option>
                                 ))}
@@ -390,7 +392,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                                   : 'bg-slate-900 hover:bg-slate-950 text-white shadow-md shadow-slate-900/10'
                               }`}
                             >
-                              {coupon ? 'Applied' : 'Apply'}
+                              {coupon ? t('applied') : t('apply')}
                             </button>
                           </div>
                           {coupon && (
@@ -398,7 +400,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                               onClick={() => { setCoupon(null); setCouponCode(''); setCouponSuccess(''); setCouponError(''); }}
                               className="text-[10px] text-red-500 font-bold hover:underline block"
                             >
-                              Remove {coupon.code} coupon
+                              {t('remove')} {coupon.code} {t('coupon')}
                             </button>
                           )}
                           {couponError && <p className="text-red-500 text-[10px] font-semibold mt-1">{couponError}</p>}
@@ -408,21 +410,21 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                         {/* Calculations */}
                         <div className="space-y-3 pt-3 border-t border-slate-100 text-xs">
                           <div className="flex justify-between text-slate-500 font-medium">
-                            <span>Subtotal</span>
+                            <span>{t('subtotal')}</span>
                             <span className="font-extrabold text-slate-900">{formatPrice(itemsPrice, currencySymbol)}</span>
                           </div>
                           <div className="flex justify-between text-slate-500 font-medium">
-                            <span>Shipping</span>
-                            <span className="font-extrabold text-slate-900">{shippingPrice === 0 ? 'FREE' : formatPrice(shippingPrice, currencySymbol)}</span>
+                            <span>{t('shippingCost')}</span>
+                            <span className="font-extrabold text-slate-900">{shippingPrice === 0 ? t('free') : formatPrice(shippingPrice, currencySymbol)}</span>
                           </div>
                           {coupon && (
                             <div className="flex justify-between text-emerald-600 font-semibold">
-                              <span>Coupon Discount</span>
+                              <span>{t('couponDiscount')}</span>
                               <span>-{formatPrice(Math.abs(discountPrice), currencySymbol)}</span>
                             </div>
                           )}
                           <div className="flex justify-between text-slate-800 border-t border-slate-100 pt-3 text-sm font-extrabold">
-                            <span>Total Price</span>
+                            <span>{t('totalPrice')}</span>
                             <span className="text-lg font-black text-blue-600">{formatPrice(totalPrice, currencySymbol)}</span>
                           </div>
                         </div>
@@ -437,7 +439,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                           }}
                           className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-2xl shadow-lg shadow-blue-500/25 transition duration-300 flex items-center justify-center gap-2 text-sm"
                         >
-                          Checkout
+                          {t('checkout')}
                           <ArrowRight size={16} />
                         </button>
                       </div>
@@ -452,50 +454,50 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200/60 p-6 space-y-6">
                   <div>
-                    <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base">Shipping Address</h3>
-                    <p className="text-slate-400 text-xs mt-1">Please enter your physical shipping address details.</p>
+                    <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base">{t('shippingAddress')}</h3>
+                    <p className="text-slate-400 text-xs mt-1">{t('shippingAddressNote')}</p>
                   </div>
                   
                   <div className="space-y-4">
                     <div>
-                      <label className="text-xs font-bold text-slate-500">Full Name</label>
+                      <label className="text-xs font-bold text-slate-500">{t('fullName')}</label>
                       <input
                         type="text"
                         value={shippingInfo.name}
                         onChange={(e) => setShippingInfo({ ...shippingInfo, name: e.target.value })}
                         className="w-full mt-1.5 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50/50 focus:bg-white transition"
-                        placeholder="e.g. John Doe"
+                        placeholder={t('placeholderName')}
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-slate-500">Delivery Address</label>
+                      <label className="text-xs font-bold text-slate-500">{t('deliveryAddress')}</label>
                       <input
                         type="text"
                         value={shippingInfo.address}
                         onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })}
                         className="w-full mt-1.5 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50/50 focus:bg-white transition"
-                        placeholder="Street address, building, floor etc."
+                        placeholder={t('placeholderAddress')}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs font-bold text-slate-500">City</label>
+                        <label className="text-xs font-bold text-slate-500">{t('city')}</label>
                         <input
                           type="text"
                           value={shippingInfo.city}
                           onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
                           className="w-full mt-1.5 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50/50 focus:bg-white transition"
-                          placeholder="e.g. Dhaka"
+                          placeholder={t('placeholderCity')}
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-slate-500">Postal Code</label>
+                        <label className="text-xs font-bold text-slate-500">{t('postalCode')}</label>
                         <input
                           type="text"
                           value={shippingInfo.postalCode}
                           onChange={(e) => setShippingInfo({ ...shippingInfo, postalCode: e.target.value })}
                           className="w-full mt-1.5 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50/50 focus:bg-white transition"
-                          placeholder="e.g. 1212"
+                          placeholder={t('placeholderPostalCode')}
                         />
                       </div>
                     </div>
@@ -504,7 +506,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                     <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/60 space-y-3">
                       <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
                         <Smartphone size={16} className="text-blue-600" />
-                        Phone Verification (OTP Required)
+                        {t('phoneVerification')}
                       </div>
                       
                       <div className="flex gap-2">
@@ -520,7 +522,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                             setOtpSuccess('');
                           }}
                           className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
-                          placeholder="e.g. +8801712345678"
+                          placeholder={t('placeholderPhone')}
                         />
                         {!otpSent ? (
                           <button
@@ -528,7 +530,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                             disabled={otpLoading}
                             className="px-4 py-2.5 bg-slate-900 hover:bg-slate-950 text-white text-xs font-bold rounded-xl transition duration-300 shadow-md shadow-slate-950/10 whitespace-nowrap"
                           >
-                            {otpLoading ? 'Sending...' : 'Send OTP'}
+                            {otpLoading ? t('sending') : t('sendOtp')}
                           </button>
                         ) : (
                           <button
@@ -538,7 +540,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                               phoneVerified ? 'bg-emerald-500 cursor-default' : 'bg-blue-600 hover:bg-blue-700'
                             }`}
                           >
-                            {otpLoading ? 'Verifying...' : phoneVerified ? 'Verified!' : 'Verify'}
+                            {otpLoading ? t('verifying') : phoneVerified ? t('verified') : t('verify')}
                           </button>
                         )}
                       </div>
@@ -546,7 +548,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                         <div className="flex gap-2 mt-2">
                           <input
                             type="text"
-                            placeholder="Enter 6-digit OTP code"
+                            placeholder={t('enterOtp')}
                             value={otpCode}
                             onChange={(e) => setOtpCode(e.target.value)}
                             className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white font-mono tracking-widest text-center"
@@ -561,8 +563,8 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                   {/* Shipping Method Selection */}
                   <div className="space-y-4">
                     <div>
-                      <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base">Shipping Delivery Methods</h3>
-                      <p className="text-slate-400 text-xs mt-1">Select your preferred courier delivery speed.</p>
+                      <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base">{t('shippingMethods')}</h3>
+                      <p className="text-slate-400 text-xs mt-1">{t('shippingMethodNote')}</p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -586,7 +588,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                             <div className="flex justify-between items-center">
                               <div className="text-sm font-extrabold text-slate-800">{method.name}</div>
                               <div className="text-sm font-black text-slate-950">
-                                {method.price === 0 ? 'FREE' : formatPrice(method.price, currencySymbol)}
+                                {method.price === 0 ? t('free') : formatPrice(method.price, currencySymbol)}
                               </div>
                             </div>
                             <div className="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-wider">{method.estimatedDays}</div>
@@ -603,32 +605,32 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                 {/* Subtotal & Steps Navigation */}
                 <div className="lg:col-span-1">
                   <div className="bg-white rounded-3xl border border-slate-200/60 p-6 sticky top-[200px] shadow-xs space-y-5">
-                    <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base font-bold">Confirmation Summary</h3>
+                    <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base font-bold">{t('confirmationSummary')}</h3>
                     
                     <div className="space-y-3 text-xs">
                       <div className="flex justify-between text-slate-500 font-medium">
-                        <span>Items Subtotal</span>
+                        <span>{t('itemsSubtotal')}</span>
                         <span className="font-extrabold text-slate-900">{formatPrice(itemsPrice, currencySymbol)}</span>
                       </div>
                       <div className="flex justify-between text-slate-500 font-medium">
-                        <span>Delivery Shipping</span>
-                        <span className="font-extrabold text-slate-900">{shippingPrice === 0 ? 'FREE' : formatPrice(shippingPrice, currencySymbol)}</span>
+                        <span>{t('shippingDelivery')}</span>
+                        <span className="font-extrabold text-slate-900">{shippingPrice === 0 ? t('free') : formatPrice(shippingPrice, currencySymbol)}</span>
                       </div>
                       {coupon && (
                         <div className="flex justify-between text-emerald-600 font-semibold">
-                          <span>Coupon Discount</span>
+                          <span>{t('couponDiscount')}</span>
                           <span>-{formatPrice(Math.abs(discountPrice), currencySymbol)}</span>
                         </div>
                       )}
                       <div className="flex justify-between text-slate-800 border-t border-slate-100 pt-3 text-sm font-extrabold">
-                        <span>Grand Total</span>
+                        <span>{t('grandTotal')}</span>
                         <span className="text-lg font-black text-blue-600">{formatPrice(totalPrice, currencySymbol)}</span>
                       </div>
                     </div>
 
                     {!phoneVerified && (
                       <p className="text-amber-600 text-[10px] font-bold text-center">
-                        * Please verify your phone number using OTP.
+                        {t('otpRequiredWarning')}
                       </p>
                     )}
 
@@ -638,12 +640,12 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                         className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition text-xs flex items-center justify-center gap-1"
                       >
                         <ArrowLeft size={14} />
-                        Back to Cart
+                        {t('backToCart')}
                       </button>
                       <button 
                         onClick={() => {
                           if (!phoneVerified) {
-                            alert('Please verify your phone number first');
+                            alert(t('verifyPhoneAlert'));
                             return;
                           }
                           setCheckoutStep('payment');
@@ -654,7 +656,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                             : 'bg-slate-200 text-slate-450 cursor-not-allowed'
                         }`}
                       >
-                        Next: Payment
+                        {t('nextPayment')}
                         <ArrowRight size={14} />
                       </button>
                     </div>
@@ -673,30 +675,30 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                         <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
                         </svg>
-                        Advance Payment Required
+                        {t('advancePaymentRequired')}
                       </div>
                       <p className="text-xs text-amber-700">
-                        To process orders above {formatPrice(advancePaymentThreshold, currencySymbol)}, our policy requires a {advancePaymentPercent}% advance payment.
+                        {t('advancePaymentPolicy', { threshold: formatPrice(advancePaymentThreshold, currencySymbol), percent: advancePaymentPercent })}
                       </p>
                       <div className="flex justify-between text-xs font-bold text-amber-850 bg-white/70 rounded-xl px-4 py-2.5 border border-amber-100">
-                        <span>Required Advance Amount:</span>
+                        <span>{t('requiredAdvanceAmount')}:</span>
                         <span className="text-sm font-black">{formatPrice(advanceAmount, currencySymbol)}</span>
                       </div>
-                      <p className="text-[10px] text-amber-600">The rest amount of {formatPrice(totalPrice - advanceAmount, currencySymbol)} will be paid on delivery.</p>
+                      <p className="text-[10px] text-amber-600">{t('remainingOnDelivery', { remaining: formatPrice(totalPrice - advanceAmount, currencySymbol) })}</p>
                     </div>
                   )}
 
                   <div>
-                    <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base">Payment Options</h3>
-                    <p className="text-slate-400 text-xs mt-1">Select your preferred payment method from the secure list.</p>
+                    <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base">{t('paymentOptions')}</h3>
+                    <p className="text-slate-400 text-xs mt-1">{t('paymentOptionsNote')}</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
-                      { id: 'Cash on Delivery', name: 'Cash on Delivery', sub: 'Pay with cash upon delivery' },
-                      { id: 'bKash', name: 'bKash Wallet', sub: 'Instant mobile wallet payment' },
-                      { id: 'Nagad', name: 'Nagad Wallet', sub: 'Fast mobile banking service' },
-                      { id: 'SSLCommerz', name: 'SSLCommerz Gateway', sub: 'Cards, net banking, other methods' },
+                      { id: 'Cash on Delivery', name: t('cashOnDelivery'), sub: t('payCashOnDelivery') },
+                      { id: 'bKash', name: 'bKash Wallet', sub: t('instantMobilePayment') },
+                      { id: 'Nagad', name: 'Nagad Wallet', sub: t('fastMobileBanking') },
+                      { id: 'SSLCommerz', name: 'SSLCommerz Gateway', sub: t('gatewayMethods') },
                     ].map((method) => (
                       <button
                         key={method.id}
@@ -725,25 +727,25 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                 {/* Subtotal & Confirmation order button */}
                 <div className="lg:col-span-1">
                   <div className="bg-white rounded-3xl border border-slate-200/60 p-6 sticky top-[200px] shadow-xs space-y-5">
-                    <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base">Final Checkout</h3>
+                    <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base">{t('finalCheckout')}</h3>
                     
                     <div className="space-y-3 text-xs">
                       <div className="flex justify-between text-slate-500">
-                        <span>Items Subtotal</span>
+                        <span>{t('itemsSubtotal')}</span>
                         <span className="font-bold text-slate-850">{formatPrice(itemsPrice, currencySymbol)}</span>
                       </div>
                       <div className="flex justify-between text-slate-500">
-                        <span>Shipping Delivery</span>
-                        <span className="font-bold text-slate-850">{shippingPrice === 0 ? 'FREE' : formatPrice(shippingPrice, currencySymbol)}</span>
+                        <span>{t('shippingDelivery')}</span>
+                        <span className="font-bold text-slate-850">{shippingPrice === 0 ? t('free') : formatPrice(shippingPrice, currencySymbol)}</span>
                       </div>
                       {coupon && (
                         <div className="flex justify-between text-emerald-600 font-semibold">
-                          <span>Discount Applied</span>
+                          <span>{t('discountApplied')}</span>
                           <span>-{formatPrice(Math.abs(discountPrice), currencySymbol)}</span>
                         </div>
                       )}
                       <div className="flex justify-between text-slate-850 border-t border-slate-100 pt-3 text-sm font-extrabold">
-                        <span>Total Payable</span>
+                        <span>{t('totalPayable')}</span>
                         <span className="text-lg font-black text-blue-600">{formatPrice(totalPrice, currencySymbol)}</span>
                       </div>
                     </div>
@@ -754,14 +756,14 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                         className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition text-xs flex items-center justify-center gap-1"
                       >
                         <ArrowLeft size={14} />
-                        Back
+                        {t('back')}
                       </button>
                       <button 
                         onClick={handleSubmitOrder}
                         disabled={placing}
                         className="flex-grow-[2] py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-lg shadow-emerald-500/25 transition text-xs flex items-center justify-center gap-1.5"
                       >
-                        {placing ? 'Placing Order...' : 'Confirm Order'}
+                        {placing ? t('placingOrder') : t('confirmOrder')}
                       </button>
                     </div>
                   </div>
@@ -777,27 +779,27 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                 </div>
                 
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-slate-900">Thank you for your order!</h3>
+                  <h3 className="text-2xl font-black text-slate-900">{t('thankYou')}</h3>
                   <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                    Your order <span className="font-mono font-extrabold text-slate-900 bg-slate-50 px-1.5 py-0.5 rounded">#{placedOrder._id?.substring(0, 8)}</span> has been successfully placed.
+                    {t('orderPlacedNote', { orderId: placedOrder._id?.substring(0, 8) })}
                   </p>
                 </div>
 
                 <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 text-left w-full space-y-3 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Order Status:</span>
-                    <span className="font-extrabold text-emerald-650 bg-emerald-50 px-2 py-0.5 rounded">Pending Confirmation</span>
+                    <span className="text-slate-400">{t('orderStatus')}</span>
+                    <span className="font-extrabold text-emerald-650 bg-emerald-50 px-2 py-0.5 rounded">{t('pendingConfirmation')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Payment Selection:</span>
+                    <span className="text-slate-400">{t('paymentSelection')}</span>
                     <span className="font-bold text-slate-800">{placedOrder.paymentMethod}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Delivery Method:</span>
+                    <span className="text-slate-400">{t('deliveryMethod')}</span>
                     <span className="font-bold text-slate-800">{placedOrder.shippingMethod?.name || 'Standard'}</span>
                   </div>
                   <div className="flex justify-between border-t border-slate-200/60 pt-3">
-                    <span className="text-slate-450 font-bold">Total Bill:</span>
+                    <span className="text-slate-450 font-bold">{t('totalBill')}</span>
                     <span className="font-black text-slate-900 text-sm">{formatPrice(placedOrder.totalPrice, currencySymbol)}</span>
                   </div>
                 </div>
@@ -809,7 +811,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                   }}
                   className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-2xl shadow-lg shadow-blue-500/25 transition duration-300"
                 >
-                  Continue Shopping
+                  {t('continueShopping')}
                 </button>
               </div>
             )}

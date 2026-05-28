@@ -2,17 +2,22 @@
 
 import React, { useContext, useState, useEffect } from 'react';
 import { ShopContext } from '@/context/ShopContext';
-import { ShoppingBag, Search, User, Heart, Menu, X, LogOut, LayoutDashboard, Sun, Moon, ChevronDown, Zap } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { ShoppingBag, Search, User, Heart, Menu, X, LogOut, LayoutDashboard, Sun, Moon, ChevronDown, Zap, MapPin, GitCompare, Truck, PhoneCall } from 'lucide-react';
+import CompareModal from './CompareModal';
 
 const API_URL = 'http://localhost:5000/api';
 
 export default function Header({ onCartClick, onAuthClick, onSearchChange, currentSearch, onTabChange, activeTab }) {
-  const { user, logout, cartItems } = useContext(ShopContext);
+  const { user, logout, cartItems, compareList = [] } = useContext(ShopContext);
+  const { lang, t, setLang } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [headerSettings, setHeaderSettings] = useState({});
   const [darkMode, setDarkMode] = useState(false);
   const [categories, setCategories] = useState([]);
   const [pages, setPages] = useState([]);
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('shopio-dark-mode');
@@ -63,22 +68,53 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
   return (
     <>
       {/* Top Utility Bar */}
-      <div className="w-full bg-slate-50 border-b border-slate-100 text-[11px] text-slate-500 py-2">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div className="w-full bg-slate-50 border-b border-slate-100 text-[14px] text-slate-650 py-2.5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2.5">
           
           {/* Left Side: Language, Currency, Find Store, Apps */}
           <div className="flex items-center gap-4 flex-wrap">
             {/* Language */}
-            <div className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition">
-              <span className="text-sm">🇺🇸</span>
-              <span className="font-semibold">English</span>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+            <div className="relative">
+              <button 
+                onClick={() => setShowLangDropdown(!showLangDropdown)}
+                className="flex items-center gap-1.5 cursor-pointer bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-blue-100/60 text-[14px]"
+              >
+                <span className="text-base">{lang === 'en' ? '🇬🇧' : '🇧🇩'}</span>
+                <span>{lang === 'en' ? 'English' : 'বাংলা'}</span>
+                <ChevronDown size={14} className="stroke-[3]" />
+              </button>
+              
+              {showLangDropdown && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowLangDropdown(false)}></div>
+                  <div className="absolute left-0 mt-1.5 w-28 bg-white text-slate-800 rounded-lg shadow-lg border border-slate-100 py-1 z-50">
+                    <button
+                      onClick={() => {
+                        setLang('en');
+                        setShowLangDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-[14px] font-bold hover:bg-slate-50 transition flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'en' ? 'text-blue-600 bg-blue-50/20' : 'text-slate-700'}`}
+                    >
+                      <span>🇬🇧</span> English
+                    </button>
+                    <button
+                      onClick={() => {
+                        setLang('bn');
+                        setShowLangDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-[14px] font-bold hover:bg-slate-50 transition flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'bn' ? 'text-blue-600 bg-blue-50/20' : 'text-slate-700'}`}
+                    >
+                      <span>🇧🇩</span> বাংলা
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Currency */}
-            <div className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition">
+            <div className="flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100/60 px-3 py-1 rounded-full font-bold text-[14px] cursor-pointer hover:bg-amber-600 hover:text-white transition duration-300">
               <span className="font-semibold">{headerSettings.currency || 'BDT'}</span>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
             </div>
 
             <span className="text-slate-200">|</span>
@@ -86,59 +122,83 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
             {/* Find a Store */}
             <a 
               href={headerSettings.topBarStoreLink || '#'} 
-              className="font-semibold hover:text-blue-600 transition"
+              target={headerSettings.topBarStoreLink && headerSettings.topBarStoreLink.startsWith('http') ? '_blank' : undefined}
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-rose-100/60 text-[14px]"
             >
-              Find a Store
+              <MapPin size={14} />
+              {t('findStore')}
             </a>
 
+            <span className="text-slate-200">|</span>
+
             {/* Apps */}
-            <div className="flex items-center gap-2 text-slate-400">
+            <div className="flex items-center gap-2">
               <a 
                 href={headerSettings.topBarPlayStoreLink || '#'} 
                 title="Google Play Store" 
                 target={headerSettings.topBarPlayStoreLink && headerSettings.topBarPlayStoreLink !== '#' ? '_blank' : undefined}
                 rel="noopener noreferrer"
-                className="hover:text-blue-600 transition"
+                className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-650 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-emerald-100/60 text-[14px]"
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M5.25 3.03v17.94c0 .33.18.63.48.78.3.15.66.12.93-.09l9.36-7.49 3.06-2.45c.42-.34.42-.98 0-1.32l-3.06-2.45-9.36-7.49C6.39.72 6.03.69 5.73.84c-0.3.15-.48.45-.48.78z"/>
                 </svg>
+                <span>Play Store</span>
               </a>
               <a 
                 href={headerSettings.topBarAppStoreLink || '#'} 
                 title="Apple App Store" 
                 target={headerSettings.topBarAppStoreLink && headerSettings.topBarAppStoreLink !== '#' ? '_blank' : undefined}
                 rel="noopener noreferrer"
-                className="hover:text-blue-600 transition"
+                className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-650 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-indigo-100/60 text-[14px]"
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.7-1.13 1.84-.99 2.94.99.08 2.16-.52 2.82-1.33z"/>
                 </svg>
+                <span>App Store</span>
               </a>
             </div>
           </div>
 
           {/* Right Side: Compare, Track Order, Helpline */}
-          <div className="flex items-center gap-4 flex-wrap">
-            <a href="#" className="font-semibold hover:text-blue-600 transition" onClick={(e) => { e.preventDefault(); alert("Compare list is empty!"); }}>Compare</a>
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+            {/* Compare */}
+            <a 
+              href="#" 
+              onClick={(e) => { e.preventDefault(); setCompareOpen(true); }}
+              className="flex items-center gap-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-600 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-cyan-100/60 text-[14px]"
+            >
+              <GitCompare size={14} className="stroke-[3]" />
+              <span>{t('compare')}</span>
+              {compareList.length > 0 && (
+                <span className="bg-cyan-600 text-white text-[10px] font-black rounded-full px-1.5 py-0.5 ml-1">
+                  {compareList.length}
+                </span>
+              )}
+            </a>
             
             <span className="text-slate-200">|</span>
             
+            {/* Track Order */}
             <button 
-              className="font-semibold hover:text-blue-600 transition cursor-pointer bg-transparent border-0 p-0 text-[11px]" 
               onClick={() => onTabChange('dashboard')}
+              className="flex items-center gap-1.5 bg-violet-50 text-violet-700 hover:bg-violet-600 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-violet-100/60 text-[14px] cursor-pointer"
             >
-              Track Order
+              <Truck size={14} className="stroke-[3]" />
+              <span>{t('trackOrder')}</span>
             </button>
             
             <span className="text-slate-200">|</span>
             
-            <div className="flex items-center gap-1 text-slate-500 font-semibold">
-              <span>Helpline</span>
-              <a href={`tel:${headerSettings.topBarHelpline || '8801234567890'}`} className="font-bold text-slate-700 hover:text-blue-600 transition">
-                {headerSettings.topBarHelpline || '8801234567890'}
-              </a>
-            </div>
+            {/* Helpline */}
+            <a 
+              href={`tel:${headerSettings.topBarHelpline || '8801234567890'}`}
+              className="flex items-center gap-1.5 bg-orange-50 text-orange-700 hover:bg-orange-600 hover:text-white px-3 py-1 rounded-full transition duration-300 font-bold border border-orange-100/60 text-[14px]"
+            >
+              <PhoneCall size={14} className="stroke-[3]" />
+              <span>{t('helpline')}: {headerSettings.topBarHelpline || '8801234567890'}</span>
+            </a>
           </div>
 
         </div>
@@ -170,38 +230,12 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
 
           {/* Center Navigation - Desktop */}
           <nav className="hidden md:flex space-x-10 font-bold text-slate-800 text-lg lg:text-xl">
-            <button
-              onClick={() => handleNavClick('home')}
-              className={`hover:text-blue-600 transition ${activeTab === 'home' ? 'text-blue-600 font-black' : ''}`}
-            >
-              Home
-            </button>
-            <button
-              onClick={() => handleNavClick('shop')}
-              className={`hover:text-blue-600 transition ${activeTab === 'shop' ? 'text-blue-600 font-black' : ''}`}
-            >
-              Shop
-            </button>
-            <button
-              onClick={() => handleNavClick('categories')}
-              className={`hover:text-blue-600 transition ${activeTab === 'categories' ? 'text-blue-600 font-black' : ''}`}
-            >
-              Categories
-            </button>
             {user && !user.isAdmin && user.role !== 'seller' && (
               <button
                 onClick={() => handleNavClick('dashboard')}
                 className={`hover:text-blue-600 transition ${activeTab === 'dashboard' ? 'text-blue-600 font-black' : ''}`}
               >
-                Dashboard
-              </button>
-            )}
-            {user && (user.isAdmin || user.role === 'seller') && (
-              <button
-                onClick={() => window.location.href = '/admin'}
-                className="hover:text-blue-600 transition font-bold"
-              >
-                Admin Panel
+                {t('dashboard')}
               </button>
             )}
           </nav>
@@ -210,7 +244,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
           <div className="hidden sm:flex flex-1 max-w-md relative">
             <input
               type="text"
-              placeholder="Search for orders, products, categories..."
+              placeholder={lang === 'bn' ? "অর্ডার, পণ্য, ক্যাটাগরি খুঁজুন..." : "Search for orders, products, categories..."}
               value={currentSearch}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-full text-base bg-slate-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
@@ -249,11 +283,11 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                   className="hidden md:flex flex-col text-right hover:text-blue-600 transition cursor-pointer"
                 >
                   <span className="text-base font-bold text-slate-800">{user.name}</span>
-                  <span className="text-sm font-semibold text-slate-400 capitalize">{user.role === 'seller' ? 'Seller' : (user.isAdmin ? 'Admin' : 'Customer')}</span>
+                  <span className="text-sm font-semibold text-slate-400 capitalize">{user.role === 'seller' ? (lang === 'bn' ? 'বিক্রেতা' : 'Seller') : (user.isAdmin ? (lang === 'bn' ? 'অ্যাডমিন' : 'Admin') : (lang === 'bn' ? 'গ্রাহক' : 'Customer'))}</span>
                 </button>
                 <button
                   onClick={logout}
-                  title="Logout"
+                  title={lang === 'bn' ? "লগআউট" : "Logout"}
                   className="p-3 text-slate-600 hover:text-red-500 hover:bg-red-50/50 rounded-full transition flex items-center gap-1.5"
                 >
                   <LogOut size={24} />
@@ -265,7 +299,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 className="p-3 text-slate-600 hover:bg-slate-100 rounded-full transition flex items-center gap-2"
               >
                 <User size={24} />
-                <span className="hidden md:inline text-lg font-bold">Login</span>
+                <span className="hidden md:inline text-lg font-bold">{t('login')}</span>
               </button>
             )}
 
@@ -310,7 +344,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
             <div className="relative group/cat">
               <button className="flex items-center gap-2 text-white hover:text-amber-500 font-bold py-3 pr-8 transition cursor-pointer bg-transparent border-0 border-r border-zinc-700">
                 <Menu size={18} />
-                <span>Shop By Categories</span>
+                <span>{t('shopByCategories')}</span>
                 <ChevronDown size={14} />
               </button>
               
@@ -333,22 +367,21 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
             
             {/* Nav Links - Left aligned after categories */}
             <div className="flex items-center pl-8 gap-6 font-bold">
-              <button onClick={() => { onSearchChange(''); onTabChange('shop'); }} className="hover:text-[#FF6600] transition cursor-pointer bg-transparent border-0 text-white font-semibold text-sm py-3">Products</button>
-              <button onClick={() => { onSearchChange(''); onTabChange('shop'); }} className="hover:text-[#FF6600] transition cursor-pointer bg-transparent border-0 text-white font-semibold text-sm py-3">Store</button>
-              <button onClick={() => { onSearchChange(''); onTabChange('shop'); }} className="hover:text-[#FF6600] transition cursor-pointer bg-transparent border-0 text-white font-semibold text-sm py-3">Brands</button>
-              <button onClick={() => onTabChange('categories')} className="hover:text-[#FF6600] transition cursor-pointer bg-transparent border-0 text-white font-semibold text-sm py-3">Categories</button>
+              <button onClick={() => { onSearchChange(''); onTabChange('shop'); }} className="hover:text-[#FF6600] transition cursor-pointer bg-transparent border-0 text-white font-semibold text-sm py-3">{t('products')}</button>
+              <button onClick={() => { onSearchChange(''); onTabChange('shop'); }} className="hover:text-[#FF6600] transition cursor-pointer bg-transparent border-0 text-white font-semibold text-sm py-3">{t('store')}</button>
+              <button onClick={() => { onSearchChange(''); onTabChange('shop'); }} className="hover:text-[#FF6600] transition cursor-pointer bg-transparent border-0 text-white font-semibold text-sm py-3">{t('brands')}</button>
               
               {/* Pages Dropdown */}
               <div className="relative group/pages">
                 <button className="flex items-center gap-1 hover:text-[#FF6600] transition cursor-pointer font-semibold bg-transparent border-0 text-white text-sm py-3">
-                  <span>Pages</span>
+                  <span>{t('pages')}</span>
                   <ChevronDown size={13} />
                 </button>
                 
                 {/* Pages Dropdown Content */}
                 <div className="absolute left-0 top-full hidden group-hover/pages:block w-48 bg-white text-slate-800 rounded-xl shadow-xl border border-slate-100 py-2 z-50">
                   {pages.length === 0 ? (
-                    <span className="block px-4 py-2 text-xs text-slate-400">No pages</span>
+                    <span className="block px-4 py-2 text-xs text-slate-400">{lang === 'bn' ? 'কোনো পেইজ নেই' : 'No pages'}</span>
                   ) : pages.map((p) => (
                     <button
                       key={p.slug}
@@ -371,7 +404,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
               className="flex items-center gap-1.5 bg-[#FF6600] text-white px-4 py-2 text-[12px] rounded-lg font-extrabold shadow hover:bg-amber-500 hover:text-white transition duration-300 cursor-pointer border-0"
             >
               <Zap size={14} className="text-white fill-white" />
-              <span>Daily Deals</span>
+              <span>{t('dailyDeals')}</span>
             </button>
           </div>
           
@@ -382,13 +415,9 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
       <div className="md:hidden border-t border-slate-100 bg-white px-2">
         <div className="flex overflow-x-auto gap-1 py-1.5 scrollbar-hide">
           {[
-            { tab: 'home', label: 'Home' },
-            { tab: 'shop', label: 'Shop' },
-            { tab: 'categories', label: 'Categories' },
-            { tab: 'brands', label: 'Brands', isBrands: true },
-            { tab: 'deals', label: 'Daily Deals', isDeals: true },
-            ...(user && !user.isAdmin && user.role !== 'seller' ? [{ tab: 'dashboard', label: 'Dashboard' }] : []),
-            ...(user && (user.isAdmin || user.role === 'seller') ? [{ tab: 'admin', label: 'Admin Panel', isAdminLink: true }] : []),
+            { tab: 'brands', label: t('brands'), isBrands: true },
+            { tab: 'deals', label: t('dailyDeals'), isDeals: true },
+            ...(user && !user.isAdmin && user.role !== 'seller' ? [{ tab: 'dashboard', label: t('dashboard') }] : []),
           ].map((item) => {
             const isActive = activeTab === item.tab && !item.isBrands && !item.isDeals;
             return (
@@ -414,48 +443,24 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
         <div className="md:hidden border-t border-slate-100 bg-white px-4 py-4 space-y-3 shadow-inner">
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder={lang === 'bn' ? "পণ্য খুঁজুন..." : "Search products..."}
             value={currentSearch}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg text-base bg-slate-50 focus:bg-white focus:outline-hidden"
           />
           <nav className="flex flex-col gap-2 font-bold text-lg text-slate-700">
             <button
-              onClick={() => handleNavClick('home')}
-              className={`text-left py-2.5 px-4 hover:bg-slate-50 rounded-lg transition ${
-                activeTab === 'home' ? 'text-blue-600 bg-blue-50/50' : ''
-              }`}
-            >
-              Home
-            </button>
-            <button
-              onClick={() => handleNavClick('shop')}
-              className={`text-left py-2.5 px-4 hover:bg-slate-50 rounded-lg transition ${
-                activeTab === 'shop' ? 'text-blue-600 bg-blue-50/50' : ''
-              }`}
-            >
-              Shop
-            </button>
-            <button
-              onClick={() => handleNavClick('categories')}
-              className={`text-left py-2.5 px-4 hover:bg-slate-50 rounded-lg transition ${
-                activeTab === 'categories' ? 'text-blue-600 bg-blue-50/50' : ''
-              }`}
-            >
-              Categories
-            </button>
-            <button
               onClick={() => handleNavClick('shop', true, false)}
               className="text-left py-2.5 px-4 hover:bg-slate-50 rounded-lg transition text-slate-700"
             >
-              Brands
+              {t('brands')}
             </button>
             <button
               onClick={() => handleNavClick('shop', false, true)}
               className="text-left py-2.5 px-4 hover:bg-slate-50 rounded-lg transition text-slate-700 flex items-center gap-1.5"
             >
               <Zap size={16} className="text-amber-500 fill-amber-500" />
-              Daily Deals
+              {t('dailyDeals')}
             </button>
             {user && !user.isAdmin && user.role !== 'seller' && (
               <button
@@ -464,15 +469,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                   activeTab === 'dashboard' ? 'text-blue-600 bg-blue-50/50' : ''
                 }`}
               >
-                My Dashboard
-              </button>
-            )}
-            {user && (user.isAdmin || user.role === 'seller') && (
-              <button
-                onClick={() => window.location.href = '/admin'}
-                className="text-left py-2.5 px-4 hover:bg-slate-50 rounded-lg transition text-blue-600 font-bold"
-              >
-                Admin Panel
+                {lang === 'bn' ? 'আমার ড্যাশবোর্ড' : 'My Dashboard'}
               </button>
             )}
           </nav>
@@ -526,6 +523,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
           ))}
         </div>
       </div>
+      <CompareModal isOpen={compareOpen} onClose={() => setCompareOpen(false)} />
     </header>
   </>
   );

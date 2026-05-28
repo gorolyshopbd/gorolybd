@@ -1,11 +1,17 @@
 'use client';
 
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
+import { createClient } from '@insforge/sdk';
 
 export const ShopContext = createContext();
 
 const API_URL = 'http://localhost:5000/api';
 const BASE_URL = API_URL.replace('/api', '');
+
+const insforge = createClient({
+  baseUrl: process.env.NEXT_PUBLIC_INSFORGE_URL,
+  anonKey: process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY,
+});
 
 // Utility: format a price. Components should use this instead of hardcoding $ or ৳.
 export const formatPrice = (amount, symbol = '$') => `${symbol}${Number(amount).toFixed(2)}`;
@@ -28,12 +34,52 @@ export const ShopProvider = ({ children }) => {
   const [currencySymbol, setCurrencySymbol] = useState('৳');
   const [currencyCode, setCurrencyCode] = useState('BDT');
   const [payouts, setPayouts] = useState([]);
+  const [compareList, setCompareList] = useState([]);
   const [sellerSettings, setSellerSettings] = useState({
     category_based_commission: false,
     seller_based_commission: false,
     message_to_seller_mail: true
   });
   const [sellerPackages, setSellerPackages] = useState([]);
+  const [onlineSubscriptions, setOnlineSubscriptions] = useState([]);
+  const [offlineSubscriptions, setOfflineSubscriptions] = useState([]);
+  const [rewardSettings, setRewardSettings] = useState({
+    is_enabled: true,
+    earn_rate: 1.00,
+    redeem_rate: 0.10,
+    min_redeem_points: 100
+  });
+  const [userPoints, setUserPoints] = useState([]);
+  const [pointLogs, setPointLogs] = useState([]);
+  const [rewardProducts, setRewardProducts] = useState([]);
+  const [rtLive, setRtLive] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const init = async () => {
+      await insforge.realtime.connect();
+      const res = await insforge.realtime.subscribe('dashboard');
+      if (res && res.ok && mounted) setRtLive(true);
+    };
+    init();
+
+    insforge.realtime.on('order_updated', (payload) => {
+      console.log('[RT] order_updated:', payload);
+    });
+
+    insforge.realtime.on('product_updated', (payload) => {
+      console.log('[RT] product_updated:', payload);
+    });
+
+    insforge.realtime.on('connect', () => { if (mounted) setRtLive(true); });
+    insforge.realtime.on('disconnect', () => { if (mounted) setRtLive(false); });
+
+    return () => {
+      mounted = false;
+      insforge.realtime.unsubscribe('dashboard');
+      insforge.realtime.disconnect();
+    };
+  }, []);
 
   // Seller Packages Functions
   const fetchSellerPackages = async () => {
@@ -49,6 +95,181 @@ export const ShopProvider = ({ children }) => {
       }
       return [];
     } catch { return []; }
+  };
+
+  const fetchOnlineSubscriptions = async () => {
+    if (!user || !user.token) return [];
+    try {
+      const res = await fetch(`${API_URL}/seller-subscriptions/online`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOnlineSubscriptions(data);
+        return data;
+      }
+      return [];
+    } catch { return []; }
+  };
+
+  const fetchOfflineSubscriptions = async () => {
+    if (!user || !user.token) return [];
+    try {
+      const res = await fetch(`${API_URL}/seller-subscriptions/offline`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOfflineSubscriptions(data);
+        return data;
+      }
+      return [];
+    } catch { return []; }
+  };
+
+  const fetchRewardSettings = async () => {
+    if (!user || !user.token) return;
+    try {
+      const res = await fetch(`${API_URL}/rewards/settings`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRewardSettings(data);
+        return data;
+      }
+    } catch {}
+  };
+
+  const updateRewardSettings = async (settingsData) => {
+    if (!user || !user.token) return { success: false, error: 'Not authenticated' };
+    try {
+      const res = await fetch(`${API_URL}/rewards/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+        body: JSON.stringify(settingsData)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to update reward settings');
+      setRewardSettings(data);
+      return { success: true, settings: data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const fetchUserPoints = async () => {
+    if (!user || !user.token) return [];
+    try {
+      const res = await fetch(`${API_URL}/rewards/user-points`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUserPoints(data);
+        return data;
+      }
+      return [];
+    } catch { return []; }
+  };
+
+  const fetchPointLogs = async () => {
+    if (!user || !user.token) return [];
+    try {
+      const res = await fetch(`${API_URL}/rewards/logs`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPointLogs(data);
+        return data;
+      }
+      return [];
+    } catch { return []; }
+  };
+
+  const adjustUserPoints = async (adjustData) => {
+    if (!user || !user.token) return { success: false, error: 'Not authenticated' };
+    try {
+      const res = await fetch(`${API_URL}/rewards/adjust`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+        body: JSON.stringify(adjustData)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to adjust points');
+      fetchUserPoints();
+      fetchPointLogs();
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const fetchRewardProducts = async () => {
+    if (!user || !user.token) return [];
+    try {
+      const res = await fetch(`${API_URL}/rewards/products`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRewardProducts(data);
+        return data;
+      }
+      return [];
+    } catch { return []; }
+  };
+
+  const setRewardByCategory = async (categoryData) => {
+    if (!user || !user.token) return { success: false, error: 'Not authenticated' };
+    try {
+      const res = await fetch(`${API_URL}/rewards/set-by-category`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+        body: JSON.stringify(categoryData)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to set category rewards');
+      fetchRewardProducts();
+      return { success: true, message: data.message };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const setRewardBySeller = async (sellerData) => {
+    if (!user || !user.token) return { success: false, error: 'Not authenticated' };
+    try {
+      const res = await fetch(`${API_URL}/rewards/set-by-seller`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+        body: JSON.stringify(sellerData)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to set seller rewards');
+      fetchRewardProducts();
+      return { success: true, message: data.message };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const setRewardByProduct = async (productData) => {
+    if (!user || !user.token) return { success: false, error: 'Not authenticated' };
+    try {
+      const res = await fetch(`${API_URL}/rewards/set-by-product`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+        body: JSON.stringify(productData)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to set product rewards');
+      fetchRewardProducts();
+      return { success: true, message: data.message };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   };
 
   const createSellerPackage = async (pkgData) => {
@@ -223,6 +444,15 @@ export const ShopProvider = ({ children }) => {
       if (storedCart) {
         try {
           setCartItems(JSON.parse(storedCart));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      const storedCompare = localStorage.getItem('shop_compare');
+      if (storedCompare) {
+        try {
+          setCompareList(JSON.parse(storedCompare));
         } catch (e) {
           console.error(e);
         }
@@ -498,6 +728,35 @@ export const ShopProvider = ({ children }) => {
     setCoupon(null);
   };
 
+  const addToCompare = (product) => {
+    setCompareList((prev) => {
+      if (prev.find((x) => x._id === product._id)) {
+        return prev;
+      }
+      if (prev.length >= 3) {
+        const isBn = typeof window !== 'undefined' && localStorage.getItem('shopio-lang') === 'bn';
+        alert(isBn ? "আপনি সর্বোচ্চ ৩টি পণ্য তুলনা করতে পারেন!" : "You can compare up to 3 products!");
+        return prev;
+      }
+      const updated = [...prev, product];
+      localStorage.setItem('shop_compare', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const removeFromCompare = (id) => {
+    setCompareList((prev) => {
+      const updated = prev.filter((x) => x._id !== id);
+      localStorage.setItem('shop_compare', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const clearCompare = () => {
+    setCompareList([]);
+    localStorage.removeItem('shop_compare');
+  };
+
   // Fetch available coupons for dropdown
   const fetchAvailableCoupons = async () => {
     try {
@@ -722,6 +981,10 @@ export const ShopProvider = ({ children }) => {
         removeFromCart,
         updateCartQty,
         clearCart,
+        compareList,
+        addToCompare,
+        removeFromCompare,
+        clearCompare,
         applyCouponCode,
         fetchAvailableCoupons,
         setCoupon,
@@ -748,6 +1011,24 @@ export const ShopProvider = ({ children }) => {
         createSellerPackage,
         updateSellerPackage,
         deleteSellerPackage,
+        onlineSubscriptions,
+        offlineSubscriptions,
+        fetchOnlineSubscriptions,
+        fetchOfflineSubscriptions,
+        rewardSettings,
+        userPoints,
+        pointLogs,
+        fetchRewardSettings,
+        updateRewardSettings,
+        fetchUserPoints,
+        fetchPointLogs,
+        adjustUserPoints,
+        rewardProducts,
+        fetchRewardProducts,
+        setRewardByCategory,
+        setRewardBySeller,
+        setRewardByProduct,
+        rtLive,
       }}
     >
       {children}

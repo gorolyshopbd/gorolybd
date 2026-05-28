@@ -3,11 +3,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Star, Heart, ShoppingCart, Eye, Zap } from 'lucide-react';
 
 export default function FlashSale({ products, onProductClick, onAddToWishlist }) {
   const router = useRouter();
   const { addToCart, currencySymbol } = useContext(ShopContext);
+  const { lang, t } = useLanguage();
   const [timeLeft, setTimeLeft] = useState({
     days: 2, hours: 14, minutes: 36, seconds: 48,
   });
@@ -41,17 +43,17 @@ export default function FlashSale({ products, onProductClick, onAddToWishlist })
               <Zap size={22} className="text-white" />
             </div>
             <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Flash Sale</h2>
-              <p className="text-orange-100 text-xs sm:text-sm opacity-90">Hurry up! These deals won&apos;t last long.</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{lang === 'bn' ? 'ফ্ল্যাশ সেল' : 'Flash Sale'}</h2>
+              <p className="text-orange-100 text-xs sm:text-sm opacity-90">{lang === 'bn' ? 'তাড়াতাড়ি করুন! এই অফারটি সীমিত সময়ের জন্য।' : "Hurry up! These deals won't last long."}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5">
             {[
-              { val: timeLeft.days, label: 'Days' },
-              { val: timeLeft.hours, label: 'Hours' },
-              { val: timeLeft.minutes, label: 'Mins' },
-              { val: timeLeft.seconds, label: 'Secs' },
+              { val: timeLeft.days, label: lang === 'bn' ? 'দিন' : 'Days' },
+              { val: timeLeft.hours, label: lang === 'bn' ? 'ঘণ্টা' : 'Hours' },
+              { val: timeLeft.minutes, label: lang === 'bn' ? 'মিনিট' : 'Mins' },
+              { val: timeLeft.seconds, label: lang === 'bn' ? 'সেকেন্ড' : 'Secs' },
             ].map((t, idx) => (
               <div key={idx} className="flex items-center">
                 <div className="bg-white/15 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 text-center min-w-[48px]">
@@ -92,7 +94,7 @@ export default function FlashSale({ products, onProductClick, onAddToWishlist })
                   <button
                     onClick={() => onProductClick(product)}
                     className="absolute bottom-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-md hover:bg-white transition z-10 text-slate-500 hover:text-blue-600 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 duration-300"
-                    title="Quick View"
+                    title={lang === 'bn' ? 'দ্রুত দেখুন' : 'Quick View'}
                   >
                     <Eye size={15} />
                   </button>
@@ -131,7 +133,7 @@ export default function FlashSale({ products, onProductClick, onAddToWishlist })
                       className="px-3.5 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 text-xs font-bold rounded-xl transition-all duration-300 shadow-md shadow-orange-500/20 hover:shadow-lg hover:shadow-orange-500/30 flex items-center gap-1.5"
                     >
                       <ShoppingCart size={12} />
-                      Add
+                      {t('add')}
                     </button>
                   </div>
                 </div>

@@ -1,7 +1,8 @@
-import { supabase } from '../config/db.js';
+import { db } from '../config/db.js';
 import generateToken from '../utils/generateToken.js';
 import { saveOTP, verifyOTP as checkOTP } from '../config/otpStore.js';
 import bcrypt from 'bcryptjs';
+import twilio from 'twilio';
 import fs from 'fs';
 import csv from 'csv-parser';
 
@@ -46,7 +47,7 @@ const authUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const { data: user, error } = await supabase.from('users').select('*').eq('email', email).single();
+    const { data: user, error } = await db.database.from('users').select('*').eq('email', email).single();
     console.log('Login attempt:', email, user, error);
     
     if (user && await bcrypt.compare(password, user.password_hash)) {
@@ -70,7 +71,7 @@ const registerUser = async (req, res) => {
   const { name, email, password, phone, role } = req.body;
 
   try {
-    const { data: userExists } = await supabase.from('users').select('id').eq('email', email).single();
+    const { data: userExists } = await db.database.from('users').select('id').eq('email', email).single();
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
@@ -80,7 +81,7 @@ const registerUser = async (req, res) => {
 
     const assignedRole = role === 'seller' ? 'seller' : 'customer';
 
-    const { data: user, error } = await supabase.from('users').insert({
+    const { data: user, error } = await db.database.from('users').insert({
       name,
       email,
       password_hash,
@@ -106,7 +107,7 @@ const registerUser = async (req, res) => {
 // @access  Private
 const getUserProfile = async (req, res) => {
   try {
-    const { data: user, error } = await supabase.from('users').select('*').eq('id', req.user._id).single();
+    const { data: user, error } = await db.database.from('users').select('*').eq('id', req.user._id).single();
     if (error || !user) return res.status(404).json({ message: 'User not found' });
     
     res.json(sanitizeUser(user));
@@ -128,7 +129,53 @@ const sendOTP = async (req, res) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   saveOTP(target, otp);
 
-  console.log(`[OTP Sent via ${type.toUpperCase()}] to ${target}. Code: ${otp}`);
+  // Fetch gateway settings from DB
+  let gateway = 'Simulated';
+  try {
+    const { data: settings } = await db.database.from('settings').select('*').limit(1).single();
+    if (settings) gateway = settings.otp_gateway || 'Simulated';
+  } catch {}
+
+  if (type === 'phone' && gateway !== 'Simulated') {
+    try {
+      if (gateway === 'Twilio') {
+        const { data: settings } = await db.database.from('settings').select('*').limit(1).single();
+        if (settings?.twilio_sid && settings?.twilio_auth_token && settings?.twilio_phone_number) {
+          const client = twilio(settings.twilio_sid, settings.twilio_auth_token);
+          await client.messages.create({
+            body: `Your Shopio OTP code is: ${otp}. Valid for 5 minutes.`,
+            from: settings.twilio_phone_number,
+            to: target
+          });
+          console.log(`[OTP Sent via Twilio] to ${target}`);
+          return res.json({ message: `OTP sent via Twilio to ${target}` });
+        }
+      } else if (gateway === 'GreenwebSMS') {
+        const { data: settings } = await db.database.from('settings').select('*').limit(1).single();
+        if (settings?.greenweb_api_key) {
+          const senderId = settings.greenweb_sender_id || 'Shopio';
+          const greenwebRes = await fetch('http://api.greenweb.com.bd/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              token: settings.greenweb_api_key,
+              to: target,
+              message: `Your Shopio OTP code is: ${otp}. Valid for 5 minutes.`,
+              sender: senderId
+            })
+          });
+          const result = await greenwebRes.text();
+          console.log(`[OTP Sent via GreenwebSMS] to ${target}: ${result}`);
+          return res.json({ message: `OTP sent via GreenwebSMS to ${target}` });
+        }
+      }
+    } catch (smsError) {
+      console.error('[OTP Send Failed]', smsError.message);
+      // Fall through to simulated fallback
+    }
+  }
+
+  console.log(`[OTP Simulated] to ${target}. Code: ${otp}`);
 
   res.json({
     message: `OTP simulated sent successfully to ${target}`,
@@ -162,13 +209,13 @@ const verifyOTPCode = async (req, res) => {
   }
 
   try {
-    let { data: user } = await supabase.from('users').select('*').eq('email', emailValue).single();
+    let { data: user } = await db.database.from('users').select('*').eq('email', emailValue).single();
 
     if (!user) {
       const salt = await bcrypt.genSalt(10);
       const password_hash = await bcrypt.hash(`otp-${Math.random().toString(36).substr(2, 9)}`, salt);
 
-      const { data: newUser, error } = await supabase.from('users').insert({
+      const { data: newUser, error } = await db.database.from('users').insert({
         name: nameValue,
         email: emailValue,
         password_hash,
@@ -201,13 +248,13 @@ const changePassword = async (req, res) => {
   }
 
   try {
-    const { data: user } = await supabase.from('users').select('*').eq('id', req.user._id).single();
+    const { data: user } = await db.database.from('users').select('*').eq('id', req.user._id).single();
     
     if (user && await bcrypt.compare(currentPassword, user.password_hash)) {
       const salt = await bcrypt.genSalt(10);
       const password_hash = await bcrypt.hash(newPassword, salt);
       
-      await supabase.from('users').update({ password_hash }).eq('id', req.user._id);
+      await db.database.from('users').update({ password_hash }).eq('id', req.user._id);
       return res.json({ message: 'Password updated successfully' });
     }
 
@@ -228,18 +275,18 @@ const changeEmail = async (req, res) => {
   }
 
   try {
-    const { data: user } = await supabase.from('users').select('*').eq('id', req.user._id).single();
+    const { data: user } = await db.database.from('users').select('*').eq('id', req.user._id).single();
     
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(400).json({ message: 'Incorrect password' });
     }
     
-    const { data: emailExists } = await supabase.from('users').select('id').eq('email', newEmail).neq('id', user.id).single();
+    const { data: emailExists } = await db.database.from('users').select('id').eq('email', newEmail).neq('id', user.id).single();
     if (emailExists) {
       return res.status(400).json({ message: 'Email already in use' });
     }
     
-    await supabase.from('users').update({ email: newEmail }).eq('id', user.id);
+    await db.database.from('users').update({ email: newEmail }).eq('id', user.id);
     return res.json({ message: 'Email updated successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -257,7 +304,7 @@ const forgotPassword = async (req, res) => {
   }
 
   try {
-    const { data: user } = await supabase.from('users').select('id').eq('email', email).single();
+    const { data: user } = await db.database.from('users').select('id').eq('email', email).single();
     
     if (!user) {
       return res.status(404).json({ message: 'No account found with this email' });
@@ -293,12 +340,12 @@ const resetPassword = async (req, res) => {
   }
 
   try {
-    const { data: user } = await supabase.from('users').select('id').eq('email', email).single();
+    const { data: user } = await db.database.from('users').select('id').eq('email', email).single();
     if (user) {
       const salt = await bcrypt.genSalt(10);
       const password_hash = await bcrypt.hash(newPassword, salt);
       
-      await supabase.from('users').update({ password_hash }).eq('id', user.id);
+      await db.database.from('users').update({ password_hash }).eq('id', user.id);
       resetTokens.delete(email);
       return res.json({ message: 'Password reset successful' });
     }
@@ -320,13 +367,13 @@ const oauthLogin = async (req, res) => {
   }
 
   try {
-    let { data: user } = await supabase.from('users').select('*').eq('email', email).single();
+    let { data: user } = await db.database.from('users').select('*').eq('email', email).single();
     
     if (!user) {
       const salt = await bcrypt.genSalt(10);
       const password_hash = await bcrypt.hash(`oauth-${provider}-${Math.random().toString(36).substr(2, 9)}`, salt);
 
-      const { data: newUser, error } = await supabase.from('users').insert({
+      const { data: newUser, error } = await db.database.from('users').insert({
         name,
         email,
         password_hash,
@@ -355,7 +402,7 @@ const oauthLogin = async (req, res) => {
 // @access  Private/Admin
 const getUsers = async (req, res) => {
   try {
-    const { data: users, error } = await supabase.from('users').select('*');
+    const { data: users, error } = await db.database.from('users').select('*');
     if (error) throw error;
     res.json(users.map(sanitizeUser));
   } catch (error) {
@@ -368,7 +415,7 @@ const getUsers = async (req, res) => {
 // @access  Private/Admin
 const getUserById = async (req, res) => {
   try {
-    const { data: user, error } = await supabase.from('users').select('*').eq('id', req.params.id).single();
+    const { data: user, error } = await db.database.from('users').select('*').eq('id', req.params.id).single();
     if (error || !user) return res.status(404).json({ message: 'User not found' });
     res.json(sanitizeUser(user));
   } catch (error) {
@@ -390,13 +437,13 @@ const createUserByAdmin = async (req, res) => {
   const userPermissions = permissions && permissions.length ? permissions : getRolePermissions(userRole);
 
   try {
-    const { data: exists } = await supabase.from('users').select('id').eq('email', email).single();
+    const { data: exists } = await db.database.from('users').select('id').eq('email', email).single();
     if (exists) return res.status(400).json({ message: 'Email already in use' });
 
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
 
-    const { data: user, error } = await supabase.from('users').insert({
+    const { data: user, error } = await db.database.from('users').insert({
       name, email, password_hash, phone: phone || '',
       role: userRole, permissions: userPermissions,
       is_admin: userRole !== 'customer'
@@ -416,12 +463,12 @@ const updateUserByAdmin = async (req, res) => {
   const { name, email, phone, role, permissions } = req.body;
 
   try {
-    const { data: user } = await supabase.from('users').select('*').eq('id', req.params.id).single();
+    const { data: user } = await db.database.from('users').select('*').eq('id', req.params.id).single();
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const updateData = {};
     if (email && email !== user.email) {
-      const { data: exists } = await supabase.from('users').select('id').eq('email', email).neq('id', user.id).single();
+      const { data: exists } = await db.database.from('users').select('id').eq('email', email).neq('id', user.id).single();
       if (exists) return res.status(400).json({ message: 'Email already in use' });
       updateData.email = email;
     }
@@ -434,7 +481,7 @@ const updateUserByAdmin = async (req, res) => {
     }
     if (permissions) updateData.permissions = permissions;
 
-    const { data: updated, error } = await supabase.from('users').update(updateData).eq('id', req.params.id).select().single();
+    const { data: updated, error } = await db.database.from('users').update(updateData).eq('id', req.params.id).select().single();
     if (error) throw error;
 
     res.json(sanitizeUser(updated));
@@ -453,13 +500,13 @@ const adminResetPassword = async (req, res) => {
   }
 
   try {
-    const { data: user } = await supabase.from('users').select('id').eq('id', req.params.id).single();
+    const { data: user } = await db.database.from('users').select('id').eq('id', req.params.id).single();
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(newPassword, salt);
 
-    await supabase.from('users').update({ password_hash }).eq('id', req.params.id);
+    await db.database.from('users').update({ password_hash }).eq('id', req.params.id);
     res.json({ message: 'Password reset successful' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -475,7 +522,7 @@ const deleteUser = async (req, res) => {
   }
 
   try {
-    const { error } = await supabase.from('users').delete().eq('id', req.params.id);
+    const { error } = await db.database.from('users').delete().eq('id', req.params.id);
     if (error) throw error;
     res.json({ message: 'User removed' });
   } catch (error) {
@@ -561,7 +608,7 @@ const importSellers = async (req, res) => {
       });
 
       if (validUsers.length > 0) {
-        const { data: insertedUsers, error } = await supabase.from('users').insert(validUsers).select();
+        const { data: insertedUsers, error } = await db.database.from('users').insert(validUsers).select();
         if (error) {
           return res.status(500).json({ message: error.message || 'Failed to insert sellers' });
         }

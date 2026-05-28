@@ -1,8 +1,8 @@
-import { supabase } from '../config/db.js';
+import { db } from '../config/db.js';
 
 export const getCoupons = async (req, res) => {
   try {
-    const { data: coupons, error } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
+    const { data: coupons, error } = await db.database.from('coupons').select('*').order('created_at', { ascending: false });
     if (error) throw error;
     
     const formatted = coupons.map(c => ({
@@ -21,10 +21,10 @@ export const createCoupon = async (req, res) => {
   try {
     const { code, discount, expiryDate, isActive } = req.body;
     
-    const { data: existing } = await supabase.from('coupons').select('id').eq('code', code).single();
+    const { data: existing } = await db.database.from('coupons').select('id').eq('code', code).single();
     if (existing) return res.status(400).json({ message: 'Coupon already exists' });
     
-    const { data: coupon, error } = await supabase.from('coupons').insert({
+    const { data: coupon, error } = await db.database.from('coupons').insert({
       code,
       discount,
       expiry_date: expiryDate,
@@ -48,7 +48,7 @@ export const updateCoupon = async (req, res) => {
     if (expiryDate !== undefined) updateData.expiry_date = expiryDate;
     if (isActive !== undefined) updateData.is_active = isActive;
     
-    const { data: coupon, error } = await supabase.from('coupons').update(updateData).eq('id', req.params.id).select().single();
+    const { data: coupon, error } = await db.database.from('coupons').update(updateData).eq('id', req.params.id).select().single();
     
     if (error || !coupon) return res.status(404).json({ message: 'Coupon not found' });
     res.json({ ...coupon, _id: coupon.id });
@@ -59,7 +59,7 @@ export const updateCoupon = async (req, res) => {
 
 export const deleteCoupon = async (req, res) => {
   try {
-    const { error } = await supabase.from('coupons').delete().eq('id', req.params.id);
+    const { error } = await db.database.from('coupons').delete().eq('id', req.params.id);
     if (error) throw error;
     res.json({ success: true });
   } catch (error) {
@@ -70,7 +70,7 @@ export const deleteCoupon = async (req, res) => {
 export const applyCoupon = async (req, res) => {
   try {
     const { code } = req.body;
-    const { data: coupon, error } = await supabase.from('coupons')
+    const { data: coupon, error } = await db.database.from('coupons')
       .select('*')
       .eq('code', code)
       .eq('is_active', true)

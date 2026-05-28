@@ -1,4 +1,4 @@
-import { supabase } from '../config/db.js';
+import { db } from '../config/db.js';
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -11,7 +11,7 @@ const getProducts = async (req, res) => {
   const isFlashSale = req.query.isFlashSale === 'true';
 
   try {
-    let query = supabase.from('products').select('*', { count: 'exact' });
+    let query = db.database.from('products').select('*', { count: 'exact' });
 
     if (req.query.sellerId) {
       query = query.eq('user_id', req.query.sellerId);
@@ -25,13 +25,16 @@ const getProducts = async (req, res) => {
     }
     if (isFlashSale) {
       query = query.eq('is_flash_sale', true);
-      // Simplified flash sale check for Supabase query
+      // Simplified flash sale check for db query
     }
 
     // Pagination
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-    query = query.range(from, to).order('created_at', { ascending: false });
+    if (req.query.all !== 'true') {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+    }
+    query = query.order('created_at', { ascending: false });
 
     const { data: products, count, error } = await query;
     if (error) throw error;
@@ -47,7 +50,15 @@ const getProducts = async (req, res) => {
       metaTitle: p.meta_title,
       metaDescription: p.meta_description,
       youtubeUrl: p.youtube_url,
-      image: p.image_url
+      image: p.image_url,
+      unit: p.unit,
+      minOrderQty: p.min_order_qty,
+      barcode: p.barcode,
+      slug: p.slug,
+      isPublished: p.is_published,
+      isCatalog: p.is_catalog,
+      isTodaysDeal: p.is_todays_deal,
+      isFeatured: p.is_featured
     }));
 
     res.json({ products: formattedProducts, page, pages: Math.ceil(count / pageSize) });
@@ -61,7 +72,7 @@ const getProducts = async (req, res) => {
 // @access  Public
 const getProductById = async (req, res) => {
   try {
-    const { data: product, error } = await supabase
+    const { data: product, error } = await db
       .from('products')
       .select('*')
       .eq('id', req.params.id)
@@ -69,7 +80,7 @@ const getProductById = async (req, res) => {
 
     if (error || !product) return res.status(404).json({ message: 'Product not found' });
 
-    const { data: reviews } = await supabase.from('reviews').select('*').eq('product_id', product.id);
+    const { data: reviews } = await db.database.from('reviews').select('*').eq('product_id', product.id);
 
     res.json({
       ...product,
@@ -83,6 +94,14 @@ const getProductById = async (req, res) => {
       metaDescription: product.meta_description,
       youtubeUrl: product.youtube_url,
       image: product.image_url,
+      unit: product.unit,
+      minOrderQty: product.min_order_qty,
+      barcode: product.barcode,
+      slug: product.slug,
+      isPublished: product.is_published,
+      isCatalog: product.is_catalog,
+      isTodaysDeal: product.is_todays_deal,
+      isFeatured: product.is_featured,
       reviews: reviews || []
     });
   } catch (error) {
@@ -97,13 +116,13 @@ const deleteProduct = async (req, res) => {
   try {
     // If seller, check ownership
     if (req.user.role === 'seller') {
-      const { data: prod } = await supabase.from('products').select('user_id').eq('id', req.params.id).single();
+      const { data: prod } = await db.database.from('products').select('user_id').eq('id', req.params.id).single();
       if (!prod || prod.user_id !== req.user._id) {
         return res.status(403).json({ message: 'Not authorized to delete this product' });
       }
     }
 
-    const { error } = await supabase.from('products').delete().eq('id', req.params.id);
+    const { error } = await db.database.from('products').delete().eq('id', req.params.id);
     if (error) throw error;
     res.json({ message: 'Product removed' });
   } catch (error) {
@@ -116,7 +135,7 @@ const deleteProduct = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
   try {
-    const { data: product, error } = await supabase.from('products').insert({
+    const { data: product, error } = await db.database.from('products').insert({
       user_id: req.user._id,
       name: 'Sample Name',
       price: 0,
@@ -133,6 +152,14 @@ const createProduct = async (req, res) => {
       meta_description: '',
       tags: [],
       youtube_url: '',
+      unit: 'pc',
+      min_order_qty: 1,
+      barcode: '',
+      slug: '',
+      is_published: true,
+      is_catalog: true,
+      is_todays_deal: false,
+      is_featured: false,
     }).select().single();
 
     if (error) throw error;
@@ -149,13 +176,15 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   const {
     name, price, description, image, images, brand, category, countInStock, discountPercent,
-    isFlashSale, isDigital, digitalFileUrl, metaTitle, metaDescription, tags, youtubeUrl, flashSaleStart, flashSaleEnd
+    isFlashSale, isDigital, digitalFileUrl, metaTitle, metaDescription, tags, youtubeUrl, flashSaleStart, flashSaleEnd,
+    unit, minOrderQty, barcode, slug,
+    isPublished, isCatalog, isTodaysDeal, isFeatured
   } = req.body;
 
   try {
     // If seller, check ownership
     if (req.user.role === 'seller') {
-      const { data: prod } = await supabase.from('products').select('user_id').eq('id', req.params.id).single();
+      const { data: prod } = await db.database.from('products').select('user_id').eq('id', req.params.id).single();
       if (!prod || prod.user_id !== req.user._id) {
         return res.status(403).json({ message: 'Not authorized to update this product' });
       }
@@ -179,8 +208,16 @@ const updateProduct = async (req, res) => {
     if (youtubeUrl !== undefined) updateData.youtube_url = youtubeUrl;
     if (flashSaleStart !== undefined) updateData.flash_sale_start = flashSaleStart || null;
     if (flashSaleEnd !== undefined) updateData.flash_sale_end = flashSaleEnd || null;
+    if (unit !== undefined) updateData.unit = unit;
+    if (minOrderQty !== undefined) updateData.min_order_qty = minOrderQty;
+    if (barcode !== undefined) updateData.barcode = barcode;
+    if (slug !== undefined) updateData.slug = slug;
+    if (isPublished !== undefined) updateData.is_published = isPublished;
+    if (isCatalog !== undefined) updateData.is_catalog = isCatalog;
+    if (isTodaysDeal !== undefined) updateData.is_todays_deal = isTodaysDeal;
+    if (isFeatured !== undefined) updateData.is_featured = isFeatured;
 
-    const { data: product, error } = await supabase.from('products').update(updateData).eq('id', req.params.id).select().single();
+    const { data: product, error } = await db.database.from('products').update(updateData).eq('id', req.params.id).select().single();
     if (error) throw error;
     
     // Manage additional images in product_images table if needed, skipping for brevity or treating image_url as primary
@@ -199,7 +236,7 @@ const createProductReview = async (req, res) => {
 
   try {
     // Check if user purchased the product
-    const { data: orders } = await supabase
+    const { data: orders } = await db
       .from('orders')
       .select('id, order_items!inner(product_id)')
       .eq('user_id', req.user._id)
@@ -210,7 +247,7 @@ const createProductReview = async (req, res) => {
     }
 
     // Check if already reviewed
-    const { data: existingReview } = await supabase
+    const { data: existingReview } = await db
       .from('reviews')
       .select('id')
       .eq('user_id', req.user._id)
@@ -222,7 +259,7 @@ const createProductReview = async (req, res) => {
     }
 
     // Insert review
-    const { error: reviewError } = await supabase.from('reviews').insert({
+    const { error: reviewError } = await db.database.from('reviews').insert({
       product_id: req.params.id,
       user_id: req.user._id,
       name: req.user.name,
@@ -232,11 +269,11 @@ const createProductReview = async (req, res) => {
     if (reviewError) throw reviewError;
 
     // Recalculate rating
-    const { data: allReviews } = await supabase.from('reviews').select('rating').eq('product_id', req.params.id);
+    const { data: allReviews } = await db.database.from('reviews').select('rating').eq('product_id', req.params.id);
     const numReviews = allReviews.length;
     const avgRating = allReviews.reduce((acc, item) => item.rating + acc, 0) / numReviews;
 
-    await supabase.from('products').update({ rating: avgRating, num_reviews: numReviews }).eq('id', req.params.id);
+    await db.database.from('products').update({ rating: avgRating, num_reviews: numReviews }).eq('id', req.params.id);
 
     res.status(201).json({ message: 'Review added' });
   } catch (error) {
@@ -249,10 +286,10 @@ const createProductReview = async (req, res) => {
 // @access  Public
 const getRelatedProducts = async (req, res) => {
   try {
-    const { data: product } = await supabase.from('products').select('category').eq('id', req.params.id).single();
+    const { data: product } = await db.database.from('products').select('category').eq('id', req.params.id).single();
     if (!product) return res.status(404).json({ message: 'Product not found' });
 
-    const { data: related, error } = await supabase
+    const { data: related, error } = await db
       .from('products')
       .select('*')
       .neq('id', req.params.id)

@@ -1,23 +1,25 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@insforge/sdk';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+const apiUrl = process.env.API_BASE_URL;
+const apiKey = process.env.API_KEY;
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing Supabase URL or Key. Cannot initialize Supabase client.');
+if (!apiUrl || !apiKey) {
+  console.error('Missing InsForge URL or Key. Cannot initialize InsForge client.');
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
+export const db = createClient({
+  baseUrl: apiUrl || '',
+  anonKey: apiKey || ''
+});
 
-// Mock flag to true so controllers bypass mock logic during migration
 export let isMongoConnected = true;
 
 const connectDB = async () => {
-  if (supabaseUrl && supabaseKey) {
-    console.log(`Supabase connected: ${supabaseUrl}`);
+  if (apiUrl && apiKey) {
+    console.log(`InsForge connected: ${apiUrl}`);
   }
 };
 

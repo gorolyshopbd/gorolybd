@@ -19,6 +19,8 @@ import videoRoutes from './routes/videoRoutes.js';
 import payoutRoutes from './routes/payoutRoutes.js';
 import sellerSettingsRoutes from './routes/sellerSettingsRoutes.js';
 import sellerPackageRoutes from './routes/sellerPackageRoutes.js';
+import sellerSubscriptionRoutes from './routes/sellerSubscriptionRoutes.js';
+import rewardRoutes from './routes/rewardRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -49,6 +51,8 @@ app.use('/api/videos', videoRoutes);
 app.use('/api/payouts', payoutRoutes);
 app.use('/api/seller-settings', sellerSettingsRoutes);
 app.use('/api/seller-packages', sellerPackageRoutes);
+app.use('/api/seller-subscriptions', sellerSubscriptionRoutes);
+app.use('/api/rewards', rewardRoutes);
 
 // Serve static uploads folder
 const __filename = fileURLToPath(import.meta.url);

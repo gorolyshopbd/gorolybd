@@ -1,8 +1,8 @@
-import { supabase } from '../config/db.js';
+import { db } from '../config/db.js';
 
 export const getActiveBanners = async (req, res) => {
   try {
-    const { data: banners, error } = await supabase.from('banners').select('*').eq('is_active', true).order('sort_order', { ascending: true });
+    const { data: banners, error } = await db.database.from('banners').select('*').eq('is_active', true).order('sort_order', { ascending: true });
     if (error) throw error;
     
     const formatted = banners.map(b => ({
@@ -20,7 +20,7 @@ export const getActiveBanners = async (req, res) => {
 
 export const getBanners = async (req, res) => {
   try {
-    const { data: banners, error } = await supabase.from('banners').select('*').order('sort_order', { ascending: true });
+    const { data: banners, error } = await db.database.from('banners').select('*').order('sort_order', { ascending: true });
     if (error) throw error;
     
     const formatted = banners.map(b => ({
@@ -40,7 +40,7 @@ export const createBanner = async (req, res) => {
   try {
     const { title, subtitle, image, link, isActive, order } = req.body;
     
-    const { data: banner, error } = await supabase.from('banners').insert({
+    const { data: banner, error } = await db.database.from('banners').insert({
       title,
       subtitle: subtitle || '',
       image_url: image || '',
@@ -68,7 +68,7 @@ export const updateBanner = async (req, res) => {
     if (isActive !== undefined) updateData.is_active = isActive;
     if (order !== undefined) updateData.sort_order = order;
     
-    const { data: banner, error } = await supabase.from('banners').update(updateData).eq('id', req.params.id).select().single();
+    const { data: banner, error } = await db.database.from('banners').update(updateData).eq('id', req.params.id).select().single();
     
     if (error || !banner) return res.status(404).json({ message: 'Banner not found' });
     res.json({ ...banner, _id: banner.id });
@@ -79,7 +79,7 @@ export const updateBanner = async (req, res) => {
 
 export const deleteBanner = async (req, res) => {
   try {
-    const { error } = await supabase.from('banners').delete().eq('id', req.params.id);
+    const { error } = await db.database.from('banners').delete().eq('id', req.params.id);
     if (error) throw error;
     res.json({ success: true });
   } catch (error) {

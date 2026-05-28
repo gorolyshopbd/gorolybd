@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { supabase } from '../config/db.js';
+import { db } from '../config/db.js';
 
 const protect = async (req, res, next) => {
   let token;
@@ -13,7 +13,7 @@ const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
 
-      const { data: user, error } = await supabase
+      const { data: user, error } = await db.database
         .from('users')
         .select('*')
         .eq('id', decoded.id)

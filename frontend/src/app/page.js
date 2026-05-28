@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useContext } from 'react';
 import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
+import { useLanguage } from '@/context/LanguageContext';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import FeatureStrip from '@/components/FeatureStrip';
@@ -26,6 +27,7 @@ import { useRouter } from 'next/navigation';
 export default function Storefront() {
   const router = useRouter();
   const { user, fetchProducts, products, addToCart, currencySymbol } = useContext(ShopContext);
+  const { lang, t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState('home'); // home, shop, categories, wishlist, admin, dashboard
   const [searchQuery, setSearchQuery] = useState('');
@@ -213,9 +215,9 @@ export default function Storefront() {
 
             {/* Breadcrumb */}
             <div className="flex items-center gap-1.5 text-sm mb-5">
-              <button onClick={() => setActiveTab('home')} className="text-[#FF6600] hover:underline font-semibold">Home</button>
+              <button onClick={() => setActiveTab('home')} className="text-[#FF6600] hover:underline font-semibold">{t('home')}</button>
               <span className="text-slate-400">›</span>
-              <span className="text-slate-600 font-medium">{selectedCategory || 'All Products'}</span>
+              <span className="text-slate-600 font-medium">{selectedCategory || t('allProducts')}</span>
             </div>
 
             <div className="flex gap-6 items-start">
@@ -227,9 +229,9 @@ export default function Storefront() {
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2 font-extrabold text-slate-800 text-sm">
                     <SlidersHorizontal size={15} className="text-[#FF6600]" />
-                    Filters
+                    {t('filters')}
                   </div>
-                  <button onClick={resetShopFilters} className="text-xs text-[#FF6600] font-bold hover:underline">Reset</button>
+                  <button onClick={resetShopFilters} className="text-xs text-[#FF6600] font-bold hover:underline">{t('reset')}</button>
                 </div>
 
                 {/* Categories filter */}
@@ -238,7 +240,7 @@ export default function Storefront() {
                     onClick={() => toggleFilter('categories')}
                     className="w-full flex items-center justify-between px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
                   >
-                    <span>Categories</span>
+                    <span>{t('categories')}</span>
                     {openFilters.categories ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
                   {openFilters.categories && (
@@ -247,7 +249,7 @@ export default function Storefront() {
                         onClick={() => setSelectedCategory('')}
                         className={`text-left text-sm px-3 py-2 rounded-lg transition font-semibold ${!selectedCategory ? 'bg-[#FF6600] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
                       >
-                        All Categories
+                        {t('allCategories')}
                       </button>
                       {shopCategories.map((cat) => (
                         <button
@@ -268,7 +270,7 @@ export default function Storefront() {
                     onClick={() => toggleFilter('brand')}
                     className="w-full flex items-center justify-between px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
                   >
-                    <span>Brand</span>
+                    <span>{t('brand')}</span>
                     {openFilters.brand ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
                   {openFilters.brand && (
@@ -277,7 +279,7 @@ export default function Storefront() {
                         onClick={() => setSelectedBrand('')}
                         className={`text-left text-sm px-3 py-2 rounded-lg transition font-semibold ${!selectedBrand ? 'bg-[#FF6600] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
                       >
-                        All Brands
+                        {t('allBrands')}
                       </button>
                       {shopBrands.map((b) => (
                         <button
@@ -298,7 +300,7 @@ export default function Storefront() {
                     onClick={() => toggleFilter('price')}
                     className="w-full flex items-center justify-between px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
                   >
-                    <span>Price</span>
+                    <span>{t('price')}</span>
                     {openFilters.price ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
                   {openFilters.price && (
@@ -313,11 +315,11 @@ export default function Storefront() {
                         className="w-full accent-[#FF6600]"
                       />
                       <div className="flex gap-2">
-                        <input type="number" placeholder="Min" value={priceRange[0]}
+                        <input type="number" placeholder={lang === 'bn' ? 'সর্বনিম্ন' : 'Min'} value={priceRange[0]}
                           onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
                           className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#FF6600]"
                         />
-                        <input type="number" placeholder="Max" value={priceRange[1]}
+                        <input type="number" placeholder={lang === 'bn' ? 'সর্বোচ্চ' : 'Max'} value={priceRange[1]}
                           onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
                           className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#FF6600]"
                         />
@@ -332,7 +334,7 @@ export default function Storefront() {
                     onClick={() => toggleFilter('rating')}
                     className="w-full flex items-center justify-between px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
                   >
-                    <span>Rating</span>
+                    <span>{t('rating')}</span>
                     {openFilters.rating ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
                   {openFilters.rating && (
@@ -344,7 +346,7 @@ export default function Storefront() {
                           className={`text-left px-3 py-2 rounded-lg transition flex items-center gap-2 ${minRating === r ? 'bg-[#FF6600] text-white' : 'hover:bg-slate-50 text-slate-600'}`}
                         >
                           {r === 0 ? (
-                            <span className="text-sm font-semibold">All Ratings</span>
+                            <span className="text-sm font-semibold">{t('allRatings')}</span>
                           ) : (
                             <>
                               <div className="flex">
@@ -352,7 +354,7 @@ export default function Storefront() {
                                   <Star key={i} size={11} fill={i < r ? 'currentColor' : 'none'} className={minRating === r ? 'text-white' : 'text-amber-400'} />
                                 ))}
                               </div>
-                              <span className="text-xs font-semibold">& above</span>
+                              <span className="text-xs font-semibold">{t('above')}</span>
                             </>
                           )}
                         </button>
@@ -381,8 +383,8 @@ export default function Storefront() {
                         <div className="w-full h-full bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 flex items-center justify-center relative overflow-hidden">
                           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #FF6600 0%, transparent 50%), radial-gradient(circle at 80% 50%, #3b82f6 0%, transparent 50%)' }} />
                           <div className="text-center z-10">
-                            <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1">Browse</div>
-                            <div className="text-white text-2xl font-extrabold">{selectedCategory || 'All Products'}</div>
+                            <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1">{lang === 'bn' ? 'ব্রাউজ' : 'Browse'}</div>
+                            <div className="text-white text-2xl font-extrabold">{selectedCategory || t('allProducts')}</div>
                           </div>
                         </div>
                       )}
@@ -390,7 +392,7 @@ export default function Storefront() {
                       {activeCat?.image && (
                         <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center px-6">
                           <div>
-                            <div className="text-white/60 text-xs font-bold uppercase tracking-widest mb-1">Category</div>
+                            <div className="text-white/60 text-xs font-bold uppercase tracking-widest mb-1">{lang === 'bn' ? 'ক্যাটাগরি' : 'Category'}</div>
                             <div className="text-white text-2xl font-extrabold drop-shadow">{selectedCategory}</div>
                           </div>
                         </div>
@@ -402,8 +404,8 @@ export default function Storefront() {
                 {/* Sort bar + count + view toggle */}
                 <div className="flex items-center justify-between mb-4 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-xs">
                   <div>
-                    <span className="font-extrabold text-slate-800 text-sm">All Products</span>
-                    <span className="ml-2 text-xs font-semibold text-[#FF6600]">Showing {sortedProducts.length} results</span>
+                    <span className="font-extrabold text-slate-800 text-sm">{t('allProducts')}</span>
+                    <span className="ml-2 text-xs font-semibold text-[#FF6600]">{t('showing')} {sortedProducts.length} {t('results')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <select
@@ -411,10 +413,10 @@ export default function Storefront() {
                       onChange={(e) => setSortOrder(e.target.value)}
                       className="text-xs font-bold border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#FF6600] bg-white"
                     >
-                      <option value="newest">Newest</option>
-                      <option value="oldest">Oldest</option>
-                      <option value="price_asc">Price: Low → High</option>
-                      <option value="price_desc">Price: High → Low</option>
+                      <option value="newest">{t('newest')}</option>
+                      <option value="oldest">{t('oldest')}</option>
+                      <option value="price_asc">{t('priceLowHigh')}</option>
+                      <option value="price_desc">{t('priceHighLow')}</option>
                     </select>
                     <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
                       <button onClick={() => setViewMode('grid')} className={`p-2 transition ${viewMode === 'grid' ? 'bg-[#FF6600] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>
@@ -430,8 +432,8 @@ export default function Storefront() {
                 {/* Products */}
                 {visibleProducts.length === 0 ? (
                   <div className="text-center py-16 space-y-4 bg-white rounded-2xl border border-slate-100">
-                    <p className="text-slate-400 font-medium">No products found matching your filter criteria.</p>
-                    <button onClick={resetShopFilters} className="px-4 py-2 bg-[#FF6600] text-white font-bold rounded-lg text-sm">Reset Filters</button>
+                    <p className="text-slate-400 font-medium">{t('noProducts')}</p>
+                    <button onClick={resetShopFilters} className="px-4 py-2 bg-[#FF6600] text-white font-bold rounded-lg text-sm">{t('resetFilters')}</button>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-6">
@@ -450,7 +452,7 @@ export default function Storefront() {
                                   <Heart size={14} fill={isWish ? 'currentColor' : 'none'} />
                                 </button>
                                 <img src={getImageUrl(product.image)} alt={product.name} onClick={() => router.push(`/product/${product._id}`)} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-500 cursor-pointer" />
-                                <button onClick={() => setSelectedProduct(product)} className="absolute bottom-2 right-2 p-1.5 bg-white/90 rounded-lg shadow-xs hover:bg-white transition z-10 text-slate-500 hover:text-[#FF6600]" title="Quick View">
+                                <button onClick={() => setSelectedProduct(product)} className="absolute bottom-2 right-2 p-1.5 bg-white/90 rounded-lg shadow-xs hover:bg-white transition z-10 text-slate-500 hover:text-[#FF6600]" title={t('quickView')}>
                                   <Eye size={13} />
                                 </button>
                               </div>
@@ -468,7 +470,7 @@ export default function Storefront() {
                                     <span className="text-sm font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</span>
                                     {product.discountPercent > 0 && <span className="text-xs text-slate-400 line-through">{formatPrice(product.price, currencySymbol)}</span>}
                                   </div>
-                                  <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="px-2.5 py-1.5 bg-[#FF6600] hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition">Add</button>
+                                  <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="px-2.5 py-1.5 bg-[#FF6600] hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition">{t('add')}</button>
                                 </div>
                               </div>
                             </div>
@@ -497,16 +499,16 @@ export default function Storefront() {
                                   <div className="flex text-amber-400">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={10} fill={i < Math.floor(product.rating || 5) ? 'currentColor' : 'none'} />)}</div>
                                   <span className="text-slate-400 text-[10px]">({product.numReviews || 12})</span>
                                 </div>
-                                <button onClick={() => setSelectedProduct(product)} className="mt-1.5 text-xs font-bold text-[#FF6600] border border-[#FF6600] px-3 py-1 rounded-lg hover:bg-[#FF6600] hover:text-white transition">Quick View</button>
+                                <button onClick={() => setSelectedProduct(product)} className="mt-1.5 text-xs font-bold text-[#FF6600] border border-[#FF6600] px-3 py-1 rounded-lg hover:bg-[#FF6600] hover:text-white transition">{t('quickView')}</button>
                               </div>
                               <div className="flex flex-col items-end gap-2 flex-shrink-0">
                                 <div className="text-right">
                                   <div className="text-lg font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</div>
                                   {product.discountPercent > 0 && <div className="text-xs text-slate-400 line-through">{formatPrice(product.price, currencySymbol)}</div>}
                                 </div>
-                                <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="px-4 py-2 bg-[#FF6600] hover:bg-orange-600 text-white text-xs font-extrabold rounded-xl transition shadow-md shadow-orange-500/20">Add To Cart</button>
+                                <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="px-4 py-2 bg-[#FF6600] hover:bg-orange-600 text-white text-xs font-extrabold rounded-xl transition shadow-md shadow-orange-500/20">{t('addToCart')}</button>
                                 <button onClick={() => handleAddToWishlist(product)} className={`text-xs font-semibold flex items-center gap-1 ${isWish ? 'text-red-500' : 'text-slate-400 hover:text-red-500'} transition`}>
-                                  <Heart size={12} fill={isWish ? 'currentColor' : 'none'} /> Wishlist
+                                  <Heart size={12} fill={isWish ? 'currentColor' : 'none'} /> {t('wishlist')}
                                 </button>
                               </div>
                             </div>
@@ -520,7 +522,7 @@ export default function Storefront() {
                       <button onClick={handleLoadMore} disabled={loadMoreLoading}
                         className="px-8 py-3 bg-[#FF6600] hover:bg-orange-600 text-white font-extrabold rounded-xl transition shadow-md flex items-center gap-2 text-sm"
                       >
-                        {loadMoreLoading ? <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>Loading...</> : 'Load More Products'}
+                        {loadMoreLoading ? <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>{t('loading')}</> : t('loadMore')}
                       </button>
                     )}
                   </div>
@@ -539,10 +541,10 @@ export default function Storefront() {
 
         {activeTab === 'wishlist' && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-            <h1 className="text-2xl font-extrabold text-slate-850">Your Wishlist</h1>
+            <h1 className="text-2xl font-extrabold text-slate-850">{t('yourWishlist')}</h1>
             {wishlist.length === 0 ? (
               <div className="text-center py-16 text-slate-400 font-medium bg-white rounded-3xl border border-slate-100">
-                Your wishlist is empty. Tap the heart icons on products to save them!
+                {t('wishlistEmpty')}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -585,7 +587,7 @@ export default function Storefront() {
                             onClick={() => addToCart(product, 1)}
                             className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition"
                           >
-                            Add to Cart
+                            {t('addToCart')}
                           </button>
                         </div>
                       </div>

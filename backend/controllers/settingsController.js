@@ -1,9 +1,9 @@
-import { supabase } from '../config/db.js';
+import { db } from '../config/db.js';
 
 export const getSettings = async (req, res) => {
   try {
     // We assume there's always one row with id 1
-    let { data: settings, error } = await supabase.from('settings').select('*').limit(1).single();
+    let { data: settings, error } = await db.database.from('settings').select('*').limit(1).single();
     
     if (!settings) {
       // Default settings if empty
@@ -28,11 +28,12 @@ export const getSettings = async (req, res) => {
         header_logo: '',
         footer_logo: '',
         top_bar_helpline: '8801234567890',
-        top_bar_store_link: '#',
-        top_bar_play_store_link: '#',
-        top_bar_app_store_link: '#'
+        top_bar_store_link: 'https://maps.google.com',
+        top_bar_play_store_link: 'https://play.google.com',
+        top_bar_app_store_link: 'https://apps.apple.com',
+        withdraw_min_amount: 500
       };
-      const { data: newSettings } = await supabase.from('settings').insert(defaultSettings).select().single();
+      const { data: newSettings } = await db.database.from('settings').insert(defaultSettings).select().single();
       settings = newSettings;
     }
     
@@ -60,7 +61,13 @@ export const getSettings = async (req, res) => {
       topBarHelpline: settings.top_bar_helpline,
       topBarStoreLink: settings.top_bar_store_link,
       topBarPlayStoreLink: settings.top_bar_play_store_link,
-      topBarAppStoreLink: settings.top_bar_app_store_link
+      topBarAppStoreLink: settings.top_bar_app_store_link,
+      withdraw_min_amount: settings.withdraw_min_amount,
+      twilioSid: settings.twilio_sid || '',
+      twilioAuthToken: settings.twilio_auth_token || '',
+      twilioPhoneNumber: settings.twilio_phone_number || '',
+      greenwebApiKey: settings.greenweb_api_key || '',
+      greenwebSenderId: settings.greenweb_sender_id || ''
     };
     
     res.json(formatted);
@@ -94,18 +101,24 @@ export const updateSettings = async (req, res) => {
       top_bar_helpline: req.body.topBarHelpline,
       top_bar_store_link: req.body.topBarStoreLink,
       top_bar_play_store_link: req.body.topBarPlayStoreLink,
-      top_bar_app_store_link: req.body.topBarAppStoreLink
+      top_bar_app_store_link: req.body.topBarAppStoreLink,
+      withdraw_min_amount: req.body.withdraw_min_amount,
+      twilio_sid: req.body.twilioSid,
+      twilio_auth_token: req.body.twilioAuthToken,
+      twilio_phone_number: req.body.twilioPhoneNumber,
+      greenweb_api_key: req.body.greenwebApiKey,
+      greenweb_sender_id: req.body.greenwebSenderId
     };
 
     // Remove undefined values
     Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
 
-    const { data: settings, error } = await supabase.from('settings').select('id').limit(1).single();
+    const { data: settings, error } = await db.database.from('settings').select('id').limit(1).single();
     
     if (settings) {
-      await supabase.from('settings').update(updateData).eq('id', settings.id);
+      await db.database.from('settings').update(updateData).eq('id', settings.id);
     } else {
-      await supabase.from('settings').insert(updateData);
+      await db.database.from('settings').insert(updateData);
     }
     
     res.json({ message: 'Settings updated successfully' });

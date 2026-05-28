@@ -91,6 +91,14 @@ CREATE TABLE IF NOT EXISTS products (
   meta_title         TEXT DEFAULT '',
   meta_description   TEXT DEFAULT '',
   tags               TEXT[] DEFAULT '{}',
+  unit               TEXT DEFAULT 'pc',
+  min_order_qty      INT DEFAULT 1,
+  barcode            TEXT DEFAULT '',
+  slug               TEXT DEFAULT '',
+  is_published       BOOLEAN DEFAULT true,
+  is_catalog         BOOLEAN DEFAULT true,
+  is_todays_deal     BOOLEAN DEFAULT false,
+  is_featured        BOOLEAN DEFAULT false,
   created_at         TIMESTAMPTZ DEFAULT NOW(),
   updated_at         TIMESTAMPTZ DEFAULT NOW()
 );
