@@ -61,15 +61,15 @@ export default function Storefront() {
   // Load products, branding, brands and categories on mount
   useEffect(() => {
     fetchProducts();
-    fetch('http://localhost:5000/api/settings/public')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/settings/public`)
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d) setBranding(d); })
       .catch(() => {});
-    fetch('http://localhost:5000/api/brands')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/brands`)
       .then((r) => r.ok ? r.json() : [])
       .then((d) => setShopBrands(d || []))
       .catch(() => {});
-    fetch('http://localhost:5000/api/categories')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/categories`)
       .then((r) => r.ok ? r.json() : [])
       .then((d) => setShopCategories(d || []))
       .catch(() => {});
