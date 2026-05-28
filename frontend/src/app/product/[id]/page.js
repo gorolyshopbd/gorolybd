@@ -211,7 +211,7 @@ export default function ProductDetailPage() {
                       />
                     </div>
                   </div>
-                  {allImages.length > 1 && (
+                  {allImages.length > 0 && (
                     <div className="flex gap-2 overflow-x-auto pb-1">
                       {allImages.map((img, idx) => (
                         <button

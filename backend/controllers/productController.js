@@ -224,8 +224,19 @@ const updateProduct = async (req, res) => {
 
     const { data: product, error } = await db.database.from('products').update(updateData).eq('id', req.params.id).select().single();
     if (error) throw error;
-    
-    // Manage additional images in product_images table if needed, skipping for brevity or treating image_url as primary
+
+    if (images !== undefined) {
+      await db.database.from('product_images').delete().eq('product_id', req.params.id);
+      if (Array.isArray(images) && images.length > 0) {
+        const imgRows = images.filter(Boolean).map((url, i) => ({
+          product_id: req.params.id,
+          image_url: url,
+          sort_order: i,
+        }));
+        const { error: imgErr } = await db.database.from('product_images').insert(imgRows);
+        if (imgErr) console.error('Failed to save product images:', imgErr);
+      }
+    }
 
     res.json({ ...product, _id: product.id });
   } catch (error) {
