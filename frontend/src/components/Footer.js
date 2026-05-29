@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Mail, Phone, MapPin, Home, ShoppingBag, LayoutGrid, Heart, ShoppingCart, Truck, RotateCcw, ShieldCheck, Download, Smartphone, PlayCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Home, ShoppingBag, LayoutGrid, Heart, ShoppingCart, Download, Smartphone, PlayCircle } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -56,28 +56,28 @@ export default function Footer({ onTabChange, onCartClick }) {
       <footer className="bg-slate-950 text-white border-t border-slate-900 pb-20 md:pb-0">
         
         {/* Brand & Newsletter Banner Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-b border-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 border-b border-slate-900">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
             
             <div className="md:col-span-6 space-y-3">
-              <h3 className="text-2xl sm:text-3xl font-black text-white">{s.footerNewsletterTitle || 'Subscribe to our newsletter'}</h3>
+              <h3 className="text-lg sm:text-xl font-black text-white">{s.footerNewsletterTitle || 'Subscribe to our newsletter'}</h3>
               <p className="text-sm font-bold text-white">{s.footerNewsletterSubtitle || 'Get the latest updates on new products, flash sales, and exclusive coupons.'}</p>
             </div>
 
             <div className="md:col-span-6 flex flex-col sm:flex-row gap-3">
-              <input type="email" placeholder="Enter your email" className="flex-1 px-4 py-3.5 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-slate-900/50 transition duration-300" />
-              <button onClick={() => alert('Thanks for subscribing!')} className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-sm transition duration-300 shadow-lg shadow-blue-600/25">Subscribe</button>
+              <input type="email" placeholder="Enter your email" className="flex-1 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-slate-900/50 transition duration-300" />
+              <button onClick={() => alert('Thanks for subscribing!')} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-sm transition duration-300 shadow-lg shadow-blue-600/25">Subscribe</button>
             </div>
 
           </div>
         </div>
 
         {/* Main Footer Links */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Col 1: Shopio Info & Socials */}
-          <div className="space-y-5">
-            <h2 className="text-2xl font-black text-white flex items-center gap-1.5">
+          <div className="space-y-3">
+            <h2 className="text-lg font-black text-white flex items-center gap-1.5">
               {s.footerLogo ? (
                 <img src={s.footerLogo} alt={s.siteTitle || 'Shopio'} className="h-8 w-auto object-contain" />
               ) : (
@@ -96,20 +96,20 @@ export default function Footer({ onTabChange, onCartClick }) {
               </div>
             )}
             
-            <div className="flex flex-wrap gap-2.5 pt-2">
-              <a href={s.footerFacebook || "https://facebook.com"} target="_blank" rel="noreferrer" className="p-3 bg-slate-900 rounded-xl hover:bg-blue-600 text-white transition duration-300" title="Facebook">
+            <div className="flex flex-wrap gap-2 pt-1">
+              <a href={s.footerFacebook || "https://facebook.com"} target="_blank" rel="noreferrer" className="p-2 bg-slate-900 rounded-lg hover:bg-blue-600 text-white transition duration-300" title="Facebook">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
               </a>
-              <a href={s.footerTwitter || "https://x.com"} target="_blank" rel="noreferrer" className="p-3 bg-slate-900 rounded-xl hover:bg-zinc-800 text-white transition duration-300" title="X (Twitter)">
+              <a href={s.footerTwitter || "https://x.com"} target="_blank" rel="noreferrer" className="p-2 bg-slate-900 rounded-lg hover:bg-zinc-800 text-white transition duration-300" title="X (Twitter)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
               </a>
-              <a href={s.footerTiktok || "https://tiktok.com"} target="_blank" rel="noreferrer" className="p-3 bg-slate-900 rounded-xl hover:bg-rose-600 text-white transition duration-300" title="TikTok">
+              <a href={s.footerTiktok || "https://tiktok.com"} target="_blank" rel="noreferrer" className="p-2 bg-slate-900 rounded-lg hover:bg-rose-600 text-white transition duration-300" title="TikTok">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12.83 2.53 1.18 3.81 1.28v3.4c-1.35-.07-2.68-.53-3.7-1.46V13c0 2.2-.6 4.47-2.12 5.92-1.6 1.64-4.04 2.23-6.21 1.78-2.6-.45-4.73-2.68-5.07-5.3-.4-3.08 1.54-6.09 4.54-6.73.9-.17 1.83-.1 2.72.16v3.48c-.68-.26-1.47-.32-2.15-.05-1.12.4-1.84 1.56-1.74 2.75.08 1.17.99 2.12 2.15 2.15 1.25.06 2.37-.9 2.45-2.15.02-1.07.01-8.15.01-9.22z"/></svg>
               </a>
-              <a href={s.footerLinkedin || "https://linkedin.com"} target="_blank" rel="noreferrer" className="p-3 bg-slate-900 rounded-xl hover:bg-blue-700 text-white transition duration-300" title="LinkedIn">
+              <a href={s.footerLinkedin || "https://linkedin.com"} target="_blank" rel="noreferrer" className="p-2 bg-slate-900 rounded-lg hover:bg-blue-700 text-white transition duration-300" title="LinkedIn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
               </a>
-              <a href={s.footerYoutube || "https://youtube.com"} target="_blank" rel="noreferrer" className="p-3 bg-slate-900 rounded-xl hover:bg-red-600 text-white transition duration-300" title="YouTube">
+              <a href={s.footerYoutube || "https://youtube.com"} target="_blank" rel="noreferrer" className="p-2 bg-slate-900 rounded-lg hover:bg-red-600 text-white transition duration-300" title="YouTube">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
               </a>
             </div>
@@ -117,8 +117,8 @@ export default function Footer({ onTabChange, onCartClick }) {
 
           {/* Col 2: Information */}
           <div className="space-y-4">
-            <h4 className="text-lg font-black text-white uppercase tracking-wider">Information</h4>
-            <ul className="space-y-3.5 text-base font-black text-white">
+            <h4 className="text-sm font-black text-white uppercase tracking-wider">Information</h4>
+            <ul className="space-y-2 text-sm font-bold text-white">
               {pages.length > 0 ? (
                 pages.map((page) => (
                   <li key={page.slug}>
@@ -145,38 +145,33 @@ export default function Footer({ onTabChange, onCartClick }) {
             </ul>
           </div>
 
-          {/* Col 3: Delivery Info */}
+          {/* Col 3: Goroly Shop Seller */}
           <div className="space-y-4">
-            <h4 className="text-lg font-black text-white uppercase tracking-wider">Delivery Information</h4>
-            <ul className="space-y-4 text-sm font-bold text-white">
-              <li className="flex gap-3 items-start">
-                <Truck size={20} className="text-blue-500 mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="text-white font-extrabold text-sm">Fast Home Delivery</div>
-                  <div className="text-xs text-white mt-0.5">Inside Dhaka: 2-3 Days<br />Outside Dhaka: 3-5 Days</div>
-                </div>
-              </li>
-              <li className="flex gap-3 items-start">
-                <RotateCcw size={20} className="text-amber-500 mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="text-white font-extrabold text-sm">Easy Returns</div>
-                  <div className="text-xs text-white mt-0.5">7-day replacement guarantee on defective items.</div>
-                </div>
-              </li>
-              <li className="flex gap-3 items-start">
-                <ShieldCheck size={20} className="text-emerald-500 mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="text-white font-extrabold text-sm">100% Original Products</div>
-                  <div className="text-xs text-white mt-0.5">Sourced directly from verified brands.</div>
-                </div>
-              </li>
+            <h4 className="text-sm font-black text-white uppercase tracking-wider">Goroly Shop Seller</h4>
+            <ul className="space-y-2 text-sm font-bold text-white">
+              {[
+                { label: 'Become A Seller', tab: 'page-become-a-seller' },
+                { label: 'Seller Policy', tab: 'page-seller-policy' },
+                { label: 'Product Policy', tab: 'page-product-policy' },
+                { label: 'Pickup & Delivery Policy', tab: 'page-pickup-delivery-policy' },
+                { label: 'Seller Exchange & Return Policy', tab: 'page-seller-exchange-return-policy' },
+              ].map((item) => (
+                <li key={item.tab}>
+                  <button
+                    onClick={() => onTabChange && onTabChange(item.tab)}
+                    className="hover:text-blue-500 hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
+                  >
+                    &rsaquo; {item.label}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Col 4: Support & App Download */}
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <h4 className="text-lg font-black text-white uppercase tracking-wider">Customer Support</h4>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <h4 className="text-sm font-black text-white uppercase tracking-wider">Customer Support</h4>
               <ul className="space-y-3 text-sm font-bold text-white">
                 <li className="flex items-center gap-2.5 text-white"><Mail size={16} className="text-blue-500 flex-shrink-0" /><span>{s.footerEmail || 'support@shopio.com'}</span></li>
                 <li className="flex items-center gap-2.5 text-white"><Phone size={16} className="text-blue-500 flex-shrink-0" /><span>{s.footerPhone || '+880 1712-345678'}</span></li>
@@ -227,7 +222,7 @@ export default function Footer({ onTabChange, onCartClick }) {
         </div>
 
         {/* Payment Gateway Badges Footer */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-slate-900 flex flex-col md:flex-row items-center justify-between gap-6 text-sm font-bold text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 border-t border-slate-900 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-bold text-white">
           <div className="text-center md:text-left">{s.footerCopyright || '© 2026 Shopio BD. All rights reserved.'}</div>
           
           {/* Visual Payment Gateway Badges */}
