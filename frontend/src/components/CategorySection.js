@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Shirt, Laptop, Carrot, Sparkles, Watch, Dumbbell, BookOpen, LayoutGrid } from 'lucide-react';
 import { getImageUrl } from '@/context/ShopContext';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const iconMap = {
   Fashion: Shirt, Electronics: Laptop, Grocery: Carrot, Beauty: Sparkles,

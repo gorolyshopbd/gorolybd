@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, User, Bot } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);

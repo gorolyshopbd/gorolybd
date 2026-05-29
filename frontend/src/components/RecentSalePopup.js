@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
 import { getImageUrl } from '@/context/ShopContext';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const names = ['John D.', 'Sarah M.', 'Ahmed K.', 'Lisa W.', 'Rahim H.', 'Maria G.', 'David P.', 'Sara J.'];
 const items = ['Smart Watch', 'Headphones', 'Running Shoes', 'Perfume', 'Handbag', 'Jacket', 'Sunglasses', 'T-Shirt'];

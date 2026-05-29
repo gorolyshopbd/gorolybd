@@ -15,7 +15,7 @@ export default function BecomeSellerPage({ onBackToHome, onAuthClick }) {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleAuthSubmit = async (e) => {
     e.preventDefault();

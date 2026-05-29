@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Gift } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function OfferPopup() {
   const [settings, setSettings] = useState(null);

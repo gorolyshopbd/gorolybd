@@ -4,3 +4,7 @@ node_modules
 .env.production
 .next
 .insforge
+diff.txt
+edits.json
+test.js
+backend/test-login.js

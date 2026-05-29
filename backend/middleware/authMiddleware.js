@@ -11,7 +11,7 @@ const protect = async (req, res, next) => {
     try {
       console.log("AUTH HEADER:", req.headers.authorization);
       token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       const { data: user, error } = await db.database
         .from('users')

@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { ShoppingBag, Search, User, Heart, Menu, X, LogOut, Sun, Moon, ChevronDown, Zap, MapPin, GitCompare, Truck, PhoneCall } from 'lucide-react';
 import CompareModal from './CompareModal';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Header({ onCartClick, onAuthClick, onSearchChange, currentSearch, onTabChange, activeTab }) {
   const { user, logout, cartItems, compareList = [] } = useContext(ShopContext);

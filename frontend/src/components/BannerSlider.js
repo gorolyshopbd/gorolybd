@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { getImageUrl } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function BannerSlider({ onShopClick }) {
   const [banners, setBanners] = useState([]);

@@ -5,7 +5,7 @@ import { createClient } from '@insforge/sdk';
 
 export const ShopContext = createContext();
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const BASE_URL = API_URL.replace('/api', '');
 
 export const insforge = createClient({
