@@ -1,4 +1,4 @@
-import { createClient } from '@insforge/sdk';
+import { createClient, createAdminClient } from '@insforge/sdk';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -10,10 +10,12 @@ if (!apiUrl || !apiKey) {
   console.error('Missing InsForge URL or Key. Cannot initialize InsForge client.');
 }
 
-export const db = createClient({
+export const db = createAdminClient({
   baseUrl: apiUrl || '',
-  anonKey: apiKey || ''
+  apiKey: apiKey || ''
 });
+
+export const insforgeAdmin = db;
 
 export let isMongoConnected = true;
 
