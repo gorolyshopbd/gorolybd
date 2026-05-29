@@ -3,6 +3,6 @@ node_modules
 .gitignore
 .env
 .env.local
-.env.production
+# .env.production  (needed at build time for NEXT_PUBLIC_* vars)
 *.md
 .next
