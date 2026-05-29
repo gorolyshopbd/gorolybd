@@ -17,5 +17,12 @@ jobs:
           script: |
             cd /opt/shopio
             git pull
+            cat > frontend/.env.production << 'ENVEOF'
+            NEXT_PUBLIC_API_URL=${{ secrets.VITE_API_URL }}
+            NEXT_PUBLIC_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}
+            NEXT_PUBLIC_API_KEY=${{ secrets.VITE_API_KEY }}
+            NEXT_PUBLIC_INSFORGE_URL=${{ secrets.INSFORGE_URL }}
+            NEXT_PUBLIC_INSFORGE_ANON_KEY=${{ secrets.INSFORGE_ANON_KEY }}
+            ENVEOF
             docker compose up -d --build
             docker system prune -af
