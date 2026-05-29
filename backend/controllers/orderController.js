@@ -24,7 +24,7 @@ const addOrderItems = async (req, res) => {
 
   try {
     // 1. Create the order
-    const { data: order, error: orderError } = await db
+    const { data: order, error: orderError } = await db.database
       .from('orders')
       .insert({
         user_id: req.user._id,
@@ -88,7 +88,7 @@ const addOrderItems = async (req, res) => {
 // @access  Private
 const getOrderById = async (req, res) => {
   try {
-    const { data: order, error } = await db
+    const { data: order, error } = await db.database
       .from('orders')
       .select(`
         *,
@@ -147,7 +147,7 @@ const updateOrderStatus = async (req, res) => {
       updateData.courier_status = 'Booked';
     }
 
-    const { data: order, error } = await db
+    const { data: order, error } = await db.database
       .from('orders')
       .update(updateData)
       .eq('id', req.params.id)
@@ -167,7 +167,7 @@ const updateOrderStatus = async (req, res) => {
 // @access  Private
 const updateOrderToPaid = async (req, res) => {
   try {
-    const { data: order, error } = await db
+    const { data: order, error } = await db.database
       .from('orders')
       .update({
         is_paid: true,
@@ -194,7 +194,7 @@ const updateOrderToPaid = async (req, res) => {
 // @access  Private
 const getMyOrders = async (req, res) => {
   try {
-    const { data: orders, error } = await db
+    const { data: orders, error } = await db.database
       .from('orders')
       .select('*')
       .eq('user_id', req.user._id)

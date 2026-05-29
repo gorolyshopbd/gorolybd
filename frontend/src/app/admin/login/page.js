@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Mail, Lock, Eye, EyeOff, ArrowLeft, ShieldCheck, Loader2,
-  AlertCircle, CheckCircle2, Info, Copy, CopyCheck, TriangleAlert,
+  AlertCircle, CheckCircle2, TriangleAlert,
   Keyboard, Sparkles
 } from 'lucide-react';
 
@@ -18,7 +18,6 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [remember, setRemember] = useState(false);
-  const [copied, setCopied] = useState(false);
   const emailRef = useRef(null);
 
   useEffect(() => {
@@ -69,16 +68,7 @@ export default function AdminLoginPage() {
     if (e.getModifierState && !e.getModifierState('CapsLock')) setCapsLock(false);
   }, []);
 
-  const fillDemo = useCallback(() => {
-    setEmail(DEMO_EMAIL);
-    setPassword(DEMO_PASS);
-  }, []);
 
-  const copyDemo = useCallback(() => {
-    navigator.clipboard.writeText(`Email: ${DEMO_EMAIL}\nPassword: ${DEMO_PASS}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, []);
 
   if (!mounted) return null;
 
@@ -260,43 +250,7 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          {/* Demo credentials */}
-          <div className="mt-7 p-4 bg-indigo-50/70 border border-indigo-100/60 rounded-xl">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5 text-[0.6rem] font-bold text-indigo-500 uppercase tracking-wider">
-                <Info size={11} />
-                Demo Credentials
-              </div>
-              <button
-                type="button"
-                onClick={copyDemo}
-                className="flex items-center gap-1 text-[0.55rem] font-bold text-slate-400 hover:text-indigo-500 transition-colors"
-              >
-                {copied ? <CopyCheck size={11} /> : <Copy size={11} />}
-                {copied ? 'Copied' : 'Copy'}
-              </button>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={fillDemo}
-                className="flex-1 flex items-center gap-2 px-3 py-2 bg-white border border-indigo-100 rounded-lg hover:border-indigo-300 hover:shadow-sm transition-all text-xs group"
-              >
-                <div className="flex flex-col items-start">
-                  <span className="text-[0.55rem] font-bold text-slate-400 uppercase tracking-wider">Email</span>
-                  <span className="text-[0.7rem] font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">{DEMO_EMAIL}</span>
-                </div>
-                <div className="w-px h-6 bg-indigo-100 mx-1" />
-                <div className="flex flex-col items-start">
-                  <span className="text-[0.55rem] font-bold text-slate-400 uppercase tracking-wider">Password</span>
-                  <span className="text-[0.7rem] font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">{DEMO_PASS}</span>
-                </div>
-                <div className="ml-auto text-indigo-400 group-hover:text-indigo-600 transition-colors">
-                  <ArrowLeft size={12} className="rotate-180" />
-                </div>
-              </button>
-            </div>
-          </div>
+
 
           {/* Back Link */}
           <div className="mt-6 text-center">

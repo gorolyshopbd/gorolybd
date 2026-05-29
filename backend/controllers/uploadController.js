@@ -5,11 +5,10 @@ const uploadToInsForge = async (file, folder = 'products') => {
   const ext = path.extname(file.originalname);
   const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
 
+  const blob = new Blob([file.buffer], { type: file.mimetype });
   const { data, error } = await db.storage
     .from('product')
-    .upload(key, file.buffer, {
-      contentType: file.mimetype,
-    });
+    .upload(key, blob);
 
   if (error) throw error;
 
@@ -34,6 +33,7 @@ const uploadImage = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
+
   try {
     const result = await uploadToInsForge(req.file, 'products');
     res.json({

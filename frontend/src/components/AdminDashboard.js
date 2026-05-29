@@ -930,6 +930,9 @@ export default function AdminDashboard({ onTabChange }) {
         setEditImagePreview('');
         setEditAdditionalImageFiles([]);
         fetchProducts();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || 'Failed to update product');
       }
     } catch (error) {
       alert(error.message);
@@ -1761,15 +1764,20 @@ export default function AdminDashboard({ onTabChange }) {
                   <button
                     onClick={async () => {
                       if (confirm('Are you sure you want to delete this product?')) {
-                        const res = await fetch(`${API_URL}/products/${prod._id}`, {
-                          method: 'DELETE',
-                          headers: { Authorization: `Bearer ${user.token}` },
-                        });
-                        if (res.ok) {
-                          alert('Product deleted!');
-                          fetchProducts();
-                        } else {
-                          alert('Error deleting product');
+                        try {
+                          const res = await fetch(`${API_URL}/products/${prod._id}`, {
+                            method: 'DELETE',
+                            headers: { Authorization: `Bearer ${user.token}` },
+                          });
+                          if (res.ok) {
+                            alert('Product deleted!');
+                            fetchProducts();
+                          } else {
+                            const errData = await res.json().catch(() => ({}));
+                            alert(errData.message || 'Error deleting product');
+                          }
+                        } catch (err) {
+                          alert(err.message || 'Error deleting product');
                         }
                       }
                     }}
