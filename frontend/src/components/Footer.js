@@ -27,7 +27,7 @@ export default function Footer({ onTabChange, onCartClick }) {
     <>
       {/* Mobile Sticky Bottom Nav */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-2px_15px_rgba(0,0,0,0.08)] md:hidden safe-area-bottom">
-        <div className="flex items-center justify-around py-2.5 px-3">
+        <div className="flex items-center justify-around py-1 px-2">
           {[
             { icon: Home, label: 'Home', tab: 'home' },
             { icon: ShoppingBag, label: 'Shop', tab: 'shop' },
@@ -43,10 +43,10 @@ export default function Footer({ onTabChange, onCartClick }) {
                   if (item.isCart && onCartClick) onCartClick();
                   else if (onTabChange) onTabChange(item.tab);
                 }}
-                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition active:scale-90"
+                className="flex flex-col items-center gap-0.5 px-2 py-0.5 rounded-lg transition active:scale-90"
               >
-                <Icon size={24} className="text-slate-600 hover:text-blue-600 active:text-blue-600 transition" />
-                <span className="text-xs font-extrabold text-slate-700">{item.label}</span>
+                <Icon size={20} className="text-slate-600 hover:text-[#ff0066] active:text-[#ff0066] transition" />
+                <span className="text-[10px] font-extrabold text-slate-700">{item.label}</span>
               </button>
             );
           })}
@@ -56,7 +56,7 @@ export default function Footer({ onTabChange, onCartClick }) {
       <footer className="bg-slate-950 text-white border-t border-slate-900 pb-20 md:pb-0">
         
         {/* Brand & Newsletter Banner Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 border-b border-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 border-b border-slate-900">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
             
             <div className="md:col-span-6 space-y-3">
@@ -65,15 +65,15 @@ export default function Footer({ onTabChange, onCartClick }) {
             </div>
 
             <div className="md:col-span-6 flex flex-col sm:flex-row gap-3">
-              <input type="email" placeholder="Enter your email" className="flex-1 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-slate-900/50 transition duration-300" />
-              <button onClick={() => alert('Thanks for subscribing!')} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-sm transition duration-300 shadow-lg shadow-blue-600/25">Subscribe</button>
+              <input type="email" placeholder="Enter your email" className="flex-1 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white focus:outline-hidden focus:ring-2 focus:ring-[#ff0066] focus:bg-slate-900/50 transition duration-300" />
+              <button onClick={() => alert('Thanks for subscribing!')} className="px-5 py-2.5 bg-[#ff0066] hover:bg-[#d60052] text-white font-black rounded-xl text-sm transition duration-300 shadow-lg shadow-[#ff0066]/25">Subscribe</button>
             </div>
 
           </div>
         </div>
 
         {/* Main Footer Links */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Col 1: Shopio Info & Socials */}
           <div className="space-y-3">
@@ -91,7 +91,7 @@ export default function Footer({ onTabChange, onCartClick }) {
             
             {s.footerAddress && (
               <div className="flex items-center gap-2.5 text-sm font-bold text-white">
-                <MapPin size={16} className="text-blue-500 flex-shrink-0" />
+                <MapPin size={16} className="text-[#ff0066] flex-shrink-0" />
                 <span>{s.footerAddress}</span>
               </div>
             )}
@@ -124,7 +124,7 @@ export default function Footer({ onTabChange, onCartClick }) {
                   <li key={page.slug}>
                     <button 
                       onClick={() => onTabChange(`page-${page.slug}`)} 
-                      className="hover:text-blue-500 hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
+                      className="hover:text-[#ff0066] hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
                     >
                       &rsaquo; {page.title}
                     </button>
@@ -135,7 +135,7 @@ export default function Footer({ onTabChange, onCartClick }) {
                   <li key={p}>
                     <button 
                       onClick={() => onTabChange(`page-${p.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`)} 
-                      className="hover:text-blue-500 hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
+                      className="hover:text-[#ff0066] hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
                     >
                       &rsaquo; {p}
                     </button>
@@ -159,7 +159,7 @@ export default function Footer({ onTabChange, onCartClick }) {
                 <li key={item.tab}>
                   <button
                     onClick={() => onTabChange && onTabChange(item.tab)}
-                    className="hover:text-blue-500 hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
+                    className="hover:text-[#ff0066] hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
                   >
                     &rsaquo; {item.label}
                   </button>
@@ -173,15 +173,15 @@ export default function Footer({ onTabChange, onCartClick }) {
             <div className="space-y-2">
               <h4 className="text-sm font-black text-white uppercase tracking-wider">Customer Support</h4>
               <ul className="space-y-3 text-sm font-bold text-white">
-                <li className="flex items-center gap-2.5 text-white"><Mail size={16} className="text-blue-500 flex-shrink-0" /><span>{s.footerEmail || 'support@shopio.com'}</span></li>
-                <li className="flex items-center gap-2.5 text-white"><Phone size={16} className="text-blue-500 flex-shrink-0" /><span>{s.footerPhone || '+880 1712-345678'}</span></li>
+                <li className="flex items-center gap-2.5 text-white"><Mail size={16} className="text-[#ff0066] flex-shrink-0" /><span>{s.footerEmail || 'support@shopio.com'}</span></li>
+                <li className="flex items-center gap-2.5 text-white"><Phone size={16} className="text-[#ff0066] flex-shrink-0" /><span>{s.footerPhone || '+880 1712-345678'}</span></li>
               </ul>
             </div>
 
             {/* App Download Buttons */}
             <div className="space-y-3">
               <h5 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-1.5">
-                <Download size={14} className="text-blue-500" />
+                <Download size={14} className="text-[#ff0066]" />
                 Download App
               </h5>
               <div className="flex flex-col sm:flex-row gap-2.5">
@@ -222,7 +222,7 @@ export default function Footer({ onTabChange, onCartClick }) {
         </div>
 
         {/* Payment Gateway Badges Footer */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 border-t border-slate-900 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-bold text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 border-t border-slate-900 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-bold text-white">
           <div className="text-center md:text-left">{s.footerCopyright || '© 2026 Shopio BD. All rights reserved.'}</div>
           
           {/* Visual Payment Gateway Badges */}

@@ -68,7 +68,20 @@ const authUser = async (req, res) => {
 // @route   POST /api/users
 // @access  Public
 const registerUser = async (req, res) => {
-  const { name, email, password, phone, role } = req.body;
+  const { 
+    name, 
+    email, 
+    password, 
+    phone, 
+    role,
+    owner_name,
+    facebook,
+    instagram,
+    division,
+    district,
+    upazila,
+    address_details
+  } = req.body;
 
   try {
     const { data: userExists } = await db.database.from('users').select('id').eq('email', email).single();
@@ -88,7 +101,14 @@ const registerUser = async (req, res) => {
       phone: phone || '',
       is_admin: false,
       role: assignedRole,
-      permissions: []
+      permissions: [],
+      owner_name: owner_name || '',
+      facebook: facebook || '',
+      instagram: instagram || '',
+      division: division || '',
+      district: district || '',
+      upazila: upazila || '',
+      address_details: address_details || ''
     }).select().single();
 
     if (error) throw error;
@@ -142,13 +162,35 @@ const sendOTP = async (req, res) => {
         const { data: settings } = await db.database.from('settings').select('*').limit(1).single();
         if (settings?.twilio_sid && settings?.twilio_auth_token && settings?.twilio_phone_number) {
           const client = twilio(settings.twilio_sid, settings.twilio_auth_token);
-          await client.messages.create({
-            body: `Your Shopio OTP code is: ${otp}. Valid for 5 minutes.`,
-            from: settings.twilio_phone_number,
-            to: target
-          });
-          console.log(`[OTP Sent via Twilio] to ${target}`);
-          return res.json({ message: `OTP sent via Twilio to ${target}` });
+          
+          let formattedPhone = target.trim();
+          if (!formattedPhone.startsWith('+')) {
+            if (formattedPhone.startsWith('880')) {
+              formattedPhone = '+' + formattedPhone;
+            } else if (formattedPhone.startsWith('0')) {
+              formattedPhone = '+88' + formattedPhone;
+            } else {
+              formattedPhone = '+880' + formattedPhone;
+            }
+          }
+
+          if (req.body.method === 'call' || type === 'call') {
+            await client.calls.create({
+              twiml: `<Response><Say>Your Goroly Shop verification code is ${otp.split('').join('. ')}</Say></Response>`,
+              from: settings.twilio_phone_number,
+              to: formattedPhone
+            });
+            console.log(`[OTP Call Sent via Twilio] to ${formattedPhone}`);
+            return res.json({ message: `OTP call sent via Twilio to ${formattedPhone}` });
+          } else {
+            await client.messages.create({
+              body: `Your Goroly Shop OTP code is: ${otp}. Valid for 5 minutes.`,
+              from: settings.twilio_phone_number,
+              to: formattedPhone
+            });
+            console.log(`[OTP Sent via Twilio] to ${formattedPhone}`);
+            return res.json({ message: `OTP sent via Twilio to ${formattedPhone}` });
+          }
         }
       } else if (gateway === 'GreenwebSMS') {
         const { data: settings } = await db.database.from('settings').select('*').limit(1).single();
@@ -160,7 +202,7 @@ const sendOTP = async (req, res) => {
             body: new URLSearchParams({
               token: settings.greenweb_api_key,
               to: target,
-              message: `Your Shopio OTP code is: ${otp}. Valid for 5 minutes.`,
+              message: `Your Goroly Shop OTP code is: ${otp}. Valid for 5 minutes.`,
               sender: senderId
             })
           });
@@ -187,7 +229,7 @@ const sendOTP = async (req, res) => {
 // @route   POST /api/users/otp/verify
 // @access  Public
 const verifyOTPCode = async (req, res) => {
-  const { type, target, otp } = req.body;
+  const { type, target, otp, onlyVerify } = req.body;
 
   if (!target || !otp) {
     return res.status(400).json({ message: 'Target and OTP are required' });
@@ -196,6 +238,10 @@ const verifyOTPCode = async (req, res) => {
   const isValid = checkOTP(target, otp);
   if (!isValid) {
     return res.status(400).json({ message: 'Invalid or expired OTP code' });
+  }
+
+  if (onlyVerify) {
+    return res.json({ success: true, message: 'OTP verified successfully' });
   }
 
   let emailValue = target;

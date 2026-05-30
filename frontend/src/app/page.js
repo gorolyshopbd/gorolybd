@@ -19,6 +19,7 @@ import UserDashboard from '@/components/UserDashboard';
 import ChatWidget from '@/components/ChatWidget';
 import CustomPageView from '@/components/CustomPageView';
 import VideoReelsView from '@/components/VideoReelsView';
+import BecomeSellerPage from '@/components/BecomeSellerPage';
 import { ShoppingCart, Star, Heart, ArrowRight, Eye, LayoutGrid, List, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -176,7 +177,7 @@ export default function Storefront() {
   return (
     <div className="flex flex-col min-h-screen bg-white justify-between">
       {/* Header */}
-      {activeTab !== 'videos' && (
+      {activeTab !== 'videos' && activeTab !== 'page-become-a-seller' && (
         <Header 
           onCartClick={() => setCartOpen(true)}
           onAuthClick={() => setAuthOpen(true)}
@@ -215,7 +216,7 @@ export default function Storefront() {
 
             {/* Breadcrumb */}
             <div className="flex items-center gap-1.5 text-sm mb-5">
-              <button onClick={() => setActiveTab('home')} className="text-[#FF6600] hover:underline font-semibold">{t('home')}</button>
+              <button onClick={() => setActiveTab('home')} className="text-[#ff0066] hover:underline font-semibold">{t('home')}</button>
               <span className="text-slate-400">›</span>
               <span className="text-slate-600 font-medium">{selectedCategory || t('allProducts')}</span>
             </div>
@@ -228,10 +229,10 @@ export default function Storefront() {
                 {/* Filter header */}
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2 font-extrabold text-slate-800 text-sm">
-                    <SlidersHorizontal size={15} className="text-[#FF6600]" />
+                    <SlidersHorizontal size={15} className="text-[#ff0066]" />
                     {t('filters')}
                   </div>
-                  <button onClick={resetShopFilters} className="text-xs text-[#FF6600] font-bold hover:underline">{t('reset')}</button>
+                  <button onClick={resetShopFilters} className="text-xs text-[#ff0066] font-bold hover:underline">{t('reset')}</button>
                 </div>
 
                 {/* Categories filter */}
@@ -247,7 +248,7 @@ export default function Storefront() {
                     <div className="px-3 pb-3 flex flex-col gap-1">
                       <button
                         onClick={() => setSelectedCategory('')}
-                        className={`text-left text-sm px-3 py-2 rounded-lg transition font-semibold ${!selectedCategory ? 'bg-[#FF6600] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+                        className={`text-left text-sm px-3 py-2 rounded-lg transition font-semibold ${!selectedCategory ? 'bg-[#ff0066] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
                       >
                         {t('allCategories')}
                       </button>
@@ -255,7 +256,7 @@ export default function Storefront() {
                         <button
                           key={cat._id}
                           onClick={() => setSelectedCategory(cat.name)}
-                          className={`text-left text-sm px-3 py-2 rounded-lg transition font-semibold ${selectedCategory === cat.name ? 'bg-[#FF6600] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+                          className={`text-left text-sm px-3 py-2 rounded-lg transition font-semibold ${selectedCategory === cat.name ? 'bg-[#ff0066] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
                         >
                           {cat.name}
                         </button>
@@ -277,7 +278,7 @@ export default function Storefront() {
                     <div className="px-3 pb-3 flex flex-col gap-1 max-h-48 overflow-y-auto">
                       <button
                         onClick={() => setSelectedBrand('')}
-                        className={`text-left text-sm px-3 py-2 rounded-lg transition font-semibold ${!selectedBrand ? 'bg-[#FF6600] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+                        className={`text-left text-sm px-3 py-2 rounded-lg transition font-semibold ${!selectedBrand ? 'bg-[#ff0066] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
                       >
                         {t('allBrands')}
                       </button>
@@ -285,7 +286,7 @@ export default function Storefront() {
                         <button
                           key={b._id}
                           onClick={() => setSelectedBrand(b.name)}
-                          className={`text-left text-sm px-3 py-2 rounded-lg transition font-semibold ${selectedBrand === b.name ? 'bg-[#FF6600] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+                          className={`text-left text-sm px-3 py-2 rounded-lg transition font-semibold ${selectedBrand === b.name ? 'bg-[#ff0066] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
                         >
                           {b.name}
                         </button>
@@ -312,16 +313,16 @@ export default function Storefront() {
                       <input type="range" min={0} max={100000} step={500}
                         value={priceRange[1]}
                         onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                        className="w-full accent-[#FF6600]"
+                        className="w-full accent-[#ff0066]"
                       />
                       <div className="flex gap-2">
                         <input type="number" placeholder={lang === 'bn' ? 'সর্বনিম্ন' : 'Min'} value={priceRange[0]}
                           onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-                          className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#FF6600]"
+                          className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#ff0066]"
                         />
                         <input type="number" placeholder={lang === 'bn' ? 'সর্বোচ্চ' : 'Max'} value={priceRange[1]}
                           onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                          className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#FF6600]"
+                          className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#ff0066]"
                         />
                       </div>
                     </div>
@@ -343,7 +344,7 @@ export default function Storefront() {
                         <button
                           key={r}
                           onClick={() => setMinRating(r)}
-                          className={`text-left px-3 py-2 rounded-lg transition flex items-center gap-2 ${minRating === r ? 'bg-[#FF6600] text-white' : 'hover:bg-slate-50 text-slate-600'}`}
+                          className={`text-left px-3 py-2 rounded-lg transition flex items-center gap-2 ${minRating === r ? 'bg-[#ff0066] text-white' : 'hover:bg-slate-50 text-slate-600'}`}
                         >
                           {r === 0 ? (
                             <span className="text-sm font-semibold">{t('allRatings')}</span>
@@ -381,7 +382,7 @@ export default function Storefront() {
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 flex items-center justify-center relative overflow-hidden">
-                          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #FF6600 0%, transparent 50%), radial-gradient(circle at 80% 50%, #3b82f6 0%, transparent 50%)' }} />
+                          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #ff0066 0%, transparent 50%), radial-gradient(circle at 80% 50%, #3b82f6 0%, transparent 50%)' }} />
                           <div className="text-center z-10">
                             <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1">{lang === 'bn' ? 'ব্রাউজ' : 'Browse'}</div>
                             <div className="text-white text-2xl font-extrabold">{selectedCategory || t('allProducts')}</div>
@@ -405,13 +406,13 @@ export default function Storefront() {
                 <div className="flex items-center justify-between mb-4 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-xs">
                   <div>
                     <span className="font-extrabold text-slate-800 text-sm">{t('allProducts')}</span>
-                    <span className="ml-2 text-xs font-semibold text-[#FF6600]">{t('showing')} {sortedProducts.length} {t('results')}</span>
+                    <span className="ml-2 text-xs font-semibold text-[#ff0066]">{t('showing')} {sortedProducts.length} {t('results')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <select
                       value={sortOrder}
                       onChange={(e) => setSortOrder(e.target.value)}
-                      className="text-xs font-bold border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#FF6600] bg-white"
+                      className="text-xs font-bold border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#ff0066] bg-white"
                     >
                       <option value="newest">{t('newest')}</option>
                       <option value="oldest">{t('oldest')}</option>
@@ -419,10 +420,10 @@ export default function Storefront() {
                       <option value="price_desc">{t('priceHighLow')}</option>
                     </select>
                     <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
-                      <button onClick={() => setViewMode('grid')} className={`p-2 transition ${viewMode === 'grid' ? 'bg-[#FF6600] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>
+                      <button onClick={() => setViewMode('grid')} className={`p-2 transition ${viewMode === 'grid' ? 'bg-[#ff0066] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>
                         <LayoutGrid size={15} />
                       </button>
-                      <button onClick={() => setViewMode('list')} className={`p-2 transition ${viewMode === 'list' ? 'bg-[#FF6600] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>
+                      <button onClick={() => setViewMode('list')} className={`p-2 transition ${viewMode === 'list' ? 'bg-[#ff0066] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>
                         <List size={15} />
                       </button>
                     </div>
@@ -433,7 +434,7 @@ export default function Storefront() {
                 {visibleProducts.length === 0 ? (
                   <div className="text-center py-16 space-y-4 bg-white rounded-2xl border border-slate-100">
                     <p className="text-slate-400 font-medium">{t('noProducts')}</p>
-                    <button onClick={resetShopFilters} className="px-4 py-2 bg-[#FF6600] text-white font-bold rounded-lg text-sm">{t('resetFilters')}</button>
+                    <button onClick={resetShopFilters} className="px-4 py-2 bg-[#ff0066] text-white font-bold rounded-lg text-sm">{t('resetFilters')}</button>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-6">
@@ -452,14 +453,14 @@ export default function Storefront() {
                                   <Heart size={14} fill={isWish ? 'currentColor' : 'none'} />
                                 </button>
                                 <img src={getImageUrl(product.image)} alt={product.name} onClick={() => router.push(`/product/${product._id}`)} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-500 cursor-pointer" />
-                                <button onClick={() => setSelectedProduct(product)} className="absolute bottom-2 right-2 p-1.5 bg-white/90 rounded-lg shadow-xs hover:bg-white transition z-10 text-slate-500 hover:text-[#FF6600]" title={t('quickView')}>
+                                <button onClick={() => setSelectedProduct(product)} className="absolute bottom-2 right-2 p-1.5 bg-white/90 rounded-lg shadow-xs hover:bg-white transition z-10 text-slate-500 hover:text-[#ff0066]" title={t('quickView')}>
                                   <Eye size={13} />
                                 </button>
                               </div>
                               <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
                                 <div>
                                   <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">{product.category}</span>
-                                  <h3 onClick={() => router.push(`/product/${product._id}`)} className="font-bold text-slate-800 text-sm hover:text-[#FF6600] cursor-pointer transition line-clamp-2 leading-snug mt-0.5">{product.name}</h3>
+                                  <h3 onClick={() => router.push(`/product/${product._id}`)} className="font-bold text-slate-800 text-sm hover:text-[#ff0066] cursor-pointer transition line-clamp-2 leading-snug mt-0.5">{product.name}</h3>
                                   <div className="flex items-center gap-1 mt-1">
                                     <div className="flex text-amber-400">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={10} fill={i < Math.floor(product.rating || 5) ? 'currentColor' : 'none'} />)}</div>
                                     <span className="text-slate-400 text-[10px]">({product.numReviews || 12})</span>
@@ -470,7 +471,7 @@ export default function Storefront() {
                                     <span className="text-sm font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</span>
                                     {product.discountPercent > 0 && <span className="text-xs text-slate-400 line-through">{formatPrice(product.price, currencySymbol)}</span>}
                                   </div>
-                                  <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="px-2.5 py-1.5 bg-[#FF6600] hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition">{t('add')}</button>
+                                  <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="px-2.5 py-1.5 bg-[#ff0066] hover:bg-rose-600 text-white text-xs font-bold rounded-lg transition">{t('add')}</button>
                                 </div>
                               </div>
                             </div>
@@ -494,19 +495,19 @@ export default function Storefront() {
                               <div className="flex-1 min-w-0">
                                 <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">{product.category}</span>
                                 {product.brand && <span className="ml-2 text-[9px] font-semibold text-slate-400">• {product.brand}</span>}
-                                <h3 onClick={() => router.push(`/product/${product._id}`)} className="font-bold text-slate-800 text-sm hover:text-[#FF6600] cursor-pointer transition line-clamp-1 mt-0.5">{product.name}</h3>
+                                <h3 onClick={() => router.push(`/product/${product._id}`)} className="font-bold text-slate-800 text-sm hover:text-[#ff0066] cursor-pointer transition line-clamp-1 mt-0.5">{product.name}</h3>
                                 <div className="flex items-center gap-1 mt-1">
                                   <div className="flex text-amber-400">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={10} fill={i < Math.floor(product.rating || 5) ? 'currentColor' : 'none'} />)}</div>
                                   <span className="text-slate-400 text-[10px]">({product.numReviews || 12})</span>
                                 </div>
-                                <button onClick={() => setSelectedProduct(product)} className="mt-1.5 text-xs font-bold text-[#FF6600] border border-[#FF6600] px-3 py-1 rounded-lg hover:bg-[#FF6600] hover:text-white transition">{t('quickView')}</button>
+                                <button onClick={() => setSelectedProduct(product)} className="mt-1.5 text-xs font-bold text-[#ff0066] border border-[#ff0066] px-3 py-1 rounded-lg hover:bg-[#ff0066] hover:text-white transition">{t('quickView')}</button>
                               </div>
                               <div className="flex flex-col items-end gap-2 flex-shrink-0">
                                 <div className="text-right">
                                   <div className="text-lg font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</div>
                                   {product.discountPercent > 0 && <div className="text-xs text-slate-400 line-through">{formatPrice(product.price, currencySymbol)}</div>}
                                 </div>
-                                <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="px-4 py-2 bg-[#FF6600] hover:bg-orange-600 text-white text-xs font-extrabold rounded-xl transition shadow-md shadow-orange-500/20">{t('addToCart')}</button>
+                                <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="px-4 py-2 bg-[#ff0066] hover:bg-rose-600 text-white text-xs font-extrabold rounded-xl transition shadow-md shadow-rose-500/20">{t('addToCart')}</button>
                                 <button onClick={() => handleAddToWishlist(product)} className={`text-xs font-semibold flex items-center gap-1 ${isWish ? 'text-red-500' : 'text-slate-400 hover:text-red-500'} transition`}>
                                   <Heart size={12} fill={isWish ? 'currentColor' : 'none'} /> {t('wishlist')}
                                 </button>
@@ -520,7 +521,7 @@ export default function Storefront() {
                     {/* Load More */}
                     {visibleProducts.length < sortedProducts.length && (
                       <button onClick={handleLoadMore} disabled={loadMoreLoading}
-                        className="px-8 py-3 bg-[#FF6600] hover:bg-orange-600 text-white font-extrabold rounded-xl transition shadow-md flex items-center gap-2 text-sm"
+                        className="px-8 py-3 bg-[#ff0066] hover:bg-rose-600 text-white font-extrabold rounded-xl transition shadow-md flex items-center gap-2 text-sm"
                       >
                         {loadMoreLoading ? <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>{t('loading')}</> : t('loadMore')}
                       </button>
@@ -575,7 +576,7 @@ export default function Storefront() {
                           <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{product.category}</span>
                           <h3
                             onClick={() => router.push(`/product/${product._id}`)}
-                            className="font-bold text-slate-800 text-sm hover:text-blue-600 cursor-pointer transition line-clamp-1"
+                            className="font-bold text-slate-800 text-sm hover:text-[#ff0066] cursor-pointer transition line-clamp-1"
                           >
                             {product.name}
                           </h3>
@@ -585,7 +586,7 @@ export default function Storefront() {
                           <span className="text-base font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</span>
                           <button
                             onClick={() => addToCart(product, 1)}
-                            className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition"
+                            className="px-3.5 py-2 bg-[#ff0066] hover:bg-[#d60052] text-white text-xs font-bold rounded-lg transition shadow-md shadow-[#ff0066]/20"
                           >
                             {t('addToCart')}
                           </button>
@@ -603,7 +604,11 @@ export default function Storefront() {
           <UserDashboard />
         )}
 
-        {activeTab.startsWith('page-') && (
+        {activeTab === 'page-become-a-seller' && (
+          <BecomeSellerPage onBackToHome={() => setActiveTab('home')} onAuthClick={() => setAuthOpen(true)} />
+        )}
+
+        {activeTab.startsWith('page-') && activeTab !== 'page-become-a-seller' && (
           <CustomPageView slug={activeTab.replace('page-', '')} onBackToHome={() => setActiveTab('home')} />
         )}
 
@@ -626,7 +631,7 @@ export default function Storefront() {
       {/* Chat Support */}
       {activeTab !== 'videos' && <ChatWidget />}
       {/* Footer */}
-      {activeTab !== 'videos' && (
+      {activeTab !== 'videos' && activeTab !== 'page-become-a-seller' && (
         <Footer onTabChange={setActiveTab} onCartClick={() => setCartOpen(true)} />
       )}
     </div>

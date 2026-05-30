@@ -2379,7 +2379,7 @@ export default function AdminDashboard({ onTabChange }) {
               {[
                 { label: 'Total Orders', val: metrics.totalOrders ? metrics.totalOrders.toLocaleString() : '0', icon: ShoppingBag, iconBg: 'bg-violet-100 text-violet-600' },
                 { label: 'Total Revenue', val: metrics.totalRevenue ? `${currencySymbol}${metrics.totalRevenue.toLocaleString()}` : '0', icon: DollarSign, iconBg: 'bg-emerald-100 text-emerald-600' },
-                { label: 'Total Customers', val: metrics.totalCustomers ? metrics.totalCustomers.toLocaleString() : '0', icon: Users, iconBg: 'bg-orange-100 text-orange-600' },
+                { label: 'Total Customers', val: metrics.totalCustomers ? metrics.totalCustomers.toLocaleString() : '0', icon: Users, iconBg: 'bg-rose-100 text-rose-600' },
                 { label: 'Pending Orders', val: metrics.pendingOrders ? metrics.pendingOrders.toLocaleString() : '0', icon: AlertCircle, iconBg: 'bg-amber-100 text-amber-600' },
                 { label: 'Total Products', val: metrics.totalProducts ? metrics.totalProducts.toLocaleString() : '0', icon: Package, iconBg: 'bg-blue-100 text-blue-600' },
               ].map((card, idx) => {
@@ -5185,7 +5185,7 @@ export default function AdminDashboard({ onTabChange }) {
                             u.role === 'admin' ? 'bg-blue-100 text-blue-700 border-blue-200' :
                             u.role === 'manager' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
                             u.role === 'moderator' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                            u.role === 'seller' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                            u.role === 'seller' ? 'bg-rose-100 text-rose-700 border-rose-200' :
                             'bg-gray-100 text-gray-600 border-slate-200'
                           }`}>{u.role || 'customer'}</span>
                         </td>
@@ -7573,7 +7573,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                     <div className="md:col-span-3 space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
                         <h4 className="font-bold text-gray-900 text-xs">Nagad Wallet PG</h4>
                       </div>
                       <p className="text-[10px] text-gray-500 leading-tight">Accept payments in BDT automatically via Nagad API.</p>
@@ -7583,7 +7583,7 @@ export default function AdminDashboard({ onTabChange }) {
                           id="nagad-enable"
                           checked={settings.nagadEnabled}
                           onChange={(e) => setSettings({ ...settings, nagadEnabled: e.target.checked })}
-                          className="accent-orange-600 rounded-sm cursor-pointer"
+                          className="accent-rose-600 rounded-sm cursor-pointer"
                         />
                         <label htmlFor="nagad-enable" className="text-[10px] font-bold text-gray-400 cursor-pointer">Active</label>
                       </div>

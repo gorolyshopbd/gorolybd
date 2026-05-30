@@ -62,9 +62,8 @@ export default function AuthModal({ isOpen, onClose }) {
     resetForm();
   };
 
-  const handleSendOTP = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
+  const handleSendOTP = async (e, method = 'sms') => {
+    if (e) e.preventDefault();
     setErrorMsg('');
 
     const target = otpType === 'email' ? email : phoneVal;
@@ -73,7 +72,7 @@ export default function AuthModal({ isOpen, onClose }) {
       return;
     }
 
-    const res = await sendOtpCode(otpType, target);
+    const res = await sendOtpCode(otpType, target, method);
     if (res.success) {
       setOtpSent(true);
     } else {
@@ -415,13 +414,25 @@ export default function AuthModal({ isOpen, onClose }) {
                       </div>
                     )}
 
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition"
-                    >
-                      {loading ? 'Sending...' : 'Send OTP Code'}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 py-3 bg-[#ff0066] hover:bg-[#d60052] text-white font-bold rounded-xl shadow-lg transition text-xs cursor-pointer border-0"
+                      >
+                        {loading ? 'Sending...' : 'Send SMS'}
+                      </button>
+                      {otpType === 'phone' && (
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={(e) => handleSendOTP(e, 'call')}
+                          className="flex-1 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl shadow-lg transition text-xs cursor-pointer border-0"
+                        >
+                          {loading ? 'Calling...' : 'Call Me'}
+                        </button>
+                      )}
+                    </div>
                   </form>
                 ) : (
                   <form onSubmit={handleVerifyOTP} className="space-y-4">

@@ -528,13 +528,13 @@ export const ShopProvider = ({ children }) => {
   };
 
   // OTP Login Functions
-  const sendOtpCode = async (type, target) => {
+  const sendOtpCode = async (type, target, method = 'sms') => {
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/users/otp/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, target }),
+        body: JSON.stringify({ type, target, method }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to send OTP');

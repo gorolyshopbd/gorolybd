@@ -3,7 +3,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { ShopContext } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { ShoppingBag, Search, User, Heart, Menu, X, LogOut, Sun, Moon, ChevronDown, Zap, MapPin, GitCompare, Truck, PhoneCall } from 'lucide-react';
+import { ShoppingBag, Search, User, Heart, Menu, X, LogOut, Sun, Moon, ChevronDown, Zap, MapPin, GitCompare, Truck, PhoneCall, Sparkles, Store } from 'lucide-react';
 import CompareModal from './CompareModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -67,425 +67,493 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
 
   return (
     <>
-      {/* Top Utility Bar */}
-      <div className="w-full bg-white border-b border-gray-100 text-[12px] text-gray-500 select-none">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="hidden sm:flex items-center justify-between h-9">
+      <style>{`
+        @keyframes bannerSlide {
+          0%   { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
+        }
+        .banner-track {
+          display: flex;
+          gap: 0;
+          white-space: nowrap;
+          animation: bannerSlide 28s linear infinite;
+          will-change: transform;
+        }
+        .banner-track:hover { animation-play-state: paused; }
+        .nav-link-underline {
+          position: relative;
+          color: rgba(255, 255, 255, 0.8);
+          transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .nav-link-underline:hover {
+          color: #ffffff;
+        }
+        .nav-link-underline::after {
+          content: '';
+          position: absolute;
+          bottom: -4px;
+          left: 0;
+          width: 0;
+          height: 2px;
+          background: #ff0066;
+          border-radius: 2px;
+          transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .nav-link-underline:hover::after { width: 100%; }
+        .nav-link-underline.active::after { width: 100%; }
+        .dropdown-menu {
+          opacity: 0;
+          transform: translateY(8px) scale(0.95);
+          pointer-events: none;
+          transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dropdown-parent:hover .dropdown-menu {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+          pointer-events: auto;
+        }
+      `}</style>
 
-            {/* Left Side */}
-            <div className="flex items-center gap-4">
+      {/* ── TOP UTILITY BAR ── */}
+      <div className="w-full bg-white border-b border-slate-100 text-[11.5px] text-slate-500 select-none hidden sm:block">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-9">
+
+            {/* Left */}
+            <div className="flex items-center gap-0 divide-x divide-slate-150">
 
               {/* Language */}
-              <div className="relative">
-                <button onClick={() => setShowLangDropdown(!showLangDropdown)}
-                  className="flex items-center gap-1 cursor-pointer bg-transparent border-0 text-gray-500 hover:text-gray-800 transition text-[12px]"
+              <div className="relative pr-4">
+                <button
+                  onClick={() => setShowLangDropdown(!showLangDropdown)}
+                  className="flex items-center gap-1.5 cursor-pointer bg-transparent border-0 text-slate-500 hover:text-[#ff0066] transition font-medium"
                 >
-                  <span>{lang === 'en' ? '🇬🇧' : '🇧🇩'}</span>
-                  <span className="font-medium">{lang === 'en' ? 'English' : 'বাংলা'}</span>
+                  <span className="text-base">{lang === 'en' ? '🌐' : '🇧🇩'}</span>
+                  <span>{lang === 'en' ? 'English' : 'বাংলা'}</span>
                   <ChevronDown size={11} />
                 </button>
                 {showLangDropdown && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowLangDropdown(false)}></div>
-                    <div className="absolute left-0 mt-1 w-28 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
+                    <div className="fixed inset-0 z-40" onClick={() => setShowLangDropdown(false)} />
+                    <div className="absolute left-0 mt-1 w-32 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50">
                       <button onClick={() => { setLang('en'); setShowLangDropdown(false); }}
-                        className={`w-full text-left px-3 py-1.5 text-[12px] font-medium hover:bg-gray-50 flex items-center gap-1.5 bg-transparent border-0 cursor-pointer ${lang === 'en' ? 'text-blue-600' : 'text-gray-600'}`}
+                        className={`w-full text-left px-3 py-2 text-[12px] font-semibold hover:bg-rose-50 flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'en' ? 'text-[#ff0066]' : 'text-slate-600'}`}
                       ><span>🇬🇧</span> English</button>
                       <button onClick={() => { setLang('bn'); setShowLangDropdown(false); }}
-                        className={`w-full text-left px-3 py-1.5 text-[12px] font-medium hover:bg-gray-50 flex items-center gap-1.5 bg-transparent border-0 cursor-pointer ${lang === 'bn' ? 'text-blue-600' : 'text-gray-600'}`}
+                        className={`w-full text-left px-3 py-2 text-[12px] font-semibold hover:bg-rose-50 flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'bn' ? 'text-[#ff0066]' : 'text-slate-600'}`}
                       ><span>🇧🇩</span> বাংলা</button>
                     </div>
                   </>
                 )}
               </div>
 
-              <span className="text-gray-200">|</span>
-
               {/* Currency */}
-              <div className="flex items-center gap-1 text-gray-500 font-medium cursor-pointer hover:text-gray-800 transition">
-                <span>{headerSettings.currency || 'IN'}</span>
+              <div className="flex items-center gap-1 px-4 cursor-pointer hover:text-[#ff0066] transition font-medium">
+                <span>{headerSettings.currency || 'TN'}</span>
                 <ChevronDown size={11} />
               </div>
 
-              <span className="text-gray-200">|</span>
-
               {/* Find a Store */}
-              <a href={headerSettings.topBarStoreLink || '#'}
-                className="flex items-center gap-1 text-gray-500 hover:text-gray-800 transition font-medium no-underline"
-              >
-                <MapPin size={12} /> <span>Find a Store</span>
+              <a href={headerSettings.topBarStoreLink || '#'} className="flex items-center gap-1.5 px-4 hover:text-[#ff0066] transition font-medium no-underline text-slate-500">
+                <MapPin size={11} /> Find a Store
               </a>
 
-              {/* Play Store / App Store icons */}
-              <span className="text-gray-200">|</span>
-              <div className="flex items-center gap-2">
-                <a href={headerSettings.topBarPlayStoreLink || '#'} className="text-gray-400 hover:text-gray-700 transition no-underline" title="Play Store">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5.25 3.03v17.94c0 .33.18.63.48.78.3.15.66.12.93-.09l9.36-7.49 3.06-2.45c.42-.34.42-.98 0-1.32l-3.06-2.45-9.36-7.49C6.39.72 6.03.69 5.73.84c-0.3.15-.48.45-.48.78z"/></svg>
+              {/* App Store Badges */}
+              <div className="flex items-center gap-2 pl-4">
+                {/* Google Play Badge */}
+                <a href={headerSettings.topBarPlayStoreLink || '#'} title="Get it on Google Play"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-200 hover:border-[#ff0066] hover:text-[#ff0066] transition text-slate-500 no-underline"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-[#01875f]">
+                    <path d="M3.18 23.76c.37.2.8.2 1.18-.02l13.64-7.86-2.9-2.9-11.92 10.78zM.5 1.4C.19 1.77 0 2.28 0 2.93v18.14c0 .65.19 1.16.5 1.53l.08.08 10.16-10.16v-.24L.58 1.32.5 1.4zM20.33 10.27l-2.9-1.67-3.23 3.23 3.23 3.22 2.91-1.68c.83-.48.83-1.62-.01-2.1zM4.36.26L17.99 8.1l-2.9 2.9L3.18.22C3.56.01 4 .01 4.36.26z"/>
+                  </svg>
+                  <div className="leading-none">
+                    <div className="text-[7px] font-medium">GET IT ON</div>
+                    <div className="text-[10px] font-black tracking-tight">Google Play</div>
+                  </div>
                 </a>
-                <a href={headerSettings.topBarAppStoreLink || '#'} className="text-gray-400 hover:text-gray-700 transition no-underline" title="App Store">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.7-1.13 1.84-.99 2.94.99.08 2.16-.52 2.82-1.33z"/></svg>
+                {/* App Store Badge */}
+                <a href={headerSettings.topBarAppStoreLink || '#'} title="Download on the App Store"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-200 hover:border-[#ff0066] hover:text-[#ff0066] transition text-slate-500 no-underline"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.7-1.13 1.84-.99 2.94.99.08 2.16-.52 2.82-1.33z"/>
+                  </svg>
+                  <div className="leading-none">
+                    <div className="text-[7px] font-medium">DOWNLOAD ON THE</div>
+                    <div className="text-[10px] font-black tracking-tight">App Store</div>
+                  </div>
                 </a>
               </div>
             </div>
 
-            {/* Right Side */}
-            <div className="flex items-center gap-4">
-
+            {/* Right */}
+            <div className="flex items-center gap-0 divide-x divide-slate-150">
               {/* Compare */}
               <a href="#" onClick={(e) => { e.preventDefault(); setCompareOpen(true); }}
-                className="flex items-center gap-1 text-gray-500 hover:text-gray-800 transition font-medium no-underline"
+                className="flex items-center gap-1.5 pr-4 hover:text-[#ff0066] transition font-medium no-underline text-slate-500"
               >
-                <GitCompare size={12} /> <span>Compare</span>
+                <GitCompare size={11} />
+                <span>Compare</span>
                 {compareList.length > 0 && (
-                  <span className="bg-blue-600 text-white text-[9px] font-black rounded-full px-1.5 py-0.5 leading-none">{compareList.length}</span>
+                  <span className="bg-[#ff0066] text-white text-[8px] font-black rounded-full px-1 py-0.5 leading-none">{compareList.length}</span>
                 )}
               </a>
 
-              <span className="text-gray-200">|</span>
-
               {/* Track Order */}
               <button onClick={() => onTabChange('dashboard')}
-                className="flex items-center gap-1 text-gray-500 hover:text-gray-800 transition font-medium bg-transparent border-0 cursor-pointer text-[12px]"
+                className="flex items-center gap-1.5 px-4 hover:text-[#ff0066] transition font-medium bg-transparent border-0 cursor-pointer text-slate-500"
               >
-                <Truck size={12} /> <span>Track Order</span>
+                <Truck size={11} /> Track Order
               </button>
-
-              <span className="text-gray-200">|</span>
 
               {/* Helpline */}
               <a href={`tel:${headerSettings.topBarHelpline || '8801234567890'}`}
-                className="flex items-center gap-1 text-gray-600 hover:text-gray-800 transition font-semibold no-underline"
+                className="flex items-center gap-1.5 pl-4 hover:text-[#ff0066] transition font-medium no-underline text-slate-500"
               >
-                <PhoneCall size={12} />
+                <PhoneCall size={11} />
                 <span>Helpline {headerSettings.topBarHelpline || '8801234567890'}</span>
               </a>
+            </div>
 
+          </div>
+        </div>
+      </div>
+
+
+
+      {/* ── MAIN STICKY HEADER ── */}
+      <header className="sticky top-0 z-40 w-full">
+
+        {/* Main Navbar */}
+        <div className="bg-white/95 backdrop-blur-lg border-b border-slate-100 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center h-14 gap-4">
+
+              {/* Logo */}
+              <button
+                onClick={() => onTabChange('home')}
+                className="flex items-center gap-2 flex-shrink-0 group"
+              >
+                {headerSettings.headerLogo ? (
+                  <img src={headerSettings.headerLogo} alt={headerSettings.siteTitle || 'Goroly Shop'} className="h-8 w-auto object-contain" />
+                ) : (
+                  <>
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#ff0066] to-[#d60052] flex items-center justify-center shadow-md shadow-[#ff0066]/30 group-hover:shadow-[#ff0066]/50 transition">
+                      <Store size={16} className="text-white" />
+                    </div>
+                    <div className="leading-none">
+                      <span className="text-lg font-black text-slate-900 tracking-tight">Goroly</span>
+                      <span className="text-lg font-black text-[#ff0066] tracking-tight"> Shop</span>
+                    </div>
+                  </>
+                )}
+              </button>
+
+              {/* Search Bar */}
+              <div className="hidden sm:flex flex-1 max-w-xl relative mx-4">
+                <div className="w-full flex items-center gap-2 pl-3.5 pr-1.5 py-1 rounded-xl border-2 border-slate-100 hover:border-slate-200 focus-within:border-[#ff0066] bg-slate-50/60 focus-within:bg-white transition-all duration-300">
+                  <Search size={15} className="flex-shrink-0 text-slate-400 focus-within:text-[#ff0066] transition-colors" />
+                  <input
+                    type="text"
+                    placeholder={lang === 'bn' ? 'পণ্য, ক্যাটাগরি খুঁজুন...' : 'Search products, categories...'}
+                    value={currentSearch}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    className="flex-1 bg-transparent outline-none text-xs font-semibold text-slate-700 placeholder-slate-400 py-1.5"
+                  />
+                  {currentSearch && (
+                    <button 
+                      onClick={() => onSearchChange('')}
+                      className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition mr-1 cursor-pointer border-0 bg-transparent"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                  <button
+                    className="bg-[#ff0066] hover:bg-[#d60052] text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all duration-200 shadow-xs active:scale-95 flex items-center gap-1.5 cursor-pointer border-0"
+                  >
+                    <span>Search</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Actions */}
+              <div className="flex items-center gap-1 ml-auto sm:ml-0">
+
+                {/* Dark Mode */}
+                <button
+                  onClick={toggleDarkMode}
+                  title={darkMode ? 'Light Mode' : 'Dark Mode'}
+                  className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition"
+                >
+                  {darkMode ? <Sun size={17} /> : <Moon size={17} />}
+                </button>
+
+                {/* User */}
+                {user ? (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        if (user.isAdmin || user.role === 'seller') {
+                          window.location.href = '/admin';
+                        } else {
+                          onTabChange('dashboard');
+                        }
+                      }}
+                      className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer group"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#ff0066] to-[#d60052] flex items-center justify-center text-white text-xs font-black shadow-sm">
+                        {user.name?.charAt(0)?.toUpperCase()}
+                      </div>
+                      <div className="text-left leading-tight">
+                        <span className="block text-xs font-bold text-slate-800 group-hover:text-[#ff0066] transition">{user.name?.split(' ')[0]}</span>
+                        <span className="block text-[10px] font-semibold text-slate-400 capitalize">
+                          {user.role === 'seller' ? 'Seller' : user.isAdmin ? 'Admin' : 'Customer'}
+                        </span>
+                      </div>
+                    </button>
+                    <button
+                      onClick={logout}
+                      title="Logout"
+                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition"
+                    >
+                      <LogOut size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={onAuthClick}
+                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 border-2 border-[#ff0066] text-[#ff0066] hover:bg-[#ff0066] hover:text-white rounded-xl text-xs font-bold transition"
+                  >
+                    <User size={14} />
+                    {t('login')}
+                  </button>
+                )}
+
+                {/* Mobile Search */}
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="sm:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-xl transition"
+                >
+                  <Search size={17} />
+                </button>
+
+                {/* Wishlist */}
+                <button
+                  onClick={() => onTabChange('wishlist')}
+                  className="p-2 text-slate-500 hover:text-[#ff0066] hover:bg-rose-50 rounded-xl transition relative"
+                >
+                  <Heart size={17} />
+                </button>
+
+                {/* Cart */}
+                <button
+                  onClick={onCartClick}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ff0066] hover:bg-[#d60052] text-white rounded-xl transition shadow-md shadow-[#ff0066]/25 hover:shadow-[#ff0066]/40 relative"
+                >
+                  <ShoppingBag size={16} />
+                  {cartCount > 0 ? (
+                    <span className="text-xs font-black">{cartCount}</span>
+                  ) : (
+                    <span className="hidden sm:inline text-xs font-bold">Cart</span>
+                  )}
+                </button>
+
+                {/* Mobile Hamburger */}
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="md:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-xl transition"
+                >
+                  {mobileMenuOpen ? <X size={17} /> : <Menu size={17} />}
+                </button>
+
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b-2 border-[#FF6600] shadow-xs">
-        {/* Main Navbar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
-          
-          {/* Logo */}
-          <div className="flex items-center">
-            <button 
-              onClick={() => onTabChange('home')} 
-              className="text-3xl sm:text-4xl font-extrabold tracking-tight text-blue-600 flex items-center gap-1.5"
-            >
-              {headerSettings.headerLogo ? (
-                <img src={headerSettings.headerLogo} alt={headerSettings.siteTitle || 'Shopio'} className="h-8 sm:h-12 w-auto object-contain" />
-              ) : (
-                <>
-                  <span className="bg-blue-600 text-white p-2 rounded-lg text-xl flex items-center justify-center font-bold">
-                    S
-                  </span>
-                  Shopio<span className="text-amber-500">.</span>
-                </>
-              )}
-            </button>
-          </div>
+        {/* ── SECONDARY NAV BAR (Desktop) ── */}
+        <div className="hidden md:block bg-[#0f172a] dark:bg-[#090d16] select-none border-b border-slate-800 dark:border-slate-900/60 shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-12">
 
-          {/* Center Navigation - Desktop */}
-          <nav className="hidden md:flex space-x-10 font-bold text-slate-800 text-lg lg:text-xl">
-            {user && !user.isAdmin && user.role !== 'seller' && (
-              <button
-                onClick={() => handleNavClick('dashboard')}
-                className={`hover:text-blue-600 transition ${activeTab === 'dashboard' ? 'text-blue-600 font-black' : ''}`}
-              >
-                {t('dashboard')}
-              </button>
-            )}
-          </nav>
+            {/* Left: Category dropdown + nav links */}
+            <div className="flex items-center h-full">
 
-          {/* Search bar */}
-          <div className="hidden sm:flex flex-1 max-w-md relative">
-            <input
-              type="text"
-              placeholder={lang === 'bn' ? "অর্ডার, পণ্য, ক্যাটাগরি খুঁজুন..." : "Search for orders, products, categories..."}
-              value={currentSearch}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-full text-base bg-slate-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            />
-            <Search className="absolute left-3.5 top-3 text-slate-400" size={18} />
-          </div>
-
-          {/* Right Action Icons */}
-          <div className="flex items-center gap-3 sm:gap-5">
-            
-            {/* Search Icon (Mobile only) - opens drawer */}
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="sm:hidden p-3 text-slate-600 hover:bg-slate-100 rounded-full transition">
-              <Search size={24} />
-            </button>
-
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={toggleDarkMode}
-              title={darkMode ? 'Light Mode' : 'Dark Mode'}
-              className="p-3 text-slate-600 hover:bg-slate-100 rounded-full transition"
-            >
-              {darkMode ? <Sun size={24} /> : <Moon size={24} />}
-            </button>
-
-            {/* User Dropdown / Auth trigger */}
-            {user ? (
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => {
-                    if (user.isAdmin || user.role === 'seller') {
-                      window.location.href = '/admin';
-                    } else {
-                      onTabChange('dashboard');
-                    }
-                  }}
-                  className="hidden md:flex flex-col text-right hover:text-blue-600 transition cursor-pointer"
-                >
-                  <span className="text-base font-bold text-slate-800">{user.name}</span>
-                  <span className="text-sm font-semibold text-slate-400 capitalize">{user.role === 'seller' ? (lang === 'bn' ? 'বিক্রেতা' : 'Seller') : (user.isAdmin ? (lang === 'bn' ? 'অ্যাডমিন' : 'Admin') : (lang === 'bn' ? 'গ্রাহক' : 'Customer'))}</span>
+              {/* Shop By Categories */}
+              <div className="dropdown-parent relative h-full flex items-center mr-4">
+                <button className="flex items-center gap-2 text-white hover:text-white font-bold text-xs transition-all duration-200 bg-white/5 hover:bg-white/10 px-3.5 py-1.5 rounded-lg border border-white/10 cursor-pointer shadow-xs">
+                  <Menu size={13} className="text-white/80" />
+                  <span>{t('shopByCategories')}</span>
+                  <ChevronDown size={11} className="text-white/60" />
                 </button>
-                <button
-                  onClick={logout}
-                  title={lang === 'bn' ? "লগআউট" : "Logout"}
-                  className="p-3 text-slate-600 hover:text-red-500 hover:bg-red-50/50 rounded-full transition flex items-center gap-1.5"
-                >
-                  <LogOut size={24} />
-                </button>
+
+                {/* Category Dropdown */}
+                <div className="dropdown-menu absolute left-0 top-full mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-slate-100 dark:border-slate-800/80 p-2 z-50">
+                  <div className="px-3.5 py-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-50 dark:border-slate-800/50 mb-1">All Categories</div>
+                  <div className="space-y-0.5 max-h-72 overflow-y-auto scrollbar-thin">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat._id}
+                        onClick={() => { onSearchChange(cat.name); onTabChange('shop'); }}
+                        className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-rose-50/70 dark:hover:bg-slate-800 hover:text-[#ff0066] dark:hover:text-[#ff0066] rounded-xl transition-all duration-200 flex items-center gap-2.5 bg-transparent border-0 cursor-pointer group"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-350 dark:bg-slate-700 group-hover:bg-[#ff0066] group-hover:scale-125 transition-all duration-200 flex-shrink-0" />
+                        <span className="group-hover:translate-x-1 transition-transform duration-200">{cat.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            ) : (
-              <button
-                onClick={onAuthClick}
-                className="p-3 text-slate-600 hover:bg-slate-100 rounded-full transition flex items-center gap-2"
-              >
-                <User size={24} />
-                <span className="hidden md:inline text-lg font-bold">{t('login')}</span>
-              </button>
-            )}
 
-            {/* Wishlist */}
-            <button onClick={() => onTabChange('wishlist')} className="p-3.5 text-slate-600 hover:bg-slate-100 rounded-full transition relative">
-              <Heart size={28} />
-            </button>
-
-            {/* Cart Icon */}
-            <button
-              onClick={onCartClick}
-              className="p-3.5 text-slate-600 hover:bg-slate-100 rounded-full transition relative flex items-center justify-center"
-            >
-              <ShoppingBag size={28} />
-              {cartCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 bg-blue-600 text-white text-[12px] font-black rounded-full w-6 h-6 flex items-center justify-center ring-2 ring-white">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-
-            {/* Mobile Hamburger */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-3 text-slate-600 hover:bg-slate-100 rounded-full transition"
-            >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-
-          </div>
-        </div>
-      </div>
-
-      {/* Secondary Navbar (Desktop Only) */}
-      <div className="hidden md:block bg-black text-white text-sm font-semibold select-none border-t border-zinc-900 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-12">
-          
-          {/* Left Side: All Nav Links */}
-          <div className="flex items-center gap-0">
-            
-            {/* Shop By Categories Dropdown */}
-            <div className="relative group/cat">
-              <button className="flex items-center gap-2 text-white hover:text-amber-500 font-bold py-3 pr-8 transition cursor-pointer bg-transparent border-0 border-r border-zinc-700">
-                <Menu size={18} />
-                <span>{t('shopByCategories')}</span>
-                <ChevronDown size={14} />
-              </button>
-              
-              {/* Category Dropdown Content */}
-              <div className="absolute left-0 top-full hidden group-hover/cat:block w-56 bg-white text-slate-800 rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                {categories.map((cat) => (
+              {/* Nav Links */}
+              <div className="flex items-center gap-6 h-full ml-4">
+                {[
+                  { label: t('products'), action: () => { onSearchChange(''); onTabChange('shop'); } },
+                  { label: t('store'), action: () => { onSearchChange(''); onTabChange('shop'); } },
+                  { label: t('brands'), action: () => { onSearchChange(''); onTabChange('shop'); } },
+                ].map((item) => (
                   <button
-                    key={cat._id}
-                    onClick={() => {
-                      onSearchChange(cat.name);
-                      onTabChange('shop');
-                    }}
-                    className="w-full text-left px-4 py-2.5 text-[13px] font-bold text-slate-700 hover:bg-slate-50 hover:text-[#FF6600] transition flex items-center gap-2 bg-transparent border-0 cursor-pointer"
+                    key={item.label}
+                    onClick={item.action}
+                    className="nav-link-underline text-white/90 hover:text-white font-semibold text-xs transition bg-transparent border-0 cursor-pointer py-1"
                   >
-                    {cat.name}
+                    {item.label}
                   </button>
                 ))}
-              </div>
-            </div>
-            
-            {/* Nav Links - Left aligned after categories */}
-            <div className="flex items-center pl-8 gap-6 font-bold">
-              <button onClick={() => { onSearchChange(''); onTabChange('shop'); }} className="hover:text-[#FF6600] transition cursor-pointer bg-transparent border-0 text-white font-semibold text-sm py-3">{t('products')}</button>
-              <button onClick={() => { onSearchChange(''); onTabChange('shop'); }} className="hover:text-[#FF6600] transition cursor-pointer bg-transparent border-0 text-white font-semibold text-sm py-3">{t('store')}</button>
-              <button onClick={() => { onSearchChange(''); onTabChange('shop'); }} className="hover:text-[#FF6600] transition cursor-pointer bg-transparent border-0 text-white font-semibold text-sm py-3">{t('brands')}</button>
-              
-              {/* Pages Dropdown */}
-              <div className="relative group/pages">
-                <button className="flex items-center gap-1 hover:text-[#FF6600] transition cursor-pointer font-semibold bg-transparent border-0 text-white text-sm py-3">
-                  <span>{t('pages')}</span>
-                  <ChevronDown size={13} />
-                </button>
-                
-                {/* Pages Dropdown Content */}
-                <div className="absolute left-0 top-full hidden group-hover/pages:block w-48 bg-white text-slate-800 rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                  {pages.length === 0 ? (
-                    <span className="block px-4 py-2 text-xs text-slate-400">{lang === 'bn' ? 'কোনো পেইজ নেই' : 'No pages'}</span>
-                  ) : pages.map((p) => (
-                    <button
-                      key={p.slug}
-                      onClick={() => onTabChange(`page-${p.slug}`)}
-                      className="w-full text-left px-4 py-2.5 text-[13px] font-bold text-slate-700 hover:bg-slate-50 hover:text-[#FF6600] transition bg-transparent border-0 cursor-pointer"
-                    >
-                      {p.title}
-                    </button>
-                  ))}
+
+                {/* Pages Dropdown */}
+                <div className="dropdown-parent relative h-full flex items-center">
+                  <button className="nav-link-underline flex items-center gap-1 text-white/90 hover:text-white font-semibold text-xs transition bg-transparent border-0 cursor-pointer py-1">
+                    {t('pages')} <ChevronDown size={11} className="text-white/60" />
+                  </button>
+                  <div className="dropdown-menu absolute left-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-slate-100 dark:border-slate-800/80 p-2 z-50">
+                    <div className="px-3 py-1.5 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-50 dark:border-slate-800/50 mb-1">Quick Links</div>
+                    <div className="space-y-0.5">
+                      {pages.length === 0 ? (
+                        <span className="block px-3 py-2.5 text-xs text-slate-400 dark:text-slate-500 font-medium">No pages</span>
+                      ) : pages.map((p) => (
+                        <button
+                          key={p.slug}
+                          onClick={() => onTabChange(`page-${p.slug}`)}
+                          className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-rose-50/70 dark:hover:bg-slate-800 hover:text-[#ff0066] dark:hover:text-[#ff0066] rounded-xl transition-all duration-200 flex items-center gap-2.5 bg-transparent border-0 cursor-pointer group"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-350 dark:bg-slate-700 group-hover:bg-[#ff0066] group-hover:scale-125 transition-all duration-200 flex-shrink-0" />
+                          <span className="group-hover:translate-x-1 transition-transform duration-200">{p.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-          </div>
-          
-          {/* Right: Daily Deals Button */}
-          <div>
-            <button 
+            {/* Right: Deals Button */}
+            <button
               onClick={() => { onSearchChange('Sale'); onTabChange('shop'); }}
-              className="flex items-center gap-1.5 bg-[#FF6600] text-white px-4 py-2 text-[12px] rounded-lg font-extrabold shadow hover:bg-amber-500 hover:text-white transition duration-300 cursor-pointer border-0"
+              className="flex items-center gap-1.5 bg-gradient-to-r from-[#ff0066] to-[#ff3385] text-white px-4 py-2 rounded-xl text-xs font-black shadow-md hover:shadow-rose-500/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer border-0"
             >
-              <Zap size={14} className="text-white fill-white" />
+              <Zap size={13} className="fill-white text-white animate-pulse" />
               <span>{t('dailyDeals')}</span>
             </button>
-          </div>
-          
-        </div>
-      </div>
 
-      {/* Mobile Nav Links (visible below header) */}
-      <div className="md:hidden border-t border-slate-100 bg-white px-2">
-        <div className="flex overflow-x-auto gap-1 py-1.5 scrollbar-hide">
-          {[
-            { tab: 'brands', label: t('brands'), isBrands: true },
-            { tab: 'deals', label: t('dailyDeals'), isDeals: true },
-            ...(user && !user.isAdmin && user.role !== 'seller' ? [{ tab: 'dashboard', label: t('dashboard') }] : []),
-          ].map((item) => {
-            const isActive = activeTab === item.tab && !item.isBrands && !item.isDeals;
-            return (
+          </div>
+        </div>
+
+        {/* ── PROMO BANNER (Marquee) ── */}
+        <div className="w-full overflow-hidden bg-[#6F1BE4]" style={{ minHeight: '34px', display: 'flex', alignItems: 'center' }}>
+          <div className="banner-track">
+            {[
+              '🔥 Summer Sale — All Swim Suits OFF 50%!',
+              '🚚 Free Express Delivery on orders over ৳999',
+              '🎁 Buy 2 Get 1 Free on selected items',
+              '⚡ Flash Deal: Extra 10% off with code GOROLY10',
+              '🌟 New Arrivals — Shop the latest trends now!',
+            ].map((msg, i) => (
+              <span key={i} style={{ color: '#fff', fontWeight: 700, fontSize: '0.78rem', letterSpacing: '0.02em', padding: '0 48px' }}>
+                {msg}
+                <button
+                  onClick={() => onTabChange('shop')}
+                  style={{ marginLeft: '10px', color: '#fff', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 'inherit', opacity: 0.85 }}
+                >
+                  Shop Now →
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Nav Tags */}
+        <div className="md:hidden bg-white border-b border-slate-100 px-3">
+          <div className="flex overflow-x-auto gap-1.5 py-1.5 scrollbar-hide">
+            {[
+              { tab: 'shop', label: t('products'), action: () => { onSearchChange(''); onTabChange('shop'); } },
+              { tab: 'deals', label: '⚡ ' + t('dailyDeals'), action: () => { onSearchChange('Sale'); onTabChange('shop'); } },
+              ...(user && !user.isAdmin && user.role !== 'seller' ? [{ tab: 'dashboard', label: t('dashboard'), action: () => onTabChange('dashboard') }] : []),
+            ].map((item) => (
               <button
                 key={item.tab}
-                onClick={() => item.isAdminLink ? (window.location.href = '/admin') : handleNavClick(item.tab, item.isBrands, item.isDeals)}
-                className={`flex-shrink-0 px-4 py-2 text-sm font-bold rounded-lg transition whitespace-nowrap flex items-center gap-1 ${
-                  isActive
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 hover:bg-slate-100'
+                onClick={item.action}
+                className={`flex-shrink-0 px-3 py-1 text-xs font-bold rounded-lg transition whitespace-nowrap ${
+                  activeTab === item.tab ? 'bg-[#ff0066] text-white' : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                {item.isDeals && <Zap size={12} className="text-amber-500 fill-amber-500" />}
                 {item.label}
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-100 bg-white px-4 py-4 space-y-3 shadow-inner">
-          <input
-            type="text"
-            placeholder={lang === 'bn' ? "পণ্য খুঁজুন..." : "Search products..."}
-            value={currentSearch}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg text-base bg-slate-50 focus:bg-white focus:outline-hidden"
-          />
-          <nav className="flex flex-col gap-2 font-bold text-lg text-slate-700">
-            <button
-              onClick={() => handleNavClick('shop', true, false)}
-              className="text-left py-2.5 px-4 hover:bg-slate-50 rounded-lg transition text-slate-700"
-            >
-              {t('brands')}
-            </button>
-            <button
-              onClick={() => handleNavClick('shop', false, true)}
-              className="text-left py-2.5 px-4 hover:bg-slate-50 rounded-lg transition text-slate-700 flex items-center gap-1.5"
-            >
-              <Zap size={16} className="text-amber-500 fill-amber-500" />
-              {t('dailyDeals')}
-            </button>
-            {user && !user.isAdmin && user.role !== 'seller' && (
+        {/* Mobile Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-slate-100 px-4 py-4 space-y-3 shadow-lg">
+            <div className="relative flex items-center bg-slate-50/60 focus-within:bg-white border-2 border-slate-100 focus-within:border-[#ff0066] rounded-xl transition duration-300 pr-1 py-1">
+              <Search size={14} className="absolute left-3 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={currentSearch}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="w-full pl-9 pr-8 bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none py-1.5"
+              />
+              {currentSearch && (
+                <button 
+                  onClick={() => onSearchChange('')}
+                  className="absolute right-12 p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200 transition cursor-pointer border-0 bg-transparent"
+                >
+                  <X size={11} />
+                </button>
+              )}
               <button
-                onClick={() => handleNavClick('dashboard')}
-                className={`text-left py-2.5 px-4 hover:bg-slate-50 rounded-lg transition ${
-                  activeTab === 'dashboard' ? 'text-blue-600 bg-blue-50/50' : ''
-                }`}
+                className="bg-[#ff0066] text-white px-3 py-1.5 rounded-lg text-xs font-extrabold border-0 flex-shrink-0 cursor-pointer"
               >
-                {lang === 'bn' ? 'আমার ড্যাশবোর্ড' : 'My Dashboard'}
+                Go
               </button>
-            )}
-          </nav>
-        </div>
-      )}
+            </div>
+            <nav className="flex flex-col gap-1 text-sm text-slate-700">
+              {!user && (
+                <button
+                  onClick={() => { onAuthClick(); setMobileMenuOpen(false); }}
+                  className="flex items-center gap-2 py-2.5 px-3 bg-[#ff0066] text-white rounded-xl font-bold"
+                >
+                  <User size={15} /> Sign In / Register
+                </button>
+              )}
+              <button onClick={() => handleNavClick('shop', true, false)} className="text-left py-2.5 px-3 hover:bg-slate-50 rounded-xl transition font-semibold">{t('brands')}</button>
+              <button onClick={() => handleNavClick('shop', false, true)} className="text-left py-2.5 px-3 hover:bg-slate-50 rounded-xl transition flex items-center gap-1.5 font-semibold">
+                <Zap size={13} className="text-amber-500 fill-amber-500" /> {t('dailyDeals')}
+              </button>
+              {user && !user.isAdmin && user.role !== 'seller' && (
+                <button onClick={() => handleNavClick('dashboard')} className={`text-left py-2.5 px-3 rounded-xl transition font-semibold ${activeTab === 'dashboard' ? 'text-[#ff0066] bg-rose-50' : 'hover:bg-slate-50'}`}>
+                  {lang === 'bn' ? 'আমার ড্যাশবোর্ড' : 'My Dashboard'}
+                </button>
+              )}
+            </nav>
+          </div>
+        )}
 
-      {/* Top Banner Alert - auto-slide marquee */}
-      <div
-        className="w-full overflow-hidden"
-        style={{
-          background: '#FF6600',
-          padding: '10px 0',
-          minHeight: '44px',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
-        <style>{`
-          @keyframes bannerSlide {
-            0%   { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-          }
-          .banner-track {
-            display: flex;
-            gap: 0;
-            white-space: nowrap;
-            animation: bannerSlide 22s linear infinite;
-            will-change: transform;
-          }
-          .banner-track:hover {
-            animation-play-state: paused;
-          }
-        `}</style>
-        <div className="banner-track">
-          {[
-            '🔥 Summer Sale — All Swim Suits OFF 50%!',
-            '🚚 Free Express Delivery on orders over ৳999',
-            '🎁 Buy 2 Get 1 Free on selected items',
-            '⚡ Flash Deal: Extra 10% off with code SHOPIO10',
-            '🌟 New Arrivals — Shop the latest trends now!',
-          ].map((msg, i) => (
-            <span key={i} style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem', letterSpacing: '0.02em', padding: '0 56px' }}>
-              {msg}
-              <button
-                onClick={() => onTabChange('shop')}
-                style={{ marginLeft: '12px', color: '#1e1b4b', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 'inherit' }}
-              >
-                Shop Now →
-              </button>
-            </span>
-          ))}
-        </div>
-      </div>
+      </header>
+
       <CompareModal isOpen={compareOpen} onClose={() => setCompareOpen(false)} />
-    </header>
-  </>
+    </>
   );
 }

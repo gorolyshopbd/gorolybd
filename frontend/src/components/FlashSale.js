@@ -34,7 +34,7 @@ export default function FlashSale({ products, onProductClick, onAddToWishlist })
 
   return (
     <section className="py-16 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-600 via-red-600 to-pink-700" />
+      <div className="absolute inset-0 bg-gradient-to-br from-rose-600 via-red-600 to-pink-700" />
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
@@ -44,7 +44,7 @@ export default function FlashSale({ products, onProductClick, onAddToWishlist })
             </div>
             <div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{lang === 'bn' ? 'ফ্ল্যাশ সেল' : 'Flash Sale'}</h2>
-              <p className="text-orange-100 text-xs sm:text-sm opacity-90">{lang === 'bn' ? 'তাড়াতাড়ি করুন! এই অফারটি সীমিত সময়ের জন্য।' : "Hurry up! These deals won't last long."}</p>
+              <p className="text-rose-100 text-xs sm:text-sm opacity-90">{lang === 'bn' ? 'তাড়াতাড়ি করুন! এই অফারটি সীমিত সময়ের জন্য।' : "Hurry up! These deals won't last long."}</p>
             </div>
           </div>
 
@@ -58,7 +58,7 @@ export default function FlashSale({ products, onProductClick, onAddToWishlist })
               <div key={idx} className="flex items-center">
                 <div className="bg-white/15 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 text-center min-w-[48px]">
                   <div className="font-extrabold text-white text-sm sm:text-lg tracking-wider">{formatNumber(t.val)}</div>
-                  <div className="text-[8px] font-semibold text-orange-200 uppercase tracking-wider">{t.label}</div>
+                  <div className="text-[8px] font-semibold text-rose-200 uppercase tracking-wider">{t.label}</div>
                 </div>
                 {idx < 3 && <span className="mx-0.5 font-bold text-white/40 text-lg">:</span>}
               </div>
@@ -75,7 +75,7 @@ export default function FlashSale({ products, onProductClick, onAddToWishlist })
                 className="group bg-white rounded-2xl overflow-hidden shadow-lg shadow-black/10 hover:shadow-2xl hover:shadow-black/20 transition-all duration-500 hover:-translate-y-1 flex flex-col"
               >
                 <div className="relative pt-[80%] bg-slate-100 overflow-hidden">
-                  <span className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg z-10 shadow-lg shadow-red-500/30">
+                  <span className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-rose-500 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg z-10 shadow-lg shadow-red-500/30">
                     -{product.discountPercent}%
                   </span>
                   <button
@@ -93,7 +93,7 @@ export default function FlashSale({ products, onProductClick, onAddToWishlist })
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   <button
                     onClick={() => onProductClick(product)}
-                    className="absolute bottom-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-md hover:bg-white transition z-10 text-slate-500 hover:text-blue-600 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 duration-300"
+                    className="absolute bottom-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-md hover:bg-white transition z-10 text-slate-500 hover:text-[#ff0066] translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 duration-300"
                     title={lang === 'bn' ? 'দ্রুত দেখুন' : 'Quick View'}
                   >
                     <Eye size={15} />
@@ -109,7 +109,7 @@ export default function FlashSale({ products, onProductClick, onAddToWishlist })
                     </div>
                     <h3
                       onClick={() => router.push(`/product/${product._id}`)}
-                      className="font-bold text-slate-800 text-sm leading-snug hover:text-blue-600 cursor-pointer transition line-clamp-2"
+                      className="font-bold text-slate-800 text-sm leading-snug hover:text-[#ff0066] cursor-pointer transition line-clamp-2"
                     >
                       {product.name}
                     </h3>
@@ -130,7 +130,7 @@ export default function FlashSale({ products, onProductClick, onAddToWishlist })
                     </div>
                     <button
                       onClick={() => addToCart(product, 1)}
-                      className="px-3.5 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 text-xs font-bold rounded-xl transition-all duration-300 shadow-md shadow-orange-500/20 hover:shadow-lg hover:shadow-orange-500/30 flex items-center gap-1.5"
+                      className="px-3.5 py-2 bg-[#ff0066] hover:bg-[#d60052] text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-md shadow-[#ff0066]/20 hover:shadow-lg hover:shadow-[#ff0066]/30 flex items-center gap-1.5 border-0 cursor-pointer"
                     >
                       <ShoppingCart size={12} />
                       {t('add')}
