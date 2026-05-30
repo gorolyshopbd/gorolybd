@@ -1,10 +1,24 @@
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: shopio-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - frontend
+
   backend:
     build: ./backend
     container_name: shopio-backend
     restart: unless-stopped
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     env_file:
       - ./backend/.env.production
     environment:
@@ -16,8 +30,8 @@ services:
     build: ./frontend
     container_name: shopio-frontend
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     env_file:
       - ./frontend/.env.production
     depends_on:

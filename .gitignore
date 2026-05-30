@@ -4,6 +4,7 @@ node_modules
 .env.production
 .next
 .insforge
+nginx/ssl/
 diff.txt
 edits.json
 test.js
