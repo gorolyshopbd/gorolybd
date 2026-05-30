@@ -42,14 +42,13 @@ export default function CompareModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  // Calculate final prices for compared products
   const productsWithPrices = compareList.map(p => {
-    const finalPrice = p.price * (1 - (p.discountPercent || 0) / 100);
-    const savings = p.price - finalPrice;
+    const price = Number(p.price) || 0;
+    const finalPrice = price * (1 - (Number(p.discountPercent) || 0) / 100);
+    const savings = price - finalPrice;
     return { ...p, finalPrice, savings };
   });
 
-  // Find the cheapest product in comparison
   const minPrice = productsWithPrices.length > 0 
     ? Math.min(...productsWithPrices.map(p => p.finalPrice)) 
     : 0;

@@ -13,8 +13,10 @@ export const insforge = createClient({
   anonKey: process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY,
 });
 
-// Utility: format a price. Components should use this instead of hardcoding $ or ৳.
-export const formatPrice = (amount, symbol = '$') => `${symbol}${Number(amount).toFixed(2)}`;
+export const formatPrice = (amount, symbol = '$') => {
+  const num = Number(amount);
+  return isNaN(num) ? `${symbol}0.00` : `${symbol}${num.toFixed(2)}`;
+};
 
 export const getImageUrl = (path) => {
   if (!path) return '';
@@ -63,13 +65,8 @@ export const ShopProvider = ({ children }) => {
     };
     init();
 
-    insforge.realtime.on('order_updated', (payload) => {
-      console.log('[RT] order_updated:', payload);
-    });
-
-    insforge.realtime.on('product_updated', (payload) => {
-      console.log('[RT] product_updated:', payload);
-    });
+    insforge.realtime.on('order_updated', () => {});
+    insforge.realtime.on('product_updated', () => {});
 
     insforge.realtime.on('connect', () => { if (mounted) setRtLive(true); });
     insforge.realtime.on('disconnect', () => { if (mounted) setRtLive(false); });

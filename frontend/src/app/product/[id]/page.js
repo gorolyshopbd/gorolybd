@@ -138,7 +138,7 @@ export default function ProductDetailPage() {
 
   const finalPrice = product ? product.price * (1 - (product.discountPercent || 0) / 100) : 0;
 
-  const whatsappNumber = '8801700000000';
+  const whatsappNumber = (product && product.seller_phone) || '8801700000000';
   const whatsappMessage = product
     ? `Hi! I want to order "${product.name}" (Qty: ${qty}, Price: ${formatPrice(finalPrice * qty, currencySymbol)}). Please confirm my order.`
     : '';

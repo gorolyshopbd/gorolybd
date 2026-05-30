@@ -30,7 +30,7 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
     }
   };
 
-  const whatsappNumber = "8801700000000"; // Replace with your merchant number
+  const whatsappNumber = product.seller_phone || "8801700000000";
   const whatsappMessage = `Hi! I want to order "${product.name}" (Qty: ${qty}, Price: ${formatPrice(finalPrice * qty, currencySymbol)}). Please confirm my order.`;
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
   const callUrl = `tel:+${whatsappNumber}`;

@@ -108,8 +108,9 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
   if (!isOpen) return null;
 
   const itemsPrice = cartItems.reduce((acc, item) => {
-    const finalPrice = item.price * (1 - (item.discountPercent || 0) / 100);
-    return acc + finalPrice * item.qty;
+    const price = Number(item.price) || 0;
+    const finalPrice = price * (1 - (Number(item.discountPercent) || 0) / 100);
+    return acc + finalPrice * Number(item.qty) || 0;
   }, 0);
 
   const shippingPrice = selectedShipping ? selectedShipping.price : 0;

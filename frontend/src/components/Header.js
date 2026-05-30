@@ -41,12 +41,12 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
 
     fetch(`${API_URL}/categories`)
       .then((r) => r.ok ? r.json() : [])
-      .then((d) => setCategories(d || []))
+      .then((d) => { if (d) setCategories(d); })
       .catch(() => {});
 
     fetch(`${API_URL}/pages/public/all`)
       .then((r) => r.ok ? r.json() : [])
-      .then((d) => setPages(d || []))
+      .then((d) => { if (d) setPages(d); })
       .catch(() => {});
   }, []);
 

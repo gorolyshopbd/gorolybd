@@ -9,8 +9,12 @@ const protect = async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     try {
-      console.log("AUTH HEADER:", req.headers.authorization);
       token = req.headers.authorization.split(' ')[1];
+
+      if (!token) {
+        return res.status(401).json({ message: 'Not authorized, no token' });
+      }
+
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       const { data: user, error } = await db.database
@@ -23,31 +27,27 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ message: 'Not authorized, user not found' });
       }
 
-      // Map to maintain compatibility with Mongoose code
       req.user = {
         ...user,
         _id: user.id,
         isAdmin: user.is_admin,
       };
 
-      next();
+      return next();
     } catch (error) {
       console.error(error);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+      return res.status(401).json({ message: 'Not authorized, token failed' });
     }
   }
 
-  if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
-  }
+  return res.status(401).json({ message: 'Not authorized, no token' });
 };
 
 const admin = (req, res, next) => {
-  if (req.user && (req.user.isAdmin || req.user.role !== 'customer')) {
-    next();
-  } else {
-    res.status(401).json({ message: 'Not authorized as an admin' });
+  if (req.user && req.user.is_admin) {
+    return next();
   }
+  return res.status(401).json({ message: 'Not authorized as an admin' });
 };
 
 export { protect, admin };

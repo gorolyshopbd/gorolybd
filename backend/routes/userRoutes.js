@@ -1,5 +1,6 @@
 import express from 'express';
 import multer from 'multer';
+import bcrypt from 'bcryptjs';
 import {
   registerUser,
   authUser,
@@ -19,6 +20,8 @@ import {
   deleteUser,
   importSellers,
 } from '../controllers/userController.js';
+import { db } from '../config/db.js';
+import generateToken from '../utils/generateToken.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -33,10 +36,6 @@ router.post('/admin-login', async (req, res) => {
     if (!username || !password) {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
-
-    const { db } = await import('../config/db.js');
-    const bcrypt = (await import('bcryptjs')).default;
-    const generateToken = (await import('../utils/generateToken.js')).default;
 
     const { data: user, error } = await db.database.from('users').select('*').eq('email', username).single();
 
