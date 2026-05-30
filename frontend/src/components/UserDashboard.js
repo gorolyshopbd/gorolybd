@@ -159,7 +159,7 @@ export default function UserDashboard() {
 
           <button
             onClick={logout}
-            className="w-full mt-8 py-2.5 px-3 bg-slate-950/40 hover:bg-rose-500/20 text-slate-400 hover:text-rose-450 font-bold rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-2 border border-slate-800/30"
+            className="w-full mt-8 py-2.5 px-3 bg-slate-950/40 hover:bg-orange-500/20 text-slate-400 hover:text-orange-400 font-bold rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-2 border border-slate-800/30"
           >
             <LogOut size={16} /> {lang === 'bn' ? 'লগআউট' : 'Logout'}
           </button>
@@ -266,7 +266,7 @@ export default function UserDashboard() {
                       Processing: 'bg-blue-50 text-blue-700 border-blue-100',
                       Shipped: 'bg-indigo-50 text-indigo-700 border-indigo-100',
                       Delivered: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-                      Cancelled: 'bg-rose-50 text-rose-700 border-rose-100',
+                      Cancelled: 'bg-orange-50 text-orange-700 border-orange-100',
                     };
 
                     const statusLabelsBn = {

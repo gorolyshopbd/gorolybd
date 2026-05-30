@@ -6,7 +6,7 @@ import { Tag, ShieldCheck, CreditCard, Truck } from 'lucide-react';
 const features = [
   {
     icon: Tag,
-    iconBg: 'from-[#ff0066] to-rose-400',
+    iconBg: 'from-[#FF6600] to-orange-400',
     title: 'Competitive Price',
     subtitle: 'Get The Best Prices Everyday',
   },

@@ -1781,7 +1781,7 @@ export default function AdminDashboard({ onTabChange }) {
                         }
                       }
                     }}
-                    className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-full transition-colors cursor-pointer inline-flex items-center justify-center"
+                    className="p-1.5 bg-orange-50 hover:bg-orange-100 text-orange-500 rounded-full transition-colors cursor-pointer inline-flex items-center justify-center"
                     title="Delete"
                   >
                     <Trash2 size={12} />
@@ -1822,7 +1822,7 @@ export default function AdminDashboard({ onTabChange }) {
         Processing: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', progress: 'w-2/4 from-blue-400 to-blue-500' },
         Shipped: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200', progress: 'w-3/4 from-indigo-400 to-indigo-500' },
         Delivered: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', progress: 'w-full from-emerald-400 to-emerald-500' },
-        Cancelled: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200', progress: 'w-full from-rose-400 to-rose-500' },
+        Cancelled: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', progress: 'w-full from-orange-400 to-orange-500' },
       };
       
       const theme = statusColors[order.status] || { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-slate-200', progress: 'w-0' };
@@ -1850,7 +1850,7 @@ export default function AdminDashboard({ onTabChange }) {
               {order.isPaid ? (
                 <span className="text-[10px] px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-600 font-bold border border-emerald-500/20">Paid</span>
               ) : (
-                <span className="text-[10px] px-2 py-1 rounded-md bg-rose-500/10 text-rose-600 font-bold border border-rose-500/20">Unpaid</span>
+                <span className="text-[10px] px-2 py-1 rounded-md bg-orange-500/10 text-orange-600 font-bold border border-orange-500/20">Unpaid</span>
               )}
             </div>
           </td>
@@ -1901,7 +1901,7 @@ export default function AdminDashboard({ onTabChange }) {
               {['Pending', 'Processing'].includes(order.status) && (
                 <button 
                   onClick={() => handleUpdateStatus(order._id, 'Cancelled')}
-                  className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-xl transition-all duration-200 ml-1"
+                  className="p-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-xl transition-all duration-200 ml-1"
                   title="Cancel Order"
                 >
                   <X size={14} />
@@ -2127,7 +2127,7 @@ export default function AdminDashboard({ onTabChange }) {
                   </div>
                   <div className="flex items-center gap-1.5">
                     {item.badge > 0 && (
-                      <span className="bg-rose-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-tight">
+                      <span className="bg-orange-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-tight">
                         {item.badge}
                       </span>
                     )}
@@ -2260,8 +2260,8 @@ export default function AdminDashboard({ onTabChange }) {
               </svg>
             </button>
             {/* Live Connection Indicator */}
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors ${rtConnected ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${rtConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors ${rtConnected ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-500'}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${rtConnected ? 'bg-emerald-500 animate-pulse' : 'bg-orange-500'}`} />
               {rtConnected ? 'LIVE' : 'OFFLINE'}
             </div>
           </div>
@@ -2271,7 +2271,7 @@ export default function AdminDashboard({ onTabChange }) {
             {/* Brush Icon Button (Clear Cache) */}
             <button
               onClick={() => alert('System cache cleared successfully!')}
-              className="w-10 h-10 bg-rose-50 border border-rose-100 rounded-lg text-rose-500 hover:bg-rose-100 transition flex items-center justify-center cursor-pointer"
+              className="w-10 h-10 bg-orange-50 border border-orange-100 rounded-lg text-orange-500 hover:bg-orange-100 transition flex items-center justify-center cursor-pointer"
               title="Clear Cache"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -2310,7 +2310,7 @@ export default function AdminDashboard({ onTabChange }) {
                 title="Notifications"
               >
                 <Bell size={16} />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full border border-white"></span>
               </button>
             </div>
 
@@ -2379,7 +2379,7 @@ export default function AdminDashboard({ onTabChange }) {
               {[
                 { label: 'Total Orders', val: metrics.totalOrders ? metrics.totalOrders.toLocaleString() : '0', icon: ShoppingBag, iconBg: 'bg-violet-100 text-violet-600' },
                 { label: 'Total Revenue', val: metrics.totalRevenue ? `${currencySymbol}${metrics.totalRevenue.toLocaleString()}` : '0', icon: DollarSign, iconBg: 'bg-emerald-100 text-emerald-600' },
-                { label: 'Total Customers', val: metrics.totalCustomers ? metrics.totalCustomers.toLocaleString() : '0', icon: Users, iconBg: 'bg-rose-100 text-rose-600' },
+                { label: 'Total Customers', val: metrics.totalCustomers ? metrics.totalCustomers.toLocaleString() : '0', icon: Users, iconBg: 'bg-orange-100 text-orange-600' },
                 { label: 'Pending Orders', val: metrics.pendingOrders ? metrics.pendingOrders.toLocaleString() : '0', icon: AlertCircle, iconBg: 'bg-amber-100 text-amber-600' },
                 { label: 'Total Products', val: metrics.totalProducts ? metrics.totalProducts.toLocaleString() : '0', icon: Package, iconBg: 'bg-blue-100 text-blue-600' },
               ].map((card, idx) => {
@@ -2479,7 +2479,7 @@ export default function AdminDashboard({ onTabChange }) {
                             Delivered: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
                             Processing: 'bg-blue-50 text-blue-600 border border-blue-100',
                             Pending: 'bg-amber-50 text-amber-600 border border-amber-100',
-                            Cancelled: 'bg-rose-50 text-rose-600 border border-rose-100'
+                            Cancelled: 'bg-orange-50 text-orange-600 border border-orange-100'
                           };
                           const displayStatus = order.status || 'Pending';
                           return (
@@ -2542,12 +2542,12 @@ export default function AdminDashboard({ onTabChange }) {
                   </div>
                   {productsList.filter(p => !p.isDigital && p.countInStock !== undefined && Number(p.countInStock) <= 10).length > 0 ? (
                     productsList.filter(p => !p.isDigital && p.countInStock !== undefined && Number(p.countInStock) <= 10).sort((a, b) => Number(a.countInStock) - Number(b.countInStock)).slice(0, 1).map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between bg-rose-50/50 border border-rose-100/70 p-3 rounded-2xl">
+                      <div key={idx} className="flex items-center justify-between bg-orange-50/50 border border-orange-100/70 p-3 rounded-2xl">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-500 font-bold border border-rose-200">{item.name?.charAt(0)}</div>
+                          <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500 font-bold border border-orange-200">{item.name?.charAt(0)}</div>
                           <div>
                             <span className="text-[11px] font-bold text-slate-800 block">{item.name}</span>
-                            <span className="text-[9px] text-rose-500 font-extrabold">Stock: {item.countInStock} <span className="font-semibold text-rose-455">(Only {item.countInStock} left)</span></span>
+                            <span className="text-[9px] text-orange-500 font-extrabold">Stock: {item.countInStock} <span className="font-semibold text-orange-500">(Only {item.countInStock} left)</span></span>
                           </div>
                         </div>
                       </div>
@@ -2869,7 +2869,7 @@ export default function AdminDashboard({ onTabChange }) {
                                 setReviewsList(reviewsList.filter(r => r.id !== rev.id));
                                 alert('Review deleted.');
                               }}
-                              className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-lg font-bold transition"
+                              className="px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-lg font-bold transition"
                             >
                               Delete
                             </button>
@@ -2899,7 +2899,7 @@ export default function AdminDashboard({ onTabChange }) {
                         </div>
                         <button
                           onClick={() => setColorsList(colorsList.filter(c => c.id !== col.id))}
-                          className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-lg font-bold transition"
+                          className="px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-lg font-bold transition"
                         >
                           Delete
                         </button>
@@ -3024,7 +3024,7 @@ export default function AdminDashboard({ onTabChange }) {
                                             }
                                           }
                                         }}
-                                        className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-full transition-colors cursor-pointer inline-flex items-center justify-center"
+                                        className="p-1.5 bg-orange-50 hover:bg-orange-100 text-orange-500 rounded-full transition-colors cursor-pointer inline-flex items-center justify-center"
                                         title="Delete"
                                       >
                                         <Trash2 size={13} />
@@ -3939,7 +3939,7 @@ export default function AdminDashboard({ onTabChange }) {
                                         }
                                       }
                                     }}
-                                    className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-full transition-colors cursor-pointer inline-flex items-center justify-center"
+                                    className="p-1.5 bg-orange-50 hover:bg-orange-100 text-orange-500 rounded-full transition-colors cursor-pointer inline-flex items-center justify-center"
                                     title="Delete"
                                   >
                                     <Trash2 size={13} />
@@ -4166,7 +4166,7 @@ export default function AdminDashboard({ onTabChange }) {
                               fetchCoupons();
                             }}
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold border cursor-pointer ${
-                              cp.isActive ? 'bg-emerald-950/50 text-emerald-400 border-emerald-900/30' : 'bg-rose-950/50 text-rose-400 border-rose-900/30'
+                              cp.isActive ? 'bg-emerald-950/50 text-emerald-400 border-emerald-900/30' : 'bg-orange-950/50 text-orange-400 border-orange-900/30'
                             }`}
                           >
                             {cp.isActive ? 'Active' : 'Expired'}
@@ -4184,7 +4184,7 @@ export default function AdminDashboard({ onTabChange }) {
                           </button>
                           <button
                             onClick={() => handleDeleteCoupon(cp._id)}
-                            className="text-[10px] font-bold text-rose-400 hover:text-rose-300"
+                            className="text-[10px] font-bold text-orange-400 hover:text-orange-300"
                           >
                             Delete
                           </button>
@@ -4330,7 +4330,7 @@ export default function AdminDashboard({ onTabChange }) {
                             </button>
                             <button
                               onClick={() => handleDeleteShipping(method._id)}
-                              className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-xl transition-all duration-200"
+                              className="p-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-xl transition-all duration-200"
                             >
                               <Trash2 size={14} />
                             </button>
@@ -4562,7 +4562,7 @@ export default function AdminDashboard({ onTabChange }) {
                                 </button>
                                 <button
                                   onClick={() => handleDeleteCategory(cat._id)}
-                                  className="w-7 h-7 flex items-center justify-center bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-full transition-colors cursor-pointer"
+                                  className="w-7 h-7 flex items-center justify-center bg-orange-50 hover:bg-orange-100 text-orange-500 rounded-full transition-colors cursor-pointer"
                                   title="Delete"
                                 >
                                   <Trash2 size={12} />
@@ -4881,7 +4881,7 @@ export default function AdminDashboard({ onTabChange }) {
                       <Edit size={12} /> Edit
                     </button>
                     <button onClick={() => handleDeleteBrand(brand._id)}
-                      className="w-8 flex items-center justify-center bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-xl transition-all duration-200">
+                      className="w-8 flex items-center justify-center bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-xl transition-all duration-200">
                       <Trash2 size={12} />
                     </button>
                   </div>
@@ -5185,7 +5185,7 @@ export default function AdminDashboard({ onTabChange }) {
                             u.role === 'admin' ? 'bg-blue-100 text-blue-700 border-blue-200' :
                             u.role === 'manager' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
                             u.role === 'moderator' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                            u.role === 'seller' ? 'bg-rose-100 text-rose-700 border-rose-200' :
+                            u.role === 'seller' ? 'bg-orange-100 text-orange-700 border-orange-200' :
                             'bg-gray-100 text-gray-600 border-slate-200'
                           }`}>{u.role || 'customer'}</span>
                         </td>
@@ -5213,7 +5213,7 @@ export default function AdminDashboard({ onTabChange }) {
                                 <button onClick={() => setPasswordResetUserId(passwordResetUserId === u._id ? null : u._id)}
                                   className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 rounded-lg font-bold transition">Key</button>
                                 <button onClick={() => handleDeleteUser(u._id)}
-                                  className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-lg font-bold transition">
+                                  className="px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-lg font-bold transition">
                                   <Trash2 size={14} />
                                 </button>
                               </>
@@ -5761,13 +5761,13 @@ export default function AdminDashboard({ onTabChange }) {
                               <div className="font-bold text-slate-800">{log.name}</div>
                               <div className="text-[10px] text-slate-400 font-medium mt-0.5">{log.email}</div>
                             </td>
-                            <td className={`py-3.5 px-4 font-bold ${log.points >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                            <td className={`py-3.5 px-4 font-bold ${log.points >= 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
                               {log.points >= 0 ? `+${log.points}` : log.points} pts
                             </td>
                             <td className="py-3.5 px-4">
                               <span className={`px-2 py-0.5 rounded text-[9px] font-bold border uppercase tracking-wider ${
                                 log.type === 'earn' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                log.type === 'redeem' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                                log.type === 'redeem' ? 'bg-orange-50 text-orange-600 border-orange-100' :
                                 'bg-blue-50 text-blue-600 border-blue-100'
                               }`}>
                                 {log.type === 'admin_adjustment' ? 'Adjust' : log.type}
@@ -5863,13 +5863,13 @@ export default function AdminDashboard({ onTabChange }) {
                             {userLogs.map((log, idx) => (
                               <tr key={log._id || idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition">
                                 <td className="py-3 px-3 text-center font-bold text-slate-500">{idx + 1}</td>
-                                <td className={`py-3 px-3 font-bold ${log.points >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                                <td className={`py-3 px-3 font-bold ${log.points >= 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
                                   {log.points >= 0 ? `+${log.points}` : log.points} pts
                                 </td>
                                 <td className="py-3 px-3">
                                   <span className={`px-2 py-0.5 rounded text-[9px] font-bold border uppercase tracking-wider ${
                                     log.type === 'earn' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                    log.type === 'redeem' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                                    log.type === 'redeem' ? 'bg-orange-50 text-orange-600 border-orange-100' :
                                     'bg-blue-50 text-blue-600 border-blue-100'
                                   }`}>
                                     {log.type === 'admin_adjustment' ? 'Adjust' : log.type}
@@ -5929,7 +5929,7 @@ export default function AdminDashboard({ onTabChange }) {
               <form onSubmit={handleSaveRewardSettings} className="p-6 space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">
-                    Set Reward <span className="text-gray-400 font-normal lowercase">(1 USD - ?)</span> <span className="text-rose-500">*</span>
+                    Set Reward <span className="text-gray-400 font-normal lowercase">(1 USD - ?)</span> <span className="text-orange-500">*</span>
                   </label>
                   <input 
                     type="number" 
@@ -6118,7 +6118,7 @@ export default function AdminDashboard({ onTabChange }) {
                       </div>
                       <div className="flex gap-2">
                         <button onClick={() => startEditPage(page)} className="text-blue-400 hover:text-blue-300 font-bold">Edit</button>
-                        <button onClick={() => handleDeletePage(page._id)} className="text-rose-400 hover:text-rose-300 font-bold">Delete</button>
+                        <button onClick={() => handleDeletePage(page._id)} className="text-orange-400 hover:text-orange-300 font-bold">Delete</button>
                       </div>
                     </div>
                   ))}
@@ -6201,7 +6201,7 @@ export default function AdminDashboard({ onTabChange }) {
                       </div>
                       <div className="flex gap-2">
                         <button onClick={() => startEditOffer(offer)} className="text-blue-400 hover:text-blue-300 font-bold">Edit</button>
-                        <button onClick={() => handleDeleteOffer(offer._id)} className="text-rose-400 hover:text-rose-300 font-bold">Delete</button>
+                        <button onClick={() => handleDeleteOffer(offer._id)} className="text-orange-400 hover:text-orange-300 font-bold">Delete</button>
                       </div>
                     </div>
                   ))}
@@ -6291,7 +6291,7 @@ export default function AdminDashboard({ onTabChange }) {
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
                         <button onClick={() => startEditBanner(b)} className="text-blue-400 hover:text-blue-300 font-bold">Edit</button>
-                        <button onClick={() => handleDeleteBanner(b._id)} className="text-rose-400 hover:text-rose-300 font-bold">Delete</button>
+                        <button onClick={() => handleDeleteBanner(b._id)} className="text-orange-400 hover:text-orange-300 font-bold">Delete</button>
                       </div>
                     </div>
                   ))}
@@ -6862,7 +6862,7 @@ export default function AdminDashboard({ onTabChange }) {
                                       if (res.success) alert('Package deleted!');
                                       else alert(res.error || 'Delete failed');
                                     }
-                                  }} className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-xl transition-all duration-200">
+                                  }} className="p-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-xl transition-all duration-200">
                                     <Trash2 size={14} />
                                   </button>
                                 </div>
@@ -7087,7 +7087,7 @@ export default function AdminDashboard({ onTabChange }) {
                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide inline-block ${
                               (sub.status || '').toLowerCase() === 'active' 
                                 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
-                                : 'bg-rose-50 text-rose-600 border border-rose-100'
+                                : 'bg-orange-50 text-orange-600 border border-orange-100'
                             }`}>
                               {sub.status || 'Active'}
                             </span>
@@ -7233,7 +7233,7 @@ export default function AdminDashboard({ onTabChange }) {
                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide inline-block ${
                               (sub.status || '').toLowerCase() === 'active' 
                                 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
-                                : 'bg-rose-50 text-rose-600 border border-rose-100'
+                                : 'bg-orange-50 text-orange-600 border border-orange-100'
                             }`}>
                               {sub.status || 'Active'}
                             </span>
@@ -7267,7 +7267,7 @@ export default function AdminDashboard({ onTabChange }) {
               <div className="p-5 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2"><MessageSquare size={16} className="text-blue-500" /> Messages ({chatMessages.filter((m) => !m.isAdmin).length})</h3>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleCloseChat} className="text-[10px] text-rose-400 hover:text-rose-300 hover:underline font-semibold">Close Chat</button>
+                  <button onClick={handleCloseChat} className="text-[10px] text-orange-400 hover:text-orange-300 hover:underline font-semibold">Close Chat</button>
                   <button onClick={fetchChatMessages} className="text-[10px] text-blue-400 hover:underline">Refresh</button>
                 </div>
               </div>
@@ -7526,7 +7526,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                     <div className="md:col-span-3 space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
                         <h4 className="font-bold text-gray-900 text-xs">bKash Merchant PG</h4>
                       </div>
                       <p className="text-[10px] text-gray-500 leading-tight">Accept payments in BDT automatically via bkash API.</p>
@@ -7573,7 +7573,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                     <div className="md:col-span-3 space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
                         <h4 className="font-bold text-gray-900 text-xs">Nagad Wallet PG</h4>
                       </div>
                       <p className="text-[10px] text-gray-500 leading-tight">Accept payments in BDT automatically via Nagad API.</p>
@@ -7583,7 +7583,7 @@ export default function AdminDashboard({ onTabChange }) {
                           id="nagad-enable"
                           checked={settings.nagadEnabled}
                           onChange={(e) => setSettings({ ...settings, nagadEnabled: e.target.checked })}
-                          className="accent-rose-600 rounded-sm cursor-pointer"
+                          className="accent-orange-600 rounded-sm cursor-pointer"
                         />
                         <label htmlFor="nagad-enable" className="text-[10px] font-bold text-gray-400 cursor-pointer">Active</label>
                       </div>
@@ -7954,7 +7954,7 @@ export default function AdminDashboard({ onTabChange }) {
                       </div>
                       <div className="flex gap-2 flex-shrink-0 ml-4">
                         <button onClick={() => startEditVideo(vid)} className="text-blue-500 hover:text-blue-400 font-bold">Edit</button>
-                        <button onClick={() => handleDeleteVideo(vid._id)} className="text-rose-500 hover:text-rose-400 font-bold">Delete</button>
+                        <button onClick={() => handleDeleteVideo(vid._id)} className="text-orange-500 hover:text-orange-400 font-bold">Delete</button>
                       </div>
                     </div>
                   ))}

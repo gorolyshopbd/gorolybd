@@ -237,7 +237,7 @@ export default function ProductDetailPage() {
                       <span className="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded-md">
                         {product.category}
                       </span>
-                      <span className={`text-xs font-semibold ${product.countInStock > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                      <span className={`text-xs font-semibold ${product.countInStock > 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
                         {product.countInStock > 0 ? t('inStock') : t('outOfStock')}
                       </span>
                     </div>

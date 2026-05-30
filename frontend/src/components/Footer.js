@@ -45,7 +45,7 @@ export default function Footer({ onTabChange, onCartClick }) {
                 }}
                 className="flex flex-col items-center gap-0.5 px-2 py-0.5 rounded-lg transition active:scale-90"
               >
-                <Icon size={20} className="text-slate-600 hover:text-[#ff0066] active:text-[#ff0066] transition" />
+                <Icon size={20} className="text-slate-600 hover:text-[#FF6600] active:text-[#FF6600] transition" />
                 <span className="text-[10px] font-extrabold text-slate-700">{item.label}</span>
               </button>
             );
@@ -65,8 +65,8 @@ export default function Footer({ onTabChange, onCartClick }) {
             </div>
 
             <div className="md:col-span-6 flex flex-col sm:flex-row gap-3">
-              <input type="email" placeholder="Enter your email" className="flex-1 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white focus:outline-hidden focus:ring-2 focus:ring-[#ff0066] focus:bg-slate-900/50 transition duration-300" />
-              <button onClick={() => alert('Thanks for subscribing!')} className="px-5 py-2.5 bg-[#ff0066] hover:bg-[#d60052] text-white font-black rounded-xl text-sm transition duration-300 shadow-lg shadow-[#ff0066]/25">Subscribe</button>
+              <input type="email" placeholder="Enter your email" className="flex-1 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white focus:outline-hidden focus:ring-2 focus:ring-[#FF6600] focus:bg-slate-900/50 transition duration-300" />
+              <button onClick={() => alert('Thanks for subscribing!')} className="px-5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-black rounded-xl text-sm transition duration-300 shadow-lg shadow-[#FF6600]/25">Subscribe</button>
             </div>
 
           </div>
@@ -91,7 +91,7 @@ export default function Footer({ onTabChange, onCartClick }) {
             
             {s.footerAddress && (
               <div className="flex items-center gap-2.5 text-sm font-bold text-white">
-                <MapPin size={16} className="text-[#ff0066] flex-shrink-0" />
+                <MapPin size={16} className="text-[#FF6600] flex-shrink-0" />
                 <span>{s.footerAddress}</span>
               </div>
             )}
@@ -103,7 +103,7 @@ export default function Footer({ onTabChange, onCartClick }) {
               <a href={s.footerTwitter || "https://x.com"} target="_blank" rel="noreferrer" className="p-2 bg-slate-900 rounded-lg hover:bg-zinc-800 text-white transition duration-300" title="X (Twitter)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
               </a>
-              <a href={s.footerTiktok || "https://tiktok.com"} target="_blank" rel="noreferrer" className="p-2 bg-slate-900 rounded-lg hover:bg-rose-600 text-white transition duration-300" title="TikTok">
+              <a href={s.footerTiktok || "https://tiktok.com"} target="_blank" rel="noreferrer" className="p-2 bg-slate-900 rounded-lg hover:bg-orange-600 text-white transition duration-300" title="TikTok">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12.83 2.53 1.18 3.81 1.28v3.4c-1.35-.07-2.68-.53-3.7-1.46V13c0 2.2-.6 4.47-2.12 5.92-1.6 1.64-4.04 2.23-6.21 1.78-2.6-.45-4.73-2.68-5.07-5.3-.4-3.08 1.54-6.09 4.54-6.73.9-.17 1.83-.1 2.72.16v3.48c-.68-.26-1.47-.32-2.15-.05-1.12.4-1.84 1.56-1.74 2.75.08 1.17.99 2.12 2.15 2.15 1.25.06 2.37-.9 2.45-2.15.02-1.07.01-8.15.01-9.22z"/></svg>
               </a>
               <a href={s.footerLinkedin || "https://linkedin.com"} target="_blank" rel="noreferrer" className="p-2 bg-slate-900 rounded-lg hover:bg-blue-700 text-white transition duration-300" title="LinkedIn">
@@ -124,7 +124,7 @@ export default function Footer({ onTabChange, onCartClick }) {
                   <li key={page.slug}>
                     <button 
                       onClick={() => onTabChange(`page-${page.slug}`)} 
-                      className="hover:text-[#ff0066] hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
+                      className="hover:text-[#FF6600] hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
                     >
                       &rsaquo; {page.title}
                     </button>
@@ -135,7 +135,7 @@ export default function Footer({ onTabChange, onCartClick }) {
                   <li key={p}>
                     <button 
                       onClick={() => onTabChange(`page-${p.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`)} 
-                      className="hover:text-[#ff0066] hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
+                      className="hover:text-[#FF6600] hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
                     >
                       &rsaquo; {p}
                     </button>
@@ -159,7 +159,7 @@ export default function Footer({ onTabChange, onCartClick }) {
                 <li key={item.tab}>
                   <button
                     onClick={() => onTabChange && onTabChange(item.tab)}
-                    className="hover:text-[#ff0066] hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
+                    className="hover:text-[#FF6600] hover:translate-x-1.5 transition-all duration-300 flex items-center gap-1 text-white text-left"
                   >
                     &rsaquo; {item.label}
                   </button>
@@ -173,15 +173,15 @@ export default function Footer({ onTabChange, onCartClick }) {
             <div className="space-y-2">
               <h4 className="text-sm font-black text-white uppercase tracking-wider">Customer Support</h4>
               <ul className="space-y-3 text-sm font-bold text-white">
-                <li className="flex items-center gap-2.5 text-white"><Mail size={16} className="text-[#ff0066] flex-shrink-0" /><span>{s.footerEmail || 'support@shopio.com'}</span></li>
-                <li className="flex items-center gap-2.5 text-white"><Phone size={16} className="text-[#ff0066] flex-shrink-0" /><span>{s.footerPhone || '+880 1712-345678'}</span></li>
+                <li className="flex items-center gap-2.5 text-white"><Mail size={16} className="text-[#FF6600] flex-shrink-0" /><span>{s.footerEmail || 'support@shopio.com'}</span></li>
+                <li className="flex items-center gap-2.5 text-white"><Phone size={16} className="text-[#FF6600] flex-shrink-0" /><span>{s.footerPhone || '+880 1712-345678'}</span></li>
               </ul>
             </div>
 
             {/* App Download Buttons */}
             <div className="space-y-3">
               <h5 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-1.5">
-                <Download size={14} className="text-[#ff0066]" />
+                <Download size={14} className="text-[#FF6600]" />
                 Download App
               </h5>
               <div className="flex flex-col sm:flex-row gap-2.5">

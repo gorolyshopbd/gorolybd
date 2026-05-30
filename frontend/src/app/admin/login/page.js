@@ -83,7 +83,7 @@ export default function AdminLoginPage() {
         <div className="absolute -top-[15%] -left-[10%] w-[55%] h-[55%] bg-gradient-to-br from-indigo-300/25 via-purple-300/15 to-transparent rounded-full blur-[130px] animate-[floatSlow_8s_ease-in-out_infinite]" />
         <div className="absolute -bottom-[15%] -right-[10%] w-[55%] h-[55%] bg-gradient-to-br from-violet-300/25 via-indigo-300/15 to-transparent rounded-full blur-[130px] animate-[floatSlow_8s_ease-in-out_infinite_2s]" />
         <div className="absolute top-[20%] right-[25%] w-[25%] h-[25%] bg-cyan-300/10 rounded-full blur-[100px] animate-[floatSlow_10s_ease-in-out_infinite_4s]" />
-        <div className="absolute bottom-[30%] left-[20%] w-[20%] h-[20%] bg-rose-300/10 rounded-full blur-[90px] animate-[floatSlow_10s_ease-in-out_infinite_1s]" />
+        <div className="absolute bottom-[30%] left-[20%] w-[20%] h-[20%] bg-orange-300/10 rounded-full blur-[90px] animate-[floatSlow_10s_ease-in-out_infinite_1s]" />
         {/* Subtle grid overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:32px_32px] opacity-30" />
       </div>
@@ -215,8 +215,8 @@ export default function AdminLoginPage() {
 
             {/* Error / Success Message */}
             {error && (
-              <div className="flex items-start gap-2.5 p-3.5 bg-rose-50/90 border border-rose-200/70 rounded-xl text-rose-600 text-xs font-semibold shadow-sm animate-fade-in">
-                <AlertCircle size={15} className="mt-0.5 flex-shrink-0 text-rose-400" />
+              <div className="flex items-start gap-2.5 p-3.5 bg-orange-50/90 border border-orange-200/70 rounded-xl text-orange-600 text-xs font-semibold shadow-sm animate-fade-in">
+                <AlertCircle size={15} className="mt-0.5 flex-shrink-0 text-orange-400" />
                 <span>{error}</span>
               </div>
             )}

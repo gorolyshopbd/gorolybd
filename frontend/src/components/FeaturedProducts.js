@@ -19,7 +19,7 @@ export default function FeaturedProducts({ products, onProductClick, onAddToWish
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-[#ff0066] to-rose-400 rounded-xl shadow-lg shadow-[#ff0066]/20">
+            <div className="p-2 bg-gradient-to-br from-[#FF6600] to-orange-400 rounded-xl shadow-lg shadow-[#FF6600]/20">
               <Sparkles size={20} className="text-white" />
             </div>
             <div>
@@ -29,7 +29,7 @@ export default function FeaturedProducts({ products, onProductClick, onAddToWish
           </div>
           <button
             onClick={() => router.push('/shop')}
-            className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-bold text-[#ff0066] bg-rose-50 hover:bg-rose-100 rounded-xl transition"
+            className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-bold text-[#FF6600] bg-orange-50 hover:bg-orange-100 rounded-xl transition"
           >
             {t('viewAll')}
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
@@ -65,7 +65,7 @@ export default function FeaturedProducts({ products, onProductClick, onAddToWish
                   <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   <button
                     onClick={() => onProductClick(product)}
-                    className="absolute bottom-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-md hover:bg-white transition z-10 text-slate-500 hover:text-[#ff0066] translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 duration-300"
+                    className="absolute bottom-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-md hover:bg-white transition z-10 text-slate-500 hover:text-[#FF6600] translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 duration-300"
                     title="Quick View"
                   >
                     <Eye size={15} />
@@ -81,7 +81,7 @@ export default function FeaturedProducts({ products, onProductClick, onAddToWish
                     </div>
                     <h3
                       onClick={() => router.push(`/product/${product._id}`)}
-                      className="font-bold text-slate-800 text-sm leading-snug hover:text-[#ff0066] cursor-pointer transition line-clamp-2"
+                      className="font-bold text-slate-800 text-sm leading-snug hover:text-[#FF6600] cursor-pointer transition line-clamp-2"
                     >
                       {product.name}
                     </h3>
@@ -104,7 +104,7 @@ export default function FeaturedProducts({ products, onProductClick, onAddToWish
                     </div>
                     <button
                       onClick={() => addToCart(product, 1)}
-                      className="px-3.5 py-2 bg-[#ff0066] hover:bg-[#d60052] text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-md shadow-[#ff0066]/15 hover:shadow-lg hover:shadow-[#ff0066]/25 flex items-center gap-1.5 border-0 cursor-pointer"
+                      className="px-3.5 py-2 bg-[#FF6600] hover:bg-[#e05a00] text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-md shadow-[#FF6600]/15 hover:shadow-lg hover:shadow-[#FF6600]/25 flex items-center gap-1.5 border-0 cursor-pointer"
                     >
                       <ShoppingBag size={12} />
                       {t('add')}

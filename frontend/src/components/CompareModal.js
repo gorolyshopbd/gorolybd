@@ -182,7 +182,7 @@ export default function CompareModal({ isOpen, onClose }) {
                   {/* Remove Button */}
                   <button 
                     onClick={() => removeFromCompare(p._id)}
-                    className="absolute right-3 top-3 p-1.5 bg-rose-50 text-rose-600 rounded-lg opacity-80 hover:opacity-100 transition"
+                    className="absolute right-3 top-3 p-1.5 bg-orange-50 text-orange-600 rounded-lg opacity-80 hover:opacity-100 transition"
                     title={lang === 'bn' ? 'মুছে ফেলুন' : 'Remove'}
                   >
                     <Trash2 size={14} />
@@ -263,7 +263,7 @@ export default function CompareModal({ isOpen, onClose }) {
                               {lang === 'bn' ? 'সবচেয়ে সাশ্রয়ী' : 'Cheapest'}
                             </span>
                           ) : (
-                            <span className="text-rose-600 font-extrabold text-[11px]">
+                            <span className="text-orange-600 font-extrabold text-[11px]">
                               +{formatPrice(p.finalPrice - minPrice, currencySymbol)}
                             </span>
                           )}
@@ -279,7 +279,7 @@ export default function CompareModal({ isOpen, onClose }) {
                       </div>
                       <div>
                         <span className="text-slate-400">{lang === 'bn' ? 'অবস্থা: ' : 'Status: '}</span>
-                        <span className={p.countInStock > 0 ? 'text-emerald-600 font-bold' : 'text-rose-500 font-bold'}>
+                        <span className={p.countInStock > 0 ? 'text-emerald-600 font-bold' : 'text-orange-500 font-bold'}>
                           {p.countInStock > 0 ? t('inStock') : t('outOfStock')}
                         </span>
                       </div>

@@ -418,7 +418,7 @@ export default function AuthModal({ isOpen, onClose }) {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="flex-1 py-3 bg-[#ff0066] hover:bg-[#d60052] text-white font-bold rounded-xl shadow-lg transition text-xs cursor-pointer border-0"
+                        className="flex-1 py-3 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-xl shadow-lg transition text-xs cursor-pointer border-0"
                       >
                         {loading ? 'Sending...' : 'Send SMS'}
                       </button>

@@ -14,7 +14,7 @@ const iconMap = {
 const bgMap = {
   Fashion: 'from-indigo-500 to-indigo-600', Electronics: 'from-blue-500 to-blue-600',
   Grocery: 'from-amber-500 to-amber-600', Beauty: 'from-pink-500 to-pink-600',
-  Accessories: 'from-emerald-500 to-emerald-600', Sports: 'from-rose-500 to-rose-600',
+  Accessories: 'from-emerald-500 to-emerald-600', Sports: 'from-orange-500 to-orange-600',
   Books: 'from-violet-500 to-violet-600',
 };
 

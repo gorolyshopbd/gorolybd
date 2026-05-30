@@ -95,7 +95,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
           left: 0;
           width: 0;
           height: 2px;
-          background: #ff0066;
+          background: #FF6600;
           border-radius: 2px;
           transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -126,7 +126,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
               <div className="relative pr-4">
                 <button
                   onClick={() => setShowLangDropdown(!showLangDropdown)}
-                  className="flex items-center gap-1.5 cursor-pointer bg-transparent border-0 text-slate-500 hover:text-[#ff0066] transition font-medium"
+                  className="flex items-center gap-1.5 cursor-pointer bg-transparent border-0 text-slate-500 hover:text-[#FF6600] transition font-medium"
                 >
                   <span className="text-base">{lang === 'en' ? '🌐' : '🇧🇩'}</span>
                   <span>{lang === 'en' ? 'English' : 'বাংলা'}</span>
@@ -137,10 +137,10 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                     <div className="fixed inset-0 z-40" onClick={() => setShowLangDropdown(false)} />
                     <div className="absolute left-0 mt-1 w-32 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50">
                       <button onClick={() => { setLang('en'); setShowLangDropdown(false); }}
-                        className={`w-full text-left px-3 py-2 text-[12px] font-semibold hover:bg-rose-50 flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'en' ? 'text-[#ff0066]' : 'text-slate-600'}`}
+                        className={`w-full text-left px-3 py-2 text-[12px] font-semibold hover:bg-orange-50 flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'en' ? 'text-[#FF6600]' : 'text-slate-600'}`}
                       ><span>🇬🇧</span> English</button>
                       <button onClick={() => { setLang('bn'); setShowLangDropdown(false); }}
-                        className={`w-full text-left px-3 py-2 text-[12px] font-semibold hover:bg-rose-50 flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'bn' ? 'text-[#ff0066]' : 'text-slate-600'}`}
+                        className={`w-full text-left px-3 py-2 text-[12px] font-semibold hover:bg-orange-50 flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'bn' ? 'text-[#FF6600]' : 'text-slate-600'}`}
                       ><span>🇧🇩</span> বাংলা</button>
                     </div>
                   </>
@@ -148,13 +148,13 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
               </div>
 
               {/* Currency */}
-              <div className="flex items-center gap-1 px-4 cursor-pointer hover:text-[#ff0066] transition font-medium">
+              <div className="flex items-center gap-1 px-4 cursor-pointer hover:text-[#FF6600] transition font-medium">
                 <span>{headerSettings.currency || 'TN'}</span>
                 <ChevronDown size={11} />
               </div>
 
               {/* Find a Store */}
-              <a href={headerSettings.topBarStoreLink || '#'} className="flex items-center gap-1.5 px-4 hover:text-[#ff0066] transition font-medium no-underline text-slate-500">
+              <a href={headerSettings.topBarStoreLink || '#'} className="flex items-center gap-1.5 px-4 hover:text-[#FF6600] transition font-medium no-underline text-slate-500">
                 <MapPin size={11} /> Find a Store
               </a>
 
@@ -162,7 +162,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
               <div className="flex items-center gap-2 pl-4">
                 {/* Google Play Badge */}
                 <a href={headerSettings.topBarPlayStoreLink || '#'} title="Get it on Google Play"
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-200 hover:border-[#ff0066] hover:text-[#ff0066] transition text-slate-500 no-underline"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-200 hover:border-[#FF6600] hover:text-[#FF6600] transition text-slate-500 no-underline"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-[#01875f]">
                     <path d="M3.18 23.76c.37.2.8.2 1.18-.02l13.64-7.86-2.9-2.9-11.92 10.78zM.5 1.4C.19 1.77 0 2.28 0 2.93v18.14c0 .65.19 1.16.5 1.53l.08.08 10.16-10.16v-.24L.58 1.32.5 1.4zM20.33 10.27l-2.9-1.67-3.23 3.23 3.23 3.22 2.91-1.68c.83-.48.83-1.62-.01-2.1zM4.36.26L17.99 8.1l-2.9 2.9L3.18.22C3.56.01 4 .01 4.36.26z"/>
@@ -174,7 +174,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 </a>
                 {/* App Store Badge */}
                 <a href={headerSettings.topBarAppStoreLink || '#'} title="Download on the App Store"
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-200 hover:border-[#ff0066] hover:text-[#ff0066] transition text-slate-500 no-underline"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-200 hover:border-[#FF6600] hover:text-[#FF6600] transition text-slate-500 no-underline"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.7-1.13 1.84-.99 2.94.99.08 2.16-.52 2.82-1.33z"/>
@@ -191,25 +191,25 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
             <div className="flex items-center gap-0 divide-x divide-slate-150">
               {/* Compare */}
               <a href="#" onClick={(e) => { e.preventDefault(); setCompareOpen(true); }}
-                className="flex items-center gap-1.5 pr-4 hover:text-[#ff0066] transition font-medium no-underline text-slate-500"
+                className="flex items-center gap-1.5 pr-4 hover:text-[#FF6600] transition font-medium no-underline text-slate-500"
               >
                 <GitCompare size={11} />
                 <span>Compare</span>
                 {compareList.length > 0 && (
-                  <span className="bg-[#ff0066] text-white text-[8px] font-black rounded-full px-1 py-0.5 leading-none">{compareList.length}</span>
+                  <span className="bg-[#FF6600] text-white text-[8px] font-black rounded-full px-1 py-0.5 leading-none">{compareList.length}</span>
                 )}
               </a>
 
               {/* Track Order */}
               <button onClick={() => onTabChange('dashboard')}
-                className="flex items-center gap-1.5 px-4 hover:text-[#ff0066] transition font-medium bg-transparent border-0 cursor-pointer text-slate-500"
+                className="flex items-center gap-1.5 px-4 hover:text-[#FF6600] transition font-medium bg-transparent border-0 cursor-pointer text-slate-500"
               >
                 <Truck size={11} /> Track Order
               </button>
 
               {/* Helpline */}
               <a href={`tel:${headerSettings.topBarHelpline || '8801234567890'}`}
-                className="flex items-center gap-1.5 pl-4 hover:text-[#ff0066] transition font-medium no-underline text-slate-500"
+                className="flex items-center gap-1.5 pl-4 hover:text-[#FF6600] transition font-medium no-underline text-slate-500"
               >
                 <PhoneCall size={11} />
                 <span>Helpline {headerSettings.topBarHelpline || '8801234567890'}</span>
@@ -239,12 +239,12 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                   <img src={headerSettings.headerLogo} alt={headerSettings.siteTitle || 'Goroly Shop'} className="h-8 w-auto object-contain" />
                 ) : (
                   <>
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#ff0066] to-[#d60052] flex items-center justify-center shadow-md shadow-[#ff0066]/30 group-hover:shadow-[#ff0066]/50 transition">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FF6600] to-[#e05a00] flex items-center justify-center shadow-md shadow-[#FF6600]/30 group-hover:shadow-[#FF6600]/50 transition">
                       <Store size={16} className="text-white" />
                     </div>
                     <div className="leading-none">
                       <span className="text-lg font-black text-slate-900 tracking-tight">Goroly</span>
-                      <span className="text-lg font-black text-[#ff0066] tracking-tight"> Shop</span>
+                      <span className="text-lg font-black text-[#FF6600] tracking-tight"> Shop</span>
                     </div>
                   </>
                 )}
@@ -252,8 +252,8 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
 
               {/* Search Bar */}
               <div className="hidden sm:flex flex-1 max-w-xl relative mx-4">
-                <div className="w-full flex items-center gap-2 pl-3.5 pr-1.5 py-1 rounded-xl border-2 border-slate-100 hover:border-slate-200 focus-within:border-[#ff0066] bg-slate-50/60 focus-within:bg-white transition-all duration-300">
-                  <Search size={15} className="flex-shrink-0 text-slate-400 focus-within:text-[#ff0066] transition-colors" />
+                <div className="w-full flex items-center gap-2 pl-3.5 pr-1.5 py-1 rounded-xl border-2 border-slate-100 hover:border-slate-200 focus-within:border-[#FF6600] bg-slate-50/60 focus-within:bg-white transition-all duration-300">
+                  <Search size={15} className="flex-shrink-0 text-slate-400 focus-within:text-[#FF6600] transition-colors" />
                   <input
                     type="text"
                     placeholder={lang === 'bn' ? 'পণ্য, ক্যাটাগরি খুঁজুন...' : 'Search products, categories...'}
@@ -270,7 +270,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                     </button>
                   )}
                   <button
-                    className="bg-[#ff0066] hover:bg-[#d60052] text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all duration-200 shadow-xs active:scale-95 flex items-center gap-1.5 cursor-pointer border-0"
+                    className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all duration-200 shadow-xs active:scale-95 flex items-center gap-1.5 cursor-pointer border-0"
                   >
                     <span>Search</span>
                   </button>
@@ -302,11 +302,11 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                       }}
                       className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer group"
                     >
-                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#ff0066] to-[#d60052] flex items-center justify-center text-white text-xs font-black shadow-sm">
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#FF6600] to-[#e05a00] flex items-center justify-center text-white text-xs font-black shadow-sm">
                         {user.name?.charAt(0)?.toUpperCase()}
                       </div>
                       <div className="text-left leading-tight">
-                        <span className="block text-xs font-bold text-slate-800 group-hover:text-[#ff0066] transition">{user.name?.split(' ')[0]}</span>
+                        <span className="block text-xs font-bold text-slate-800 group-hover:text-[#FF6600] transition">{user.name?.split(' ')[0]}</span>
                         <span className="block text-[10px] font-semibold text-slate-400 capitalize">
                           {user.role === 'seller' ? 'Seller' : user.isAdmin ? 'Admin' : 'Customer'}
                         </span>
@@ -323,7 +323,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 ) : (
                   <button
                     onClick={onAuthClick}
-                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 border-2 border-[#ff0066] text-[#ff0066] hover:bg-[#ff0066] hover:text-white rounded-xl text-xs font-bold transition"
+                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 border-2 border-[#FF6600] text-[#FF6600] hover:bg-[#FF6600] hover:text-white rounded-xl text-xs font-bold transition"
                   >
                     <User size={14} />
                     {t('login')}
@@ -341,7 +341,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 {/* Wishlist */}
                 <button
                   onClick={() => onTabChange('wishlist')}
-                  className="p-2 text-slate-500 hover:text-[#ff0066] hover:bg-rose-50 rounded-xl transition relative"
+                  className="p-2 text-slate-500 hover:text-[#FF6600] hover:bg-orange-50 rounded-xl transition relative"
                 >
                   <Heart size={17} />
                 </button>
@@ -349,7 +349,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 {/* Cart */}
                 <button
                   onClick={onCartClick}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ff0066] hover:bg-[#d60052] text-white rounded-xl transition shadow-md shadow-[#ff0066]/25 hover:shadow-[#ff0066]/40 relative"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF6600] hover:bg-[#e05a00] text-white rounded-xl transition shadow-md shadow-[#FF6600]/25 hover:shadow-[#FF6600]/40 relative"
                 >
                   <ShoppingBag size={16} />
                   {cartCount > 0 ? (
@@ -395,9 +395,9 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                       <button
                         key={cat._id}
                         onClick={() => { onSearchChange(cat.name); onTabChange('shop'); }}
-                        className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-rose-50/70 dark:hover:bg-slate-800 hover:text-[#ff0066] dark:hover:text-[#ff0066] rounded-xl transition-all duration-200 flex items-center gap-2.5 bg-transparent border-0 cursor-pointer group"
+                        className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-orange-50/70 dark:hover:bg-slate-800 hover:text-[#FF6600] dark:hover:text-[#FF6600] rounded-xl transition-all duration-200 flex items-center gap-2.5 bg-transparent border-0 cursor-pointer group"
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-350 dark:bg-slate-700 group-hover:bg-[#ff0066] group-hover:scale-125 transition-all duration-200 flex-shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-350 dark:bg-slate-700 group-hover:bg-[#FF6600] group-hover:scale-125 transition-all duration-200 flex-shrink-0" />
                         <span className="group-hover:translate-x-1 transition-transform duration-200">{cat.name}</span>
                       </button>
                     ))}
@@ -435,9 +435,9 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                         <button
                           key={p.slug}
                           onClick={() => onTabChange(`page-${p.slug}`)}
-                          className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-rose-50/70 dark:hover:bg-slate-800 hover:text-[#ff0066] dark:hover:text-[#ff0066] rounded-xl transition-all duration-200 flex items-center gap-2.5 bg-transparent border-0 cursor-pointer group"
+                          className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-orange-50/70 dark:hover:bg-slate-800 hover:text-[#FF6600] dark:hover:text-[#FF6600] rounded-xl transition-all duration-200 flex items-center gap-2.5 bg-transparent border-0 cursor-pointer group"
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-350 dark:bg-slate-700 group-hover:bg-[#ff0066] group-hover:scale-125 transition-all duration-200 flex-shrink-0" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-350 dark:bg-slate-700 group-hover:bg-[#FF6600] group-hover:scale-125 transition-all duration-200 flex-shrink-0" />
                           <span className="group-hover:translate-x-1 transition-transform duration-200">{p.title}</span>
                         </button>
                       ))}
@@ -450,7 +450,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
             {/* Right: Deals Button */}
             <button
               onClick={() => { onSearchChange('Sale'); onTabChange('shop'); }}
-              className="flex items-center gap-1.5 bg-gradient-to-r from-[#ff0066] to-[#ff3385] text-white px-4 py-2 rounded-xl text-xs font-black shadow-md hover:shadow-rose-500/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer border-0"
+              className="flex items-center gap-1.5 bg-gradient-to-r from-[#FF6600] to-[#ff7e1b] text-white px-4 py-2 rounded-xl text-xs font-black shadow-md hover:shadow-orange-500/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer border-0"
             >
               <Zap size={13} className="fill-white text-white animate-pulse" />
               <span>{t('dailyDeals')}</span>
@@ -494,7 +494,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 key={item.tab}
                 onClick={item.action}
                 className={`flex-shrink-0 px-3 py-1 text-xs font-bold rounded-lg transition whitespace-nowrap ${
-                  activeTab === item.tab ? 'bg-[#ff0066] text-white' : 'text-slate-600 hover:bg-slate-100'
+                  activeTab === item.tab ? 'bg-[#FF6600] text-white' : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 {item.label}
@@ -506,7 +506,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
         {/* Mobile Drawer */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-slate-100 px-4 py-4 space-y-3 shadow-lg">
-            <div className="relative flex items-center bg-slate-50/60 focus-within:bg-white border-2 border-slate-100 focus-within:border-[#ff0066] rounded-xl transition duration-300 pr-1 py-1">
+            <div className="relative flex items-center bg-slate-50/60 focus-within:bg-white border-2 border-slate-100 focus-within:border-[#FF6600] rounded-xl transition duration-300 pr-1 py-1">
               <Search size={14} className="absolute left-3 text-slate-400" />
               <input
                 type="text"
@@ -524,7 +524,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 </button>
               )}
               <button
-                className="bg-[#ff0066] text-white px-3 py-1.5 rounded-lg text-xs font-extrabold border-0 flex-shrink-0 cursor-pointer"
+                className="bg-[#FF6600] text-white px-3 py-1.5 rounded-lg text-xs font-extrabold border-0 flex-shrink-0 cursor-pointer"
               >
                 Go
               </button>
@@ -533,7 +533,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
               {!user && (
                 <button
                   onClick={() => { onAuthClick(); setMobileMenuOpen(false); }}
-                  className="flex items-center gap-2 py-2.5 px-3 bg-[#ff0066] text-white rounded-xl font-bold"
+                  className="flex items-center gap-2 py-2.5 px-3 bg-[#FF6600] text-white rounded-xl font-bold"
                 >
                   <User size={15} /> Sign In / Register
                 </button>
@@ -543,7 +543,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 <Zap size={13} className="text-amber-500 fill-amber-500" /> {t('dailyDeals')}
               </button>
               {user && !user.isAdmin && user.role !== 'seller' && (
-                <button onClick={() => handleNavClick('dashboard')} className={`text-left py-2.5 px-3 rounded-xl transition font-semibold ${activeTab === 'dashboard' ? 'text-[#ff0066] bg-rose-50' : 'hover:bg-slate-50'}`}>
+                <button onClick={() => handleNavClick('dashboard')} className={`text-left py-2.5 px-3 rounded-xl transition font-semibold ${activeTab === 'dashboard' ? 'text-[#FF6600] bg-orange-50' : 'hover:bg-slate-50'}`}>
                   {lang === 'bn' ? 'আমার ড্যাশবোর্ড' : 'My Dashboard'}
                 </button>
               )}

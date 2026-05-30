@@ -192,10 +192,10 @@ export default function BecomeSellerPage({ onBackToHome }) {
   };
 
   const getBrandIcon = (name) => {
-    if (name === 'TRADESWORTH') return <Store size={18} className="text-[#ff0066]" />;
-    if (name === 'Avonee') return <ShoppingBag size={18} className="text-[#ff0066]" />;
-    if (name === 'Team') return <Globe size={18} className="text-[#ff0066]" />;
-    return <Package size={18} className="text-[#ff0066]" />;
+    if (name === 'TRADESWORTH') return <Store size={18} className="text-[#FF6600]" />;
+    if (name === 'Avonee') return <ShoppingBag size={18} className="text-[#FF6600]" />;
+    if (name === 'Team') return <Globe size={18} className="text-[#FF6600]" />;
+    return <Package size={18} className="text-[#FF6600]" />;
   };
 
   return (
@@ -235,14 +235,14 @@ export default function BecomeSellerPage({ onBackToHome }) {
               {user.role === 'seller' || user.isAdmin ? (
                 <button 
                   onClick={() => window.location.href = '/admin'}
-                  className="bg-[#ff0066] hover:bg-[#d60052] text-white px-6 py-2 rounded-full font-bold text-sm transition shadow-md shadow-[#ff0066]/10 flex items-center gap-1.5 cursor-pointer"
+                  className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-6 py-2 rounded-full font-bold text-sm transition shadow-md shadow-[#FF6600]/10 flex items-center gap-1.5 cursor-pointer"
                 >
                   <LayoutGrid size={13} /> Seller Dashboard
                 </button>
               ) : (
                 <button 
                   onClick={logout}
-                  className="border-2 border-[#ff0066] text-[#ff0066] hover:bg-[#ff0066]/5 px-5 py-1.5 rounded-full font-bold text-sm transition cursor-pointer"
+                  className="border-2 border-[#FF6600] text-[#FF6600] hover:bg-[#FF6600]/5 px-5 py-1.5 rounded-full font-bold text-sm transition cursor-pointer"
                 >
                   Log out
                 </button>
@@ -254,8 +254,8 @@ export default function BecomeSellerPage({ onBackToHome }) {
                 onClick={() => handleModeChange('login')}
                 className={`flex items-center gap-1.5 px-5 py-1.5 rounded-full font-bold text-sm transition cursor-pointer ${
                   authMode === 'login' 
-                    ? 'bg-[#ff0066]/10 border-2 border-[#ff0066] text-[#ff0066]' 
-                    : 'border-2 border-[#ff0066] text-[#ff0066] hover:bg-[#ff0066]/5'
+                    ? 'bg-[#FF6600]/10 border-2 border-[#FF6600] text-[#FF6600]' 
+                    : 'border-2 border-[#FF6600] text-[#FF6600] hover:bg-[#FF6600]/5'
                 }`}
               >
                 <Lock size={13} /> Log in
@@ -263,7 +263,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
               
               <button 
                 onClick={() => handleModeChange('register')}
-                className="bg-[#ff0066] hover:bg-[#d60052] text-white px-6 py-2 rounded-full font-bold text-sm transition shadow-md shadow-[#ff0066]/10 cursor-pointer"
+                className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-6 py-2 rounded-full font-bold text-sm transition shadow-md shadow-[#FF6600]/10 cursor-pointer"
               >
                 Sign up
               </button>
@@ -307,7 +307,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                 
                 <button 
                   onClick={() => handleModeChange('register')}
-                  className="bg-[#ff0066] hover:bg-[#d60052] text-white px-9 py-3.5 rounded-full font-bold text-base transition shadow-lg shadow-[#ff0066]/25 hover:-translate-y-0.5"
+                  className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-9 py-3.5 rounded-full font-bold text-base transition shadow-lg shadow-[#FF6600]/25 hover:-translate-y-0.5"
                 >
                   Sign up
                 </button>
@@ -349,7 +349,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
               {/* Right Side: Benefits list */}
               <div className="md:col-span-7 space-y-6 text-left">
                 {/* Pill badge */}
-                <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FFF5F0] text-[#ff0066] rounded-full text-xs sm:text-sm font-extrabold">
+                <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FFF5F0] text-[#FF6600] rounded-full text-xs sm:text-sm font-extrabold">
                   <span>🔥</span> Grow with us, and unlock rewards along the way.
                 </div>
 
@@ -373,7 +373,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     "A chance to co-create the future of seller rewards with us"
                   ].map((text, idx) => (
                     <div key={idx} className="flex items-start gap-3">
-                      <div className="mt-0.5 flex-shrink-0 text-[#ff0066] font-black">
+                      <div className="mt-0.5 flex-shrink-0 text-[#FF6600] font-black">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
@@ -438,7 +438,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                 {/* Big Heading */}
                 <h2 className="text-3xl sm:text-4xl font-black text-[#0f2a4a] leading-tight">
                   Why do sellers love<br />
-                  <span className="text-[#ff0066]">selling on Goroly Shop?</span>
+                  <span className="text-[#FF6600]">selling on Goroly Shop?</span>
                 </h2>
 
                 {/* Subtitle Paragraph */}
@@ -452,7 +452,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                 <div className="space-y-5 pt-4">
                   {/* Feature 1 */}
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-[#FFF5F0] rounded-2xl flex items-center justify-center flex-shrink-0 text-[#ff0066]">
+                    <div className="w-12 h-12 bg-[#FFF5F0] rounded-2xl flex items-center justify-center flex-shrink-0 text-[#FF6600]">
                       <Banknote size={22} />
                     </div>
                     <div className="space-y-1">
@@ -467,7 +467,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                   {/* Feature 2 */}
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-[#FFF5F0] rounded-2xl flex items-center justify-center flex-shrink-0 text-[#ff0066]">
+                    <div className="w-12 h-12 bg-[#FFF5F0] rounded-2xl flex items-center justify-center flex-shrink-0 text-[#FF6600]">
                       <MessageSquare size={22} />
                     </div>
                     <div className="space-y-1">
@@ -554,7 +554,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     <div key={`c1-${idx}`} className="bg-white rounded-[32px] border border-slate-100 p-8 w-[360px] sm:w-[420px] flex-shrink-0 shadow-sm hover:shadow-md transition duration-300">
                       <div className="space-y-6 text-left">
                         {/* Blue Quote Icon */}
-                        <span className="text-[52px] font-black text-[#ff0066]/20 leading-none block font-serif">“</span>
+                        <span className="text-[52px] font-black text-[#FF6600]/20 leading-none block font-serif">“</span>
                         
                         {/* Review text */}
                         <p className="text-slate-600 text-sm font-semibold leading-relaxed">
@@ -594,7 +594,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     <div key={`c2-${idx}`} className="bg-white rounded-[32px] border border-slate-100 p-8 w-[360px] sm:w-[420px] flex-shrink-0 shadow-sm hover:shadow-md transition duration-300">
                       <div className="space-y-6 text-left">
                         {/* Blue Quote Icon */}
-                        <span className="text-[52px] font-black text-[#ff0066]/20 leading-none block font-serif">“</span>
+                        <span className="text-[52px] font-black text-[#FF6600]/20 leading-none block font-serif">“</span>
                         
                         {/* Review text */}
                         <p className="text-slate-600 text-sm font-semibold leading-relaxed">
@@ -613,10 +613,10 @@ export default function BecomeSellerPage({ onBackToHome }) {
         {/* 2. LOGIN MODE */}
         {authMode === 'login' && (
           <div className="max-w-md w-full mx-auto px-6 py-12">
-            <div className="bg-white rounded-3xl border border-slate-100 p-8 sm:p-10 shadow-2xl shadow-[#ff0066]/5 space-y-6">
+            <div className="bg-white rounded-3xl border border-slate-100 p-8 sm:p-10 shadow-2xl shadow-[#FF6600]/5 space-y-6">
               
               <div className="text-center space-y-2">
-                <div className="mx-auto w-12 h-12 bg-[#ff0066]/10 rounded-2xl flex items-center justify-center text-[#ff0066]">
+                <div className="mx-auto w-12 h-12 bg-[#FF6600]/10 rounded-2xl flex items-center justify-center text-[#FF6600]">
                   <Store size={24} />
                 </div>
                 <h2 className="text-2xl font-black text-slate-800">Welcome Back</h2>
@@ -624,7 +624,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
               </div>
 
               {errorMsg && (
-                <div className="p-3.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-2xl text-xs font-bold leading-relaxed">
+                <div className="p-3.5 bg-orange-50 text-orange-600 border border-orange-100 rounded-2xl text-xs font-bold leading-relaxed">
                   ⚠️ {errorMsg}
                 </div>
               )}
@@ -638,7 +638,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                       placeholder="seller@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-[#ff0066] rounded-2xl text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-[#FF6600] rounded-2xl text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
                       required
                     />
                     <Mail className="absolute left-4 top-3.5 text-slate-400" size={16} />
@@ -653,7 +653,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-11 pr-11 py-3 bg-slate-50 border border-[#ff0066] rounded-2xl text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300"
+                      className="w-full pl-11 pr-11 py-3 bg-slate-50 border border-[#FF6600] rounded-2xl text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
                       required
                     />
                     <Lock className="absolute left-4 top-3.5 text-slate-400" size={16} />
@@ -670,7 +670,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 bg-[#ff0066] hover:bg-[#d60052] text-white font-bold rounded-2xl shadow-lg shadow-[#ff0066]/10 transition flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-2xl shadow-lg shadow-[#FF6600]/10 transition flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
@@ -692,7 +692,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                   <button
                     type="button"
                     onClick={() => handleModeChange('register')}
-                    className="text-[#ff0066] font-extrabold hover:underline"
+                    className="text-[#FF6600] font-extrabold hover:underline"
                   >
                     Create Account
                   </button>
@@ -706,17 +706,17 @@ export default function BecomeSellerPage({ onBackToHome }) {
         {/* 3. REGISTER MODE */}
         {authMode === 'register' && (
           <div className="max-w-4xl w-full mx-auto px-4 py-8">
-            <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-10 shadow-2xl shadow-[#ff0066]/5 space-y-6">
+            <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-10 shadow-2xl shadow-[#FF6600]/5 space-y-6">
               
               <div className="text-center flex flex-col items-center">
-                <div className="inline-flex flex-col items-center bg-[#FFF5F0] border-2 border-[#ff0066] rounded-3xl px-8 py-4 shadow-md transition duration-300 hover:scale-[1.02] cursor-default">
-                  <h2 className="text-2xl sm:text-3xl font-black text-[#ff0066] tracking-tight">Shop Registration</h2>
-                  <p className="text-[#ff0066]/80 text-xs sm:text-sm font-extrabold mt-1.5">If you are willing to become a seller on Goroly Shop, register here</p>
+                <div className="inline-flex flex-col items-center bg-[#FFF5F0] border-2 border-[#FF6600] rounded-3xl px-8 py-4 shadow-md transition duration-300 hover:scale-[1.02] cursor-default">
+                  <h2 className="text-2xl sm:text-3xl font-black text-[#FF6600] tracking-tight">Shop Registration</h2>
+                  <p className="text-[#FF6600]/80 text-xs sm:text-sm font-extrabold mt-1.5">If you are willing to become a seller on Goroly Shop, register here</p>
                 </div>
               </div>
 
               {errorMsg && (
-                <div className="p-3.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-2xl text-xs font-bold leading-relaxed">
+                <div className="p-3.5 bg-orange-50 text-orange-600 border border-orange-100 rounded-2xl text-xs font-bold leading-relaxed">
                   ⚠️ {errorMsg}
                 </div>
               )}
@@ -727,49 +727,49 @@ export default function BecomeSellerPage({ onBackToHome }) {
                   <div className="space-y-4">
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        Shop Name <span className="text-rose-500">*</span>
+                        Shop Name <span className="text-orange-500">*</span>
                       </label>
                       <input
                         type="text"
                         placeholder="Enter your shop name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-[#ff0066] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
                         required
                       />
                     </div>
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        Owner / Representative Name <span className="text-rose-500">*</span>
+                        Owner / Representative Name <span className="text-orange-500">*</span>
                       </label>
                       <input
                         type="text"
                         placeholder="Enter your full name"
                         value={ownerName}
                         onChange={(e) => setOwnerName(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-[#ff0066] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
                         required
                       />
                     </div>
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        Email Address <span className="text-rose-500">*</span>
+                        Email Address <span className="text-orange-500">*</span>
                       </label>
                       <input
                         type="email"
                         placeholder="Enter your email address"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-[#ff0066] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
                         required
                       />
                     </div>
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        Password <span className="text-rose-500">*</span>
+                        Password <span className="text-orange-500">*</span>
                       </label>
                       <div className="relative">
                         <input
@@ -777,7 +777,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                           placeholder="Enter password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="w-full pl-4 pr-11 py-2.5 bg-slate-50 border border-[#ff0066] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300"
+                          className="w-full pl-4 pr-11 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
                           required
                         />
                         <button 
@@ -792,8 +792,8 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1 flex items-center gap-1">
-                        <Smartphone size={16} className="text-[#ff0066]" />
-                        Owner / Representative Phone <span className="text-rose-500">*</span>
+                        <Smartphone size={16} className="text-[#FF6600]" />
+                        Owner / Representative Phone <span className="text-orange-500">*</span>
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -808,7 +808,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                             setOtpError('');
                             setOtpSuccess('');
                           }}
-                          className="flex-1 px-4 py-2.5 bg-slate-50 border border-[#ff0066] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300"
+                          className="flex-1 px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
                           required
                           disabled={phoneVerified}
                         />
@@ -818,7 +818,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                               type="button"
                               onClick={() => handleSendOtp('sms')}
                               disabled={otpLoading}
-                              className="px-3.5 py-2.5 bg-[#ff0066] hover:bg-[#d60052] text-white text-xs font-bold rounded-lg transition duration-300 cursor-pointer whitespace-nowrap border-0"
+                              className="px-3.5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white text-xs font-bold rounded-lg transition duration-300 cursor-pointer whitespace-nowrap border-0"
                             >
                               {otpLoading ? 'Sending...' : 'Send SMS'}
                             </button>
@@ -837,7 +837,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                             onClick={handleVerifyOtp}
                             disabled={otpLoading || phoneVerified}
                             className={`px-4 py-2.5 text-white text-xs font-bold rounded-lg transition duration-300 whitespace-nowrap border-0 ${
-                              phoneVerified ? 'bg-emerald-500 cursor-default' : 'bg-[#ff0066] hover:bg-[#d60052] cursor-pointer'
+                              phoneVerified ? 'bg-emerald-500 cursor-default' : 'bg-[#FF6600] hover:bg-[#e05a00] cursor-pointer'
                             }`}
                           >
                             {otpLoading ? 'Verifying...' : phoneVerified ? 'Verified' : 'Verify'}
@@ -848,25 +848,25 @@ export default function BecomeSellerPage({ onBackToHome }) {
                       {otpSent && !phoneVerified && (
                         <div className="mt-3 space-y-1.5">
                           <label className="text-xs font-bold text-slate-700 block ml-1">
-                            Enter 6-digit OTP code <span className="text-rose-500">*</span>
+                            Enter 6-digit OTP code <span className="text-orange-500">*</span>
                           </label>
                           <input
                             type="text"
                             placeholder="Enter OTP"
                             value={otpCode}
                             onChange={(e) => setOtpCode(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-[#ff0066] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300 font-mono tracking-widest text-center"
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300 font-mono tracking-widest text-center"
                             maxLength={6}
                           />
                         </div>
                       )}
 
-                      {otpError && <p className="text-rose-600 text-[11px] font-bold mt-1.5 ml-1 flex items-center gap-1">⚠️ {otpError}</p>}
+                      {otpError && <p className="text-orange-600 text-[11px] font-bold mt-1.5 ml-1 flex items-center gap-1">⚠️ {otpError}</p>}
                       {otpSuccess && <p className="text-emerald-600 text-[11px] font-bold mt-1.5 ml-1 flex items-center gap-1">✅ {otpSuccess}</p>}
                     </div>
 
                     <div>
-                      <h3 className="text-[#ff0066] font-bold text-base mt-6 mb-3 ml-1">Social Media Links</h3>
+                      <h3 className="text-[#FF6600] font-bold text-base mt-6 mb-3 ml-1">Social Media Links</h3>
                       
                       <div className="space-y-4">
                         <div>
@@ -876,7 +876,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                             placeholder="Enter your Facebook page link"
                             value={facebook}
                             onChange={(e) => setFacebook(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-[#ff0066] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300"
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
                           />
                         </div>
 
@@ -887,7 +887,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                             placeholder="Enter your Instagram page link"
                             value={instagram}
                             onChange={(e) => setInstagram(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-[#ff0066] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300"
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
                           />
                         </div>
                       </div>
@@ -896,11 +896,11 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                   {/* Right Column (Address Details) */}
                   <div className="md:pl-8 space-y-4">
-                    <h3 className="text-[#ff0066] font-bold text-base mb-3">Address</h3>
+                    <h3 className="text-[#FF6600] font-bold text-base mb-3">Address</h3>
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        Division <span className="text-rose-500">*</span>
+                        Division <span className="text-orange-500">*</span>
                       </label>
                       <div className="relative">
                         <select
@@ -910,7 +910,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                             setDistrict('');
                             setUpazila('');
                           }}
-                          className="w-full px-4 py-2.5 bg-slate-50 border border-[#ff0066] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300 appearance-none cursor-pointer"
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300 appearance-none cursor-pointer"
                           required
                         >
                           <option value="" disabled>-- Please choose your division --</option>
@@ -924,7 +924,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        District <span className="text-rose-500">*</span>
+                        District <span className="text-orange-500">*</span>
                       </label>
                       <div className="relative">
                         <select
@@ -933,7 +933,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                             setDistrict(e.target.value);
                             setUpazila('');
                           }}
-                          className="w-full px-4 py-2.5 bg-slate-50 border border-[#ff0066] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300 appearance-none cursor-pointer"
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300 appearance-none cursor-pointer"
                           required
                           disabled={!division}
                         >
@@ -948,13 +948,13 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        Police Station/Upazila <span className="text-rose-500">*</span>
+                        Police Station/Upazila <span className="text-orange-500">*</span>
                       </label>
                       <div className="relative">
                         <select
                           value={upazila}
                           onChange={(e) => setUpazila(e.target.value)}
-                          className="w-full px-4 py-2.5 bg-slate-50 border border-[#ff0066] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300 appearance-none cursor-pointer"
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300 appearance-none cursor-pointer"
                           required
                           disabled={!district}
                         >
@@ -969,14 +969,14 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        House / Road & Additional Instruction <span className="text-rose-500">*</span>
+                        House / Road & Additional Instruction <span className="text-orange-500">*</span>
                       </label>
                       <textarea
                         rows="3"
                         placeholder="Enter house / road & additional instruction"
                         value={addressDetails}
                         onChange={(e) => setAddressDetails(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-[#ff0066] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#ff0066]/10 focus:border-[#ff0066] transition duration-300 resize-none"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300 resize-none"
                         required
                       />
                     </div>
@@ -988,7 +988,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full max-w-lg py-3.5 bg-[#ff0066] hover:bg-[#d60052] text-white font-bold rounded-full transition shadow-lg shadow-[#ff0066]/15 flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full max-w-lg py-3.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-full transition shadow-lg shadow-[#FF6600]/15 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {loading ? (
                       <>
@@ -1007,7 +1007,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     <button
                       type="button"
                       onClick={() => handleModeChange('login')}
-                      className="text-[#ff0066] font-extrabold hover:underline cursor-pointer"
+                      className="text-[#FF6600] font-extrabold hover:underline cursor-pointer"
                     >
                       Log In
                     </button>
