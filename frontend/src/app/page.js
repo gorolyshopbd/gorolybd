@@ -74,6 +74,7 @@ export default function Storefront() {
       .then((r) => r.ok ? r.json() : [])
       .then((d) => setShopCategories(d || []))
       .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update document title and favicon from branding settings
@@ -149,6 +150,7 @@ export default function Storefront() {
   // Endless pagination sync
   useEffect(() => {
     setVisibleProducts(sortedProducts.slice(0, 12));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedCategory, selectedBrand, priceRange, minRating, sortOrder, products]);
 
   const handleLoadMore = () => {

@@ -63,6 +63,9 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
   const [advancePaymentThreshold, setAdvancePaymentThreshold] = useState(1000);
   const [advancePaymentPercent, setAdvancePaymentPercent] = useState(50);
 
+  // Checkout OTP enabled setting (from admin)
+  const [checkoutOtpEnabled, setCheckoutOtpEnabled] = useState(true);
+
   const fetchShippingMethods = async () => {
     try {
       const res = await fetch(`${API_URL}/shipping`);
@@ -89,10 +92,17 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
             setAdvancePaymentEnabled(d.advancePaymentEnabled || false);
             setAdvancePaymentThreshold(d.advancePaymentThreshold || 1000);
             setAdvancePaymentPercent(d.advancePaymentPercent || 50);
+            // If admin disabled checkout OTP, auto-verify phone
+            const otpOn = d.checkoutOtpEnabled !== false;
+            setCheckoutOtpEnabled(otpOn);
+            if (!otpOn) {
+              setPhoneVerified(true);
+            }
           }
         })
         .catch(() => {});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -169,7 +179,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
   };
 
   const handleSubmitOrder = async () => {
-    if (!phoneVerified) {
+    if (checkoutOtpEnabled && !phoneVerified) {
       alert(t('verifyPhoneAlert'));
       return;
     }
@@ -506,70 +516,89 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                     </div>
                     
                     {/* OTP verification container */}
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/60 space-y-3">
-                      <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
-                        <Smartphone size={16} className="text-[#FF6600]" />
-                        {t('phoneVerification')}
+                    {checkoutOtpEnabled ? (
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/60 space-y-3">
+                        <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
+                          <Smartphone size={16} className="text-[#FF6600]" />
+                          {t('phoneVerification')}
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={shippingInfo.phone}
+                            onChange={(e) => {
+                              setShippingInfo({ ...shippingInfo, phone: e.target.value });
+                              setPhoneVerified(false);
+                              setOtpSent(false);
+                              setOtpCode('');
+                              setOtpError('');
+                              setOtpSuccess('');
+                            }}
+                            className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-[#FF6600] bg-white"
+                            placeholder={t('placeholderPhone')}
+                          />
+                           {!otpSent ? (
+                            <div className="flex gap-1.5">
+                              <button
+                                onClick={() => handleSendOtp('sms')}
+                                disabled={otpLoading}
+                                className="px-3.5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white text-xs font-bold rounded-xl transition duration-300 shadow-md shadow-[#FF6600]/25 whitespace-nowrap border-0 cursor-pointer"
+                              >
+                                {otpLoading ? t('sending') : 'SMS'}
+                              </button>
+                              <button
+                                onClick={() => handleSendOtp('call')}
+                                disabled={otpLoading}
+                                className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition duration-300 shadow-md shadow-slate-900/25 whitespace-nowrap border-0 cursor-pointer"
+                              >
+                                {otpLoading ? 'Calling...' : 'Call Me'}
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={handleVerifyOtp}
+                              disabled={otpLoading || phoneVerified}
+                              className={`px-4 py-2.5 text-white text-xs font-bold rounded-xl transition duration-300 whitespace-nowrap border-0 ${
+                                phoneVerified ? 'bg-emerald-500 cursor-default' : 'bg-[#FF6600] hover:bg-[#e05a00]'
+                              }`}
+                            >
+                              {otpLoading ? t('verifying') : phoneVerified ? t('verified') : t('verify')}
+                            </button>
+                          )}
+                        </div>
+                        {otpSent && !phoneVerified && (
+                          <div className="flex gap-2 mt-2">
+                            <input
+                              type="text"
+                              placeholder={t('enterOtp')}
+                              value={otpCode}
+                              onChange={(e) => setOtpCode(e.target.value)}
+                              className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-[#FF6600] bg-white font-mono tracking-widest text-center"
+                            />
+                          </div>
+                        )}
+                        {otpError && <p className="text-red-500 text-[10px] font-bold mt-1">{otpError}</p>}
+                        {otpSuccess && <p className="text-emerald-600 text-[10px] font-bold mt-1 flex items-center gap-1"><ShieldCheck size={12} />{otpSuccess}</p>}
                       </div>
-                      
-                      <div className="flex gap-2">
+                    ) : (
+                      /* OTP disabled — simple phone input only */
+                      <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200/60 space-y-2">
+                        <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-xs">
+                          <ShieldCheck size={14} className="text-emerald-500" />
+                          Phone Number
+                          <span className="ml-auto text-[9px] bg-emerald-100 text-emerald-600 font-bold px-2 py-0.5 rounded-full border border-emerald-200">OTP Disabled</span>
+                        </div>
                         <input
                           type="text"
                           value={shippingInfo.phone}
-                          onChange={(e) => {
-                            setShippingInfo({ ...shippingInfo, phone: e.target.value });
-                            setPhoneVerified(false);
-                            setOtpSent(false);
-                            setOtpCode('');
-                            setOtpError('');
-                            setOtpSuccess('');
-                          }}
-                          className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-[#FF6600] bg-white"
+                          onChange={(e) => setShippingInfo({ ...shippingInfo, phone: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-400 bg-white"
                           placeholder={t('placeholderPhone')}
                         />
-                         {!otpSent ? (
-                          <div className="flex gap-1.5">
-                            <button
-                              onClick={() => handleSendOtp('sms')}
-                              disabled={otpLoading}
-                              className="px-3.5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white text-xs font-bold rounded-xl transition duration-300 shadow-md shadow-[#FF6600]/25 whitespace-nowrap border-0 cursor-pointer"
-                            >
-                              {otpLoading ? t('sending') : 'SMS'}
-                            </button>
-                            <button
-                              onClick={() => handleSendOtp('call')}
-                              disabled={otpLoading}
-                              className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition duration-300 shadow-md shadow-slate-900/25 whitespace-nowrap border-0 cursor-pointer"
-                            >
-                              {otpLoading ? 'Calling...' : 'Call Me'}
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={handleVerifyOtp}
-                            disabled={otpLoading || phoneVerified}
-                            className={`px-4 py-2.5 text-white text-xs font-bold rounded-xl transition duration-300 whitespace-nowrap border-0 ${
-                              phoneVerified ? 'bg-emerald-500 cursor-default' : 'bg-[#FF6600] hover:bg-[#e05a00]'
-                            }`}
-                          >
-                            {otpLoading ? t('verifying') : phoneVerified ? t('verified') : t('verify')}
-                          </button>
-                        )}
+                        <p className="text-[9px] text-emerald-600 font-semibold">✓ Phone verification is not required for this checkout</p>
                       </div>
-                      {otpSent && !phoneVerified && (
-                        <div className="flex gap-2 mt-2">
-                          <input
-                            type="text"
-                            placeholder={t('enterOtp')}
-                            value={otpCode}
-                            onChange={(e) => setOtpCode(e.target.value)}
-                            className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-[#FF6600] bg-white font-mono tracking-widest text-center"
-                          />
-                        </div>
-                      )}
-                      {otpError && <p className="text-red-500 text-[10px] font-bold mt-1">{otpError}</p>}
-                      {otpSuccess && <p className="text-emerald-600 text-[10px] font-bold mt-1 flex items-center gap-1"><ShieldCheck size={12} />{otpSuccess}</p>}
-                    </div>
+                    )}
                   </div>
 
                   {/* Shipping Method Selection */}
@@ -643,7 +672,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                       </div>
                     </div>
 
-                    {!phoneVerified && (
+                    {checkoutOtpEnabled && !phoneVerified && (
                       <p className="text-amber-600 text-[10px] font-bold text-center">
                         {t('otpRequiredWarning')}
                       </p>
@@ -659,14 +688,14 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                       </button>
                       <button 
                         onClick={() => {
-                          if (!phoneVerified) {
+                          if (checkoutOtpEnabled && !phoneVerified) {
                             alert(t('verifyPhoneAlert'));
                             return;
                           }
                           setCheckoutStep('payment');
                         }}
                         className={`flex-grow-[2] py-3 font-bold rounded-xl transition text-xs flex items-center justify-center gap-1.5 ${
-                          phoneVerified
+                          (!checkoutOtpEnabled || phoneVerified)
                             ? 'bg-[#FF6600] hover:bg-[#e05a00] text-white shadow-lg shadow-[#FF6600]/20'
                             : 'bg-slate-200 text-slate-450 cursor-not-allowed'
                         }`}

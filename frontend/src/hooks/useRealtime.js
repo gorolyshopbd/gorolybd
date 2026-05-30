@@ -21,7 +21,9 @@ export function useRealtime(channelName, eventHandlers = {}) {
   const handlersRef = useRef(eventHandlers);
   const channelRef = useRef(null);
 
-  handlersRef.current = eventHandlers;
+  useEffect(() => {
+    handlersRef.current = eventHandlers;
+  });
 
   useEffect(() => {
     const client = getClient();

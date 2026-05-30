@@ -34,6 +34,7 @@ export default function UserDashboard() {
       setEmail(user.email || '');
       fetchMyOrders();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchMyOrders = async () => {

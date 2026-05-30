@@ -105,7 +105,7 @@ export default function ProductDetailPage() {
       }
     };
     if (id) loadProduct();
-  }, [id]);
+  }, [id, API_URL]);
 
   // Set document title from product meta
   useEffect(() => {
@@ -126,6 +126,7 @@ export default function ProductDetailPage() {
       }
     };
     loadRelated();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product]);
 
   const allImages = product

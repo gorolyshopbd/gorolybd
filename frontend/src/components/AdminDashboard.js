@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
@@ -279,6 +279,7 @@ export default function AdminDashboard({ onTabChange }) {
     otpGateway: 'Simulated',
     otpLength: 6,
     otpExpiry: 5,
+    checkoutOtpEnabled: true,
     bkashMode: 'Sandbox',
     bkashEnabled: true,
     bkashMerchantNumber: '01700000000',
@@ -669,10 +670,12 @@ export default function AdminDashboard({ onTabChange }) {
       fetchUserPoints();
       fetchPointLogs();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {
     if (user && (activeTab === 'users' || activeTab === 'sellers_all' || activeTab === 'staffs' || activeTab === 'rewards_set')) fetchAllUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, activeTab]);
 
   useEffect(() => {
@@ -681,6 +684,7 @@ export default function AdminDashboard({ onTabChange }) {
     } else if (activeTab === 'users') {
       setUserForm(prev => ({ ...prev, role: 'customer', permissions: [] }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   // Separate effect for chat polling
@@ -689,6 +693,7 @@ export default function AdminDashboard({ onTabChange }) {
     fetchChatMessages();
     const interval = setInterval(fetchChatMessages, 3000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, activeTab]);
 
   // Actions
@@ -7409,10 +7414,35 @@ export default function AdminDashboard({ onTabChange }) {
 
               {/* OTP gateway Configuration */}
               <div className="bg-white/90  p-6 border border-slate-200 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 space-y-4 shadow-xl">
-                <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
-                  <Sliders size={16} className="text-blue-500" />
-                  OTP Configuration Settings
-                </h3>
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                    <Sliders size={16} className="text-blue-500" />
+                    OTP Configuration Settings
+                  </h3>
+                  {/* Checkout OTP Master Toggle */}
+                  <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Checkout OTP Verification</p>
+                      <p className="text-[9px] text-slate-400 font-medium mt-0.5">
+                        {settings.checkoutOtpEnabled ? 'ON \u2014 Phone verification required at checkout' : 'OFF \u2014 Customers checkout without OTP'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      id="checkout-otp-toggle"
+                      onClick={() => setSettings({ ...settings, checkoutOtpEnabled: !settings.checkoutOtpEnabled })}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none flex-shrink-0 ${
+                        settings.checkoutOtpEnabled ? 'bg-[#FF6600]' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+                          settings.checkoutOtpEnabled ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">SMS/OTP Gateway</label>
