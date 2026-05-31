@@ -5,6 +5,7 @@ import {
   registerUser,
   authUser,
   getUserProfile,
+  updateUserProfile,
   sendOTP,
   verifyOTPCode,
   changePassword,
@@ -76,7 +77,9 @@ router.post('/reset-password', resetPassword);
 router.post('/oauth', oauthLogin);
 
 // Private routes (user profile)
-router.route('/profile').get(protect, getUserProfile);
+router.route('/profile')
+  .get(protect, getUserProfile)
+  .put(protect, updateUserProfile);
 router.route('/profile/password').put(protect, changePassword);
 router.route('/profile/email').put(protect, changeEmail);
 
@@ -87,6 +90,20 @@ router.route('/create').post(protect, admin, createUserByAdmin);
 router.route('/:id').get(protect, admin, getUserById);
 router.route('/:id').put(protect, admin, updateUserByAdmin);
 router.route('/:id/password').put(protect, admin, adminResetPassword);
+router.route('/:id/verification').put(protect, admin, async (req, res) => {
+  const { verification_status } = req.body;
+  const allowed = ['Verified', 'Rejected', 'Pending'];
+  if (!allowed.includes(verification_status)) {
+    return res.status(400).json({ message: 'Invalid verification status' });
+  }
+  try {
+    const { data, error } = await db.database.from('users').update({ verification_status }).eq('id', req.params.id).select().single();
+    if (error) throw error;
+    res.json({ message: 'Verification status updated', verification_status: data.verification_status });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 router.route('/:id').delete(protect, admin, deleteUser);
 
 export default router;

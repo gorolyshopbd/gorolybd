@@ -17,8 +17,12 @@ CREATE TABLE IF NOT EXISTS users (
   is_admin      BOOLEAN NOT NULL DEFAULT false,
   phone         TEXT DEFAULT '',
   role          TEXT NOT NULL DEFAULT 'customer'
-                  CHECK (role IN ('superadmin','admin','manager','moderator','customer')),
+                  CHECK (role IN ('superadmin','admin','manager','moderator','customer','seller')),
   permissions   TEXT[] DEFAULT '{}',
+  nid_number    TEXT,
+  nid_image_front TEXT,
+  nid_image_back TEXT,
+  verification_status TEXT DEFAULT 'Not Verified',
   created_at    TIMESTAMPTZ DEFAULT NOW(),
   updated_at    TIMESTAMPTZ DEFAULT NOW()
 );
@@ -266,9 +270,14 @@ CREATE TABLE IF NOT EXISTS settings (
   id                           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   -- OTP
   otp_gateway                  TEXT DEFAULT 'Simulated'
-                                 CHECK (otp_gateway IN ('Simulated','Twilio','Firebase','GreenwebSMS')),
+                                 CHECK (otp_gateway IN ('Simulated','Twilio','Firebase','GreenwebSMS','SAS_BULK_SMS')),
   otp_length                   INT DEFAULT 6,
   otp_expiry                   INT DEFAULT 5,
+  -- SAS Bulk SMS
+  sas_sms_gateway_url          TEXT DEFAULT '',
+  sas_sms_api_key              TEXT DEFAULT '',
+  sas_sms_secret_key           TEXT DEFAULT '',
+  sas_sms_sender_id            TEXT DEFAULT '',
   -- bKash
   bkash_mode                   TEXT DEFAULT 'Sandbox',
   bkash_enabled                BOOLEAN DEFAULT true,

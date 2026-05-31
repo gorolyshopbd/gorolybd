@@ -5,7 +5,7 @@ import { db } from '../config/db.js';
 // @access  Protected (Admin)
 const getSellerPackages = async (req, res) => {
   try {
-    const { data, error } = await db
+    const { data, error } = await db.database
       .from('seller_packages')
       .select('*')
       .order('created_at', { ascending: false });
@@ -30,7 +30,7 @@ const createSellerPackage = async (req, res) => {
       return res.status(400).json({ message: 'Name, price, duration, and product limit are required.' });
     }
 
-    const { data, error } = await db
+    const { data, error } = await db.database
       .from('seller_packages')
       .insert([{
         name,
@@ -65,7 +65,7 @@ const updateSellerPackage = async (req, res) => {
     if (product_limit !== undefined) updateData.product_limit = Number(product_limit);
     if (is_active !== undefined) updateData.is_active = is_active;
 
-    const { data, error } = await db
+    const { data, error } = await db.database
       .from('seller_packages')
       .update(updateData)
       .eq('id', id)
@@ -87,7 +87,7 @@ const deleteSellerPackage = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { error } = await db
+    const { error } = await db.database
       .from('seller_packages')
       .delete()
       .eq('id', id);

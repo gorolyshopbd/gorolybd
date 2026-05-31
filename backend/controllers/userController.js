@@ -80,7 +80,10 @@ const registerUser = async (req, res) => {
     division,
     district,
     upazila,
-    address_details
+    address_details,
+    package_id,
+    payment_method,
+    transaction_id
   } = req.body;
 
   try {
@@ -113,6 +116,21 @@ const registerUser = async (req, res) => {
 
     if (error) throw error;
 
+    if (assignedRole === 'seller' && package_id) {
+      const subData = {
+        user_id: user.id,
+        package_id,
+        payment_method: payment_method || 'Cash on Delivery',
+        transaction_id: transaction_id || '',
+        status: (payment_method && payment_method !== 'Cash on Delivery') ? 'pending' : 'active',
+        start_date: new Date().toISOString(),
+      };
+      const { error: subError } = await db.database.from('seller_subscriptions').insert([subData]);
+      if (subError) {
+        console.error('Subscription creation failed:', subError);
+      }
+    }
+
     res.status(201).json({
       ...sanitizeUser(user),
       token: generateToken(user.id),
@@ -131,6 +149,62 @@ const getUserProfile = async (req, res) => {
     if (error || !user) return res.status(404).json({ message: 'User not found' });
     
     res.json(sanitizeUser(user));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+const updateUserProfile = async (req, res) => {
+  const { 
+    name, 
+    owner_name, 
+    phone, 
+    facebook, 
+    instagram, 
+    division, 
+    district, 
+    upazila, 
+    address_details,
+    nid_number,
+    nid_image_front,
+    nid_image_back
+  } = req.body;
+
+  try {
+    const { data: user } = await db.database.from('users').select('*').eq('id', req.user._id).single();
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (owner_name !== undefined) updateData.owner_name = owner_name;
+    if (phone !== undefined) updateData.phone = phone;
+    if (facebook !== undefined) updateData.facebook = facebook;
+    if (instagram !== undefined) updateData.instagram = instagram;
+    if (division !== undefined) updateData.division = division;
+    if (district !== undefined) updateData.district = district;
+    if (upazila !== undefined) updateData.upazila = upazila;
+    if (address_details !== undefined) updateData.address_details = address_details;
+    if (nid_number !== undefined) updateData.nid_number = nid_number;
+    if (nid_image_front !== undefined) updateData.nid_image_front = nid_image_front;
+    if (nid_image_back !== undefined) updateData.nid_image_back = nid_image_back;
+
+    if ((nid_number || nid_image_front || nid_image_back) && user.verification_status !== 'Verified') {
+      updateData.verification_status = 'Pending';
+    }
+
+    const { data: updated, error } = await db.database
+      .from('users')
+      .update(updateData)
+      .eq('id', req.user._id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json(sanitizeUser(updated));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -158,62 +232,61 @@ const sendOTP = async (req, res) => {
 
   if (type === 'phone' && gateway !== 'Simulated') {
     try {
-      if (gateway === 'Twilio') {
+      if (gateway === 'SAS_BULK_SMS' || gateway === 'Simulated' || !gateway) {
         const { data: settings } = await db.database.from('settings').select('*').limit(1).single();
-        if (settings?.twilio_sid && settings?.twilio_auth_token && settings?.twilio_phone_number) {
-          const client = twilio(settings.twilio_sid, settings.twilio_auth_token);
+        if (settings?.sas_sms_api_key && settings?.sas_sms_sender_id) {
+          let baseUrl = settings.sas_sms_gateway_url || 'http://sms.sasbulksms.com:3040';
+          if (baseUrl === 'https://sms.sasbulksms.com/') baseUrl = 'http://sms.sasbulksms.com:3040';
+          const url = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
           
-          let formattedPhone = target.trim();
-          if (!formattedPhone.startsWith('+')) {
-            if (formattedPhone.startsWith('880')) {
-              formattedPhone = '+' + formattedPhone;
-            } else if (formattedPhone.startsWith('0')) {
-              formattedPhone = '+88' + formattedPhone;
-            } else {
-              formattedPhone = '+880' + formattedPhone;
-            }
+          // Normalize Bangladesh phone number: 01XXXXXXXXX → 8801XXXXXXXXX
+          let toUser = target.replace(/\D/g, '');
+          if (toUser.startsWith('01') && toUser.length === 11) {
+            toUser = '88' + toUser;
+          } else if (toUser.startsWith('1') && toUser.length === 10) {
+            toUser = '880' + toUser;
           }
 
-          if (req.body.method === 'call' || type === 'call') {
-            await client.calls.create({
-              twiml: `<Response><Say>Your Goroly Shop verification code is ${otp.split('').join('. ')}</Say></Response>`,
-              from: settings.twilio_phone_number,
-              to: formattedPhone
-            });
-            console.log(`[OTP Call Sent via Twilio] to ${formattedPhone}`);
-            return res.json({ message: `OTP call sent via Twilio to ${formattedPhone}` });
-          } else {
-            await client.messages.create({
-              body: `Your Goroly Shop OTP code is: ${otp}. Valid for 5 minutes.`,
-              from: settings.twilio_phone_number,
-              to: formattedPhone
-            });
-            console.log(`[OTP Sent via Twilio] to ${formattedPhone}`);
-            return res.json({ message: `OTP sent via Twilio to ${formattedPhone}` });
-          }
-        }
-      } else if (gateway === 'GreenwebSMS') {
-        const { data: settings } = await db.database.from('settings').select('*').limit(1).single();
-        if (settings?.greenweb_api_key) {
-          const senderId = settings.greenweb_sender_id || 'Shopio';
-          const greenwebRes = await fetch('http://api.greenweb.com.bd/api.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-              token: settings.greenweb_api_key,
-              to: target,
-              message: `Your Goroly Shop OTP code is: ${otp}. Valid for 5 minutes.`,
-              sender: senderId
-            })
+          const params = new URLSearchParams({
+            apikey: settings.sas_sms_api_key,
+            secretkey: settings.sas_sms_secret_key || '',
+            callerID: settings.sas_sms_sender_id,
+            toUser: toUser,
+            messageContent: `Your OTP code is ${otp}`
           });
-          const result = await greenwebRes.text();
-          console.log(`[OTP Sent via GreenwebSMS] to ${target}: ${result}`);
-          return res.json({ message: `OTP sent via GreenwebSMS to ${target}` });
+          
+          const reqUrl = `${url}/sendtext?${params.toString()}`;
+          const resp = await fetch(reqUrl, {
+            method: 'GET'
+          });
+          
+          const result = await resp.text();
+          console.log(`[OTP Sent via SAS Bulk SMS] to ${target}: ${result}`);
+          
+          let isError = false;
+          if (!resp.ok) isError = true;
+          try {
+            const jsonResult = JSON.parse(result);
+            if (jsonResult.Status === "-1" || jsonResult.Text === "REJECTD") {
+              isError = true;
+            }
+          } catch (e) {
+            if (result.toLowerCase().includes('error')) isError = true;
+          }
+
+          if (isError) {
+            throw new Error(`SAS Bulk SMS API Error: ${result}`);
+          }
+
+          return res.json({ message: `OTP sent successfully to ${target}` });
+        } else {
+          return res.status(500).json({ message: 'SMS Gateway is not configured properly' });
         }
       }
     } catch (smsError) {
       console.error('[OTP Send Failed]', smsError.message);
-      // Fall through to simulated fallback
+      console.log('[OTP Send Failed] Falling back to simulated mode');
+      // Fall through to simulated mode below
     }
   }
 
@@ -677,6 +750,7 @@ export {
   authUser,
   registerUser,
   getUserProfile,
+  updateUserProfile,
   sendOTP,
   verifyOTPCode,
   changePassword,

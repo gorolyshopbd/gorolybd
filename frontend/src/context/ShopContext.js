@@ -3,6 +3,16 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import { createClient } from '@insforge/sdk';
 
+// Helper to safely parse JSON responses without throwing on HTML
+const safeJson = async (res) => {
+  try {
+    return await res.json();
+  } catch {
+    // Return null if response is not JSON (e.g., HTML error page)
+    return null;
+  }
+};
+
 export const ShopContext = createContext();
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -533,9 +543,15 @@ export const ShopProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type, target, method }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to send OTP');
-      
+      const data = await safeJson(res);
+      if (!res.ok) {
+        const errMsg = data?.message || 'Failed to send OTP';
+        throw new Error(errMsg);
+      }
+      if (!data) {
+        throw new Error('Invalid response from server');
+      }
+
       setLoading(false);
       return { success: true, otp: data.otp };
     } catch (error) {
@@ -544,26 +560,34 @@ export const ShopProvider = ({ children }) => {
     }
   };
 
-  const verifyOtpCode = async (type, target, otp) => {
+  const verifyOtpCode = async (type, target, otp, onlyVerify = false) => {
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/users/otp/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, target, otp }),
+        body: JSON.stringify({ type, target, otp, onlyVerify }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Invalid OTP code');
-
-      setUser(data);
-      localStorage.setItem('shop_user', JSON.stringify(data));
-      
-      // Auto-set admin tokens if user is admin
-      if (data.isAdmin || data.role !== 'customer') {
-        localStorage.setItem('shop_admin_token', data.token);
-        localStorage.setItem('shop_admin_user', JSON.stringify(data));
+      const data = await safeJson(res);
+      if (!res.ok) {
+        const errMsg = data?.message || 'Invalid OTP code';
+        throw new Error(errMsg);
       }
-      
+      if (!data) {
+        throw new Error('Invalid response from server');
+      }
+
+      if (!onlyVerify) {
+        setUser(data);
+        localStorage.setItem('shop_user', JSON.stringify(data));
+
+        // Auto-set admin tokens if user is admin
+        if (data.isAdmin || data.role !== 'customer') {
+          localStorage.setItem('shop_admin_token', data.token);
+          localStorage.setItem('shop_admin_user', JSON.stringify(data));
+        }
+      }
+
       setLoading(false);
       return { success: true };
     } catch (error) {

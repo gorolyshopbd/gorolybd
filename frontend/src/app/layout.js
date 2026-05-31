@@ -22,9 +22,6 @@ export default function RootLayout({ children }) {
         <ShopProvider>
           <LanguageProvider>
             <main className="flex-1">{children}</main>
-            <footer className="bg-white/95 backdrop-blur-lg border-t border-slate-200 py-4 text-center text-sm text-slate-600 dark:bg-gray-900/95 dark:border-gray-800">
-              © {new Date().getFullYear()} Goroly Shop. All rights reserved.
-            </footer>
           </LanguageProvider>
         </ShopProvider>
         <TrackingScripts />

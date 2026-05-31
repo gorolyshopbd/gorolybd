@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { ShopContext } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Store, Lock, Mail, Phone, User, Globe, ChevronDown, ArrowLeft, ArrowRight, Eye, EyeOff, Users, ShoppingBag, Calendar, Package, MessageSquare, Banknote, ShieldCheck, Smartphone, LayoutGrid } from 'lucide-react';
@@ -230,6 +230,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState('');
   const [otpSuccess, setOtpSuccess] = useState('');
+  const [checkoutOtpEnabled, setCheckoutOtpEnabled] = useState(true);
 
   // Form states
   const [name, setName] = useState(''); // Shop Name
@@ -244,7 +245,47 @@ export default function BecomeSellerPage({ onBackToHome }) {
   const [upazila, setUpazila] = useState('');
   const [addressDetails, setAddressDetails] = useState('');
 
+  // Package selection states
+  const [packages, setPackages] = useState([]);
+  const [packagesLoading, setPackagesLoading] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState(null);
+
+  // Payment step states
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [transactionId, setTransactionId] = useState('');
+  const [paySettings, setPaySettings] = useState({ bkashEnabled: true, bkashMerchantNumber: '01700000000', nagadEnabled: true, nagadMerchantId: 'NAGAD12345' });
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  // Fetch public packages
+  useEffect(() => {
+    setPackagesLoading(true);
+    fetch(`${API_URL}/seller-packages/public`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => { setPackages(data || []); setPackagesLoading(false); })
+      .catch(() => setPackagesLoading(false));
+  }, [API_URL]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/settings/public`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => {
+        if (d) {
+          const otpOn = d.checkoutOtpEnabled !== false;
+          setCheckoutOtpEnabled(otpOn);
+          if (!otpOn) {
+            setPhoneVerified(true);
+          }
+          setPaySettings({
+            bkashEnabled: true, // Always enable for seller package
+            bkashMerchantNumber: d.bkashMerchantNumber || '01700000000',
+            nagadEnabled: true, // Always enable for seller package
+            nagadMerchantId: d.nagadMerchantId || 'NAGAD12345',
+          });
+        }
+      })
+      .catch(() => {});
+  }, [API_URL]);
 
   const t = (key) => {
     return sT[lang]?.[key] || sT['en']?.[key] || key;
@@ -267,6 +308,9 @@ export default function BecomeSellerPage({ onBackToHome }) {
       if (res.success) {
         setOtpSent(true);
         setOtpSuccess(method === 'call' ? t('otpCallSuccess') : t('otpSentSuccess'));
+        if (res.otp) {
+          setOtpCode(res.otp);
+        }
       } else {
         setOtpError(res.error || 'Failed to send OTP');
       }
@@ -310,7 +354,13 @@ export default function BecomeSellerPage({ onBackToHome }) {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!phoneVerified) {
+    if (!selectedPackage) {
+      setErrorMsg(lang === 'bn' ? 'অনুগ্রহ করে একটি প্যাকেজ বেছে নিন।' : 'Please select a seller package to continue.');
+      handleModeChange('packages');
+      return;
+    }
+
+    if (checkoutOtpEnabled && !phoneVerified) {
       setErrorMsg(t('phoneRequiredWarning'));
       return;
     }
@@ -333,7 +383,11 @@ export default function BecomeSellerPage({ onBackToHome }) {
           division,
           district,
           upazila,
-          address_details: addressDetails
+          address_details: addressDetails,
+          package_id: selectedPackage.id,
+          package_name: selectedPackage.name,
+          payment_method: paymentMethod,
+          transaction_id: transactionId,
         }),
       });
       const data = await res.json();
@@ -404,6 +458,8 @@ export default function BecomeSellerPage({ onBackToHome }) {
     setOtpLoading(false);
     setOtpError('');
     setOtpSuccess('');
+    if (mode === 'packages') { setPaymentMethod(''); setTransactionId(''); }
+    if (mode !== 'register' && mode !== 'payment') setSelectedPackage(null);
   };
 
   return (
@@ -470,7 +526,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
               </button>
               
               <button 
-                onClick={() => handleModeChange('register')}
+                onClick={() => handleModeChange('packages')}
                 className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-6 py-2 rounded-full font-bold text-sm transition shadow-md shadow-[#FF6600]/10 cursor-pointer"
               >
                 {t('signUp')}
@@ -533,7 +589,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                 </h1>
                 
                 <button 
-                  onClick={() => handleModeChange('register')}
+                  onClick={() => handleModeChange('packages')}
                   className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-9 py-3.5 rounded-full font-bold text-base transition shadow-lg shadow-[#FF6600]/25 hover:-translate-y-0.5 cursor-pointer"
                 >
                   {t('signUp')}
@@ -783,6 +839,301 @@ export default function BecomeSellerPage({ onBackToHome }) {
           </div>
         )}
 
+        {/* 1.5. PACKAGE SELECTION MODE */}
+        {authMode === 'packages' && (
+          <div className="max-w-5xl w-full mx-auto px-4 py-12">
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center gap-2 bg-[#FFF5F0] text-[#FF6600] px-4 py-2 rounded-full text-xs font-extrabold mb-4">
+                <Package size={14} /> Choose Your Seller Package
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-[#0f2a4a]">
+                {lang === 'bn' ? 'আপনার প্যাকেজ বেছে নিন' : 'Select a Package to Get Started'}
+              </h2>
+              <p className="text-slate-500 text-sm font-semibold mt-2 max-w-xl mx-auto">
+                {lang === 'bn'
+                  ? 'একটি প্যাকেজ নির্বাচন করুন এবং সেলার অ্যাকাউন্ট তৈরি করুন।'
+                  : 'Pick a package that suits your business needs. You can upgrade anytime.'}
+              </p>
+            </div>
+
+            {packagesLoading ? (
+              <div className="flex justify-center py-16">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#FF6600]" />
+              </div>
+            ) : packages.length === 0 ? (
+              <div className="text-center py-16 text-slate-400">
+                <Package size={48} className="mx-auto mb-4 opacity-30" />
+                <p className="font-bold text-sm">No packages available yet.</p>
+                <p className="text-xs mt-1">Please contact admin.</p>
+              </div>
+            ) : (
+              <div className={`grid gap-6 ${packages.length === 1 ? 'grid-cols-1 max-w-sm mx-auto' : packages.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                {packages.map((pkg, idx) => {
+                  const isSelected = selectedPackage?.id === pkg.id;
+                  const isPopular = idx === Math.floor(packages.length / 2);
+                  return (
+                    <div
+                      key={pkg.id}
+                      onClick={() => setSelectedPackage(pkg)}
+                      className={`relative rounded-3xl border-2 p-6 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                        isSelected
+                          ? 'border-[#FF6600] bg-[#FFF5F0] shadow-xl shadow-[#FF6600]/10'
+                          : 'border-slate-200 bg-white hover:border-[#FF6600]/40'
+                      }`}
+                    >
+                      {isPopular && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#FF6600] text-white text-[10px] font-extrabold px-3 py-1 rounded-full tracking-wide">
+                          POPULAR
+                        </div>
+                      )}
+                      {isSelected && (
+                        <div className="absolute top-4 right-4 w-6 h-6 bg-[#FF6600] rounded-full flex items-center justify-center">
+                          <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="text-lg font-black text-slate-800">{pkg.name}</h3>
+                          <div className="flex items-end gap-1 mt-2">
+                            <span className="text-3xl font-black text-[#FF6600]">৳{Number(pkg.price).toLocaleString()}</span>
+                            {pkg.duration_days && (
+                              <span className="text-xs text-slate-400 font-semibold mb-1">/ {pkg.duration_days} days</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="border-t border-slate-100 pt-4 space-y-2.5">
+                          {pkg.product_limit && (
+                            <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                              <svg className="w-4 h-4 text-[#FF6600] flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                              Up to <span className="font-black text-slate-800">{pkg.product_limit}</span> products
+                            </div>
+                          )}
+                          {pkg.duration_days && (
+                            <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                              <svg className="w-4 h-4 text-[#FF6600] flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                              Valid for <span className="font-black text-slate-800">{pkg.duration_days} days</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                            <svg className="w-4 h-4 text-[#FF6600] flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Seller dashboard access
+                          </div>
+                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                            <svg className="w-4 h-4 text-[#FF6600] flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Order & payout management
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {packages.length > 0 && (
+              <div className="flex flex-col items-center gap-3 mt-10">
+                <button
+                  onClick={() => {
+                    if (!selectedPackage) {
+                      alert(lang === 'bn' ? 'অনুগ্রহ করে একটি প্যাকেজ বেছে নিন।' : 'Please select a package to continue.');
+                      return;
+                    }
+                    handleModeChange('payment');
+                  }}
+                  className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-10 py-3.5 rounded-full font-bold text-base transition shadow-lg shadow-[#FF6600]/25 hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
+                >
+                  {selectedPackage
+                    ? `Continue with ${selectedPackage.name}`
+                    : (lang === 'bn' ? 'একটি প্যাকেজ নির্বাচন করুন' : 'Select a Package to Continue')}
+                  <ArrowRight size={16} />
+                </button>
+                <button
+                  onClick={() => handleModeChange('landing')}
+                  className="text-slate-400 text-xs font-semibold hover:text-slate-600 transition flex items-center gap-1 cursor-pointer"
+                >
+                  <ArrowLeft size={13} /> Back to home
+                </button>
+              </div>
+            )}
+
+            <p className="text-center text-xs text-slate-400 mt-6">
+              Already have an account?{' '}
+              <button onClick={() => handleModeChange('login')} className="text-[#FF6600] font-extrabold hover:underline cursor-pointer border-0 bg-transparent">
+                Log In
+              </button>
+            </p>
+          </div>
+        )}
+
+        {/* 1.6. PAYMENT MODE */}
+        {authMode === 'payment' && (
+          <div className="max-w-lg w-full mx-auto px-4 py-12">
+            <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-2xl shadow-[#FF6600]/5 space-y-6">
+              {/* Header */}
+              <div className="text-center space-y-2">
+                <div className="mx-auto w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600">
+                  <Banknote size={24} />
+                </div>
+                <h2 className="text-2xl font-black text-slate-800">
+                  {lang === 'bn' ? 'পেমেন্ট' : 'Complete Payment'}
+                </h2>
+                <p className="text-slate-400 text-xs font-semibold">
+                  {lang === 'bn' ? 'আপনার প্যাকেজ সক্রিয় করতে পেমেন্ট সম্পন্ন করুন' : 'Pay to activate your seller package'}
+                </p>
+              </div>
+
+              {/* Package Summary */}
+              {selectedPackage && (
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Selected Package</div>
+                    <div className="font-black text-slate-800 text-lg">{selectedPackage.name}</div>
+                    <div className="text-xs text-slate-500 font-semibold">{selectedPackage.duration_days} days &bull; {selectedPackage.product_limit} products</div>
+                  </div>
+                  <div className="text-2xl font-black text-[#FF6600]">৳{Number(selectedPackage.price).toLocaleString()}</div>
+                </div>
+              )}
+
+              {/* Payment Method Selection */}
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                  {lang === 'bn' ? 'পেমেন্ট মেথড বেছে নিন' : 'Choose Payment Method'}
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {paySettings.bkashEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('bKash')}
+                      className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
+                        paymentMethod === 'bKash'
+                          ? 'border-[#e2136e] bg-[#e2136e]/5 shadow-md'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      {paymentMethod === 'bKash' && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-[#e2136e] rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                      <Smartphone size={28} className="text-[#e2136e]" />
+                      <span className="font-extrabold text-sm text-slate-700">bKash</span>
+                    </button>
+                  )}
+                  {paySettings.nagadEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('Nagad')}
+                      className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
+                        paymentMethod === 'Nagad'
+                          ? 'border-[#e2136e] bg-[#e2136e]/5 shadow-md'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      {paymentMethod === 'Nagad' && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-[#e2136e] rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                      <Smartphone size={28} className="text-[#e2136e]" />
+                      <span className="font-extrabold text-sm text-slate-700">Nagad</span>
+                    </button>
+                  )}
+                  {!paySettings.bkashEnabled && !paySettings.nagadEnabled && (
+                    <div className="col-span-2 text-center py-4 text-slate-400 text-xs font-semibold">
+                      {lang === 'bn' ? 'কোনো পেমেন্ট মেথড উপলব্ধ নেই' : 'No payment methods available'}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Merchant Info & Transaction ID */}
+              {paymentMethod && (
+                <div className="space-y-4 animate-fade-in">
+                  {/* Merchant Details */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                    <div className="flex items-start gap-3">
+                      <ShieldCheck size={18} className="text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
+                          {lang === 'bn' ? 'পেমেন্ট করার নির্দেশনা' : 'Payment Instructions'}
+                        </p>
+                        <p className="text-xs font-semibold text-amber-800">
+                          {paymentMethod === 'bKash'
+                            ? (lang === 'bn' ? `Send exactly ৳${Number(selectedPackage.price).toLocaleString()} to bKash merchant number:`
+                              : `Send exactly ৳${Number(selectedPackage.price).toLocaleString()} to bKash Merchant Number:`)
+                            : (lang === 'bn' ? `Send exactly ৳${Number(selectedPackage.price).toLocaleString()} to Nagad merchant account:`
+                              : `Send exactly ৳${Number(selectedPackage.price).toLocaleString()} to Nagad Merchant ID:`)}
+                        </p>
+                        <p className="text-lg font-black text-slate-800">
+                          {paymentMethod === 'bKash' ? paySettings.bkashMerchantNumber : paySettings.nagadMerchantId}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Transaction ID Input */}
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                      {lang === 'bn' ? 'ট্রানজেকশন আইডি (TrxID)' : 'Transaction ID (TrxID)'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={lang === 'bn' ? 'আপনার TrxID লিখুন' : 'Enter your TrxID'}
+                      value={transactionId}
+                      onChange={(e) => setTransactionId(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition shadow-inner font-mono font-bold"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1 font-medium">
+                      {lang === 'bn' ? 'পেমেন্ট সম্পন্ন করার পর উপরের TrxID টি লিখুন' : 'Enter the TrxID after sending the payment'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    if (!paymentMethod) {
+                      alert(lang === 'bn' ? 'অনুগ্রহ করে পেমেন্ট মেথড বেছে নিন।' : 'Please select a payment method.');
+                      return;
+                    }
+                    if (!transactionId.trim()) {
+                      alert(lang === 'bn' ? 'অনুগ্রহ করে ট্রানজেকশন আইডি লিখুন।' : 'Please enter the transaction ID.');
+                      return;
+                    }
+                    handleModeChange('register');
+                  }}
+                  className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-10 py-3.5 rounded-full font-bold text-base transition shadow-lg shadow-[#FF6600]/25 hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {lang === 'bn' ? 'রেজিস্ট্রেশন সম্পন্ন করুন' : 'Complete Registration'} <ArrowRight size={16} />
+                </button>
+                <button
+                  onClick={() => { setPaymentMethod(''); setTransactionId(''); handleModeChange('packages'); }}
+                  className="text-slate-400 text-xs font-semibold hover:text-slate-600 transition flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <ArrowLeft size={13} /> {lang === 'bn' ? 'প্যাকেজ বেছে নিন' : 'Back to packages'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 2. LOGIN MODE */}
         {authMode === 'login' && (
           <div className="max-w-md w-full mx-auto px-6 py-12">
@@ -864,7 +1215,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                   {t('noAccount')}{' '}
                   <button
                     type="button"
-                    onClick={() => handleModeChange('register')}
+                    onClick={() => handleModeChange('packages')}
                     className="text-[#FF6600] font-extrabold hover:underline cursor-pointer border-0 bg-transparent"
                   >
                     {t('createAccount')}
@@ -887,6 +1238,54 @@ export default function BecomeSellerPage({ onBackToHome }) {
                   <p className="text-[#FF6600]/80 text-xs sm:text-sm font-extrabold mt-1.5">{t('registerSub')}</p>
                 </div>
               </div>
+
+              {/* Selected Package Banner */}
+              {selectedPackage ? (
+                <div className="bg-[#FFF5F0] border border-[#FF6600]/20 rounded-2xl overflow-hidden">
+                  <div className="flex items-center justify-between px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-[#FF6600] rounded-xl flex items-center justify-center">
+                        <Package size={16} className="text-white" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-[#FF6600] uppercase tracking-wide">Selected Package</div>
+                        <div className="text-sm font-black text-slate-800">{selectedPackage.name} — ৳{Number(selectedPackage.price).toLocaleString()}</div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleModeChange('packages')}
+                      className="text-xs text-[#FF6600] font-bold hover:underline cursor-pointer border-0 bg-transparent"
+                    >
+                      Change
+                    </button>
+                  </div>
+                  {paymentMethod && (
+                    <div className="border-t border-[#FF6600]/10 px-5 py-2 flex items-center gap-2 text-xs font-semibold text-slate-600 bg-white/50">
+                      <Smartphone size={12} className="text-emerald-600" />
+                      {paymentMethod}{transactionId ? ` — TrxID: ${transactionId}` : ''}
+                      <button
+                        type="button"
+                        onClick={() => handleModeChange('payment')}
+                        className="ml-auto text-[#FF6600] font-bold hover:underline cursor-pointer border-0 bg-transparent text-[10px]"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between bg-red-50 border border-red-100 rounded-2xl px-5 py-3.5">
+                  <div className="text-xs text-red-600 font-bold">⚠️ No package selected. Please go back and select one.</div>
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange('packages')}
+                    className="text-xs text-[#FF6600] font-bold hover:underline cursor-pointer border-0 bg-transparent"
+                  >
+                    Select Package
+                  </button>
+                </div>
+              )}
 
               {errorMsg && (
                 <div className="p-3.5 bg-orange-50 text-orange-600 border border-orange-100 rounded-2xl text-xs font-bold leading-relaxed">
@@ -968,74 +1367,87 @@ export default function BecomeSellerPage({ onBackToHome }) {
                         <Smartphone size={16} className="text-[#FF6600]" />
                         {t('phone')} <span className="text-orange-500">*</span>
                       </label>
-                      <div className="flex gap-2">
+                      {checkoutOtpEnabled ? (
+                        <>
+                          <div className="flex gap-2">
+                            <input
+                              type="tel"
+                              placeholder={t('enterPhone')}
+                              value={phone}
+                              onChange={(e) => {
+                                setPhone(e.target.value);
+                                setPhoneVerified(false);
+                                setOtpSent(false);
+                                setOtpCode('');
+                                setOtpError('');
+                                setOtpSuccess('');
+                              }}
+                              className="flex-1 px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
+                              required
+                              disabled={phoneVerified}
+                            />
+                            {!otpSent ? (
+                              <div className="flex gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSendOtp('sms')}
+                                  disabled={otpLoading}
+                                  className="px-3.5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white text-xs font-bold rounded-lg transition duration-300 cursor-pointer whitespace-nowrap border-0"
+                                >
+                                  {otpLoading ? t('sending') : t('sendSms')}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSendOtp('call')}
+                                  disabled={otpLoading}
+                                  className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition duration-300 cursor-pointer whitespace-nowrap border-0"
+                                >
+                                  {otpLoading ? t('calling') : t('callMe')}
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={handleVerifyOtp}
+                                disabled={otpLoading || phoneVerified}
+                                className={`px-4 py-2.5 text-white text-xs font-bold rounded-lg transition duration-300 whitespace-nowrap border-0 ${
+                                  phoneVerified ? 'bg-emerald-500 cursor-default' : 'bg-[#FF6600] hover:bg-[#e05a00] cursor-pointer'
+                                }`}
+                              >
+                                {otpLoading ? t('verifying') : phoneVerified ? t('verified') : t('verify')}
+                              </button>
+                            )}
+                          </div>
+                          
+                          {otpSent && !phoneVerified && (
+                            <div className="mt-3 space-y-1.5">
+                              <label className="text-xs font-bold text-slate-700 block ml-1">
+                                {t('enterOtpLabel')} <span className="text-orange-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                placeholder={t('enterOtpPlaceholder')}
+                                value={otpCode}
+                                onChange={(e) => setOtpCode(e.target.value)}
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300 font-mono tracking-widest text-center"
+                                maxLength={6}
+                              />
+                            </div>
+                          )}
+
+                          {otpError && <p className="text-orange-600 text-[11px] font-bold mt-1.5 ml-1 flex items-center gap-1">⚠️ {otpError}</p>}
+                          {otpSuccess && <p className="text-emerald-600 text-[11px] font-bold mt-1.5 ml-1 flex items-center gap-1">✅ {otpSuccess}</p>}
+                        </>
+                      ) : (
                         <input
                           type="tel"
                           placeholder={t('enterPhone')}
                           value={phone}
-                          onChange={(e) => {
-                            setPhone(e.target.value);
-                            setPhoneVerified(false);
-                            setOtpSent(false);
-                            setOtpCode('');
-                            setOtpError('');
-                            setOtpSuccess('');
-                          }}
-                          className="flex-1 px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
                           required
-                          disabled={phoneVerified}
                         />
-                        {!otpSent ? (
-                          <div className="flex gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => handleSendOtp('sms')}
-                              disabled={otpLoading}
-                              className="px-3.5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white text-xs font-bold rounded-lg transition duration-300 cursor-pointer whitespace-nowrap border-0"
-                            >
-                              {otpLoading ? t('sending') : t('sendSms')}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleSendOtp('call')}
-                              disabled={otpLoading}
-                              className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition duration-300 cursor-pointer whitespace-nowrap border-0"
-                            >
-                              {otpLoading ? t('calling') : t('callMe')}
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={handleVerifyOtp}
-                            disabled={otpLoading || phoneVerified}
-                            className={`px-4 py-2.5 text-white text-xs font-bold rounded-lg transition duration-300 whitespace-nowrap border-0 ${
-                              phoneVerified ? 'bg-emerald-500 cursor-default' : 'bg-[#FF6600] hover:bg-[#e05a00] cursor-pointer'
-                            }`}
-                          >
-                            {otpLoading ? t('verifying') : phoneVerified ? t('verified') : t('verify')}
-                          </button>
-                        )}
-                      </div>
-                      
-                      {otpSent && !phoneVerified && (
-                        <div className="mt-3 space-y-1.5">
-                          <label className="text-xs font-bold text-slate-700 block ml-1">
-                            {t('enterOtpLabel')} <span className="text-orange-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            placeholder={t('enterOtpPlaceholder')}
-                            value={otpCode}
-                            onChange={(e) => setOtpCode(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300 font-mono tracking-widest text-center"
-                            maxLength={6}
-                          />
-                        </div>
                       )}
-
-                      {otpError && <p className="text-orange-600 text-[11px] font-bold mt-1.5 ml-1 flex items-center gap-1">⚠️ {otpError}</p>}
-                      {otpSuccess && <p className="text-emerald-600 text-[11px] font-bold mt-1.5 ml-1 flex items-center gap-1">✅ {otpSuccess}</p>}
                     </div>
 
                     <div>

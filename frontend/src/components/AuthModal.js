@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { ShopContext } from '@/context/ShopContext';
 import { 
   X, Lock, Mail, User, ShieldAlert, Phone, KeyRound, 
-  Key 
+  Key, Smartphone 
 } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose }) {
   const { 
     login, register, sendOtpCode, verifyOtpCode, 
-    forgotPasswordRequest, resetPasswordSubmit, socialOauthLogin, loading 
+    forgotPasswordRequest, resetPasswordSubmit, socialOauthLogin, loading, API_URL 
   } = useContext(ShopContext);
   
   const [authMode, setAuthMode] = useState('login'); // login, register, otp, forgot
@@ -38,6 +38,28 @@ export default function AuthModal({ isOpen, onClose }) {
   const [simName, setSimName] = useState('');
   const [simEmail, setSimEmail] = useState('');
 
+  // Signup OTP states
+  const [checkoutOtpEnabled, setCheckoutOtpEnabled] = useState(true);
+  const [signupOtpSent, setSignupOtpSent] = useState(false);
+  const [signupOtpCode, setSignupOtpCode] = useState('');
+  const [signupPhoneVerified, setSignupPhoneVerified] = useState(false);
+  const [signupOtpLoading, setSignupOtpLoading] = useState(false);
+  const [signupOtpError, setSignupOtpError] = useState('');
+  const [signupOtpSuccess, setSignupOtpSuccess] = useState('');
+
+  useEffect(() => {
+    if (isOpen && API_URL) {
+      fetch(`${API_URL}/settings/public`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => {
+          if (d) {
+            setCheckoutOtpEnabled(d.checkoutOtpEnabled !== false);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isOpen, API_URL]);
+
   if (!isOpen) return null;
 
   const resetForm = () => {
@@ -48,13 +70,18 @@ export default function AuthModal({ isOpen, onClose }) {
     setPassword('');
     setOtpVal('');
     setOtpSent(false);
-    setOtpSent(false);
     setErrorMsg('');
     setRecoveryEmail('');
     setRecoveryToken('');
     setNewRecoveryPassword('');
     setRecoveryStage(1);
     setSocialSimOpen(false);
+    setSignupOtpSent(false);
+    setSignupOtpCode('');
+    setSignupPhoneVerified(false);
+    setSignupOtpLoading(false);
+    setSignupOtpError('');
+    setSignupOtpSuccess('');
   };
 
   const handleModeChange = (mode) => {
@@ -157,6 +184,48 @@ export default function AuthModal({ isOpen, onClose }) {
     }
   };
 
+  const handleSendSignupOtp = async (method = 'sms') => {
+    if (!phoneVal || phoneVal.trim().length < 10) {
+      setSignupOtpError('Please enter a valid phone number');
+      return;
+    }
+    setSignupOtpLoading(true);
+    setSignupOtpError('');
+    setSignupOtpSuccess('');
+    setSignupPhoneVerified(false);
+    
+    const res = await sendOtpCode('phone', phoneVal, method);
+    setSignupOtpLoading(false);
+    if (res.success) {
+      setSignupOtpSent(true);
+      setSignupOtpSuccess(method === 'call' ? 'Calling your phone with OTP...' : 'OTP sent successfully!');
+      if (res.otp) {
+        setSignupOtpCode(res.otp);
+      }
+    } else {
+      setSignupOtpError(res.error || 'Failed to send OTP');
+    }
+  };
+
+  const handleVerifySignupOtp = async () => {
+    if (!signupOtpCode || signupOtpCode.length < 4) {
+      setSignupOtpError('Please enter a valid OTP code');
+      return;
+    }
+    setSignupOtpLoading(true);
+    setSignupOtpError('');
+    
+    const res = await verifyOtpCode('phone', phoneVal, signupOtpCode, true);
+    setSignupOtpLoading(false);
+    if (res.success) {
+      setSignupPhoneVerified(true);
+      setSignupOtpSuccess('Phone number verified successfully!');
+      setSignupOtpError('');
+    } else {
+      setSignupOtpError(res.error || 'Invalid OTP code');
+    }
+  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -167,14 +236,25 @@ export default function AuthModal({ isOpen, onClose }) {
       if (res.success) {
         onClose();
         resetForm();
-        if (res.role === 'seller' || res.isAdmin) {
+        if (res.role !== 'customer' || res.isAdmin) {
           window.location.href = '/admin';
+        } else {
+          // Add a reload to ensure storefront picks up the new user state immediately
+          window.location.reload();
         }
       } else {
         setErrorMsg(res.error || 'Invalid credentials');
       }
     } else {
       if (!name) return setErrorMsg('Name is required');
+      if (checkoutOtpEnabled) {
+        if (!phoneVal) {
+          return setErrorMsg('Phone number is required and must be verified via OTP');
+        }
+        if (!signupPhoneVerified) {
+          return setErrorMsg('Please verify your phone number via OTP');
+        }
+      }
       const res = await register(name, email, password, phoneVal, accountType);
       if (res.success) {
         onClose();
@@ -182,6 +262,8 @@ export default function AuthModal({ isOpen, onClose }) {
         // Since register returns a user object and token in some setups, we check accountType
         if (accountType === 'seller') {
           window.location.href = '/admin';
+        } else {
+          window.location.reload();
         }
       } else {
         setErrorMsg(res.error || 'Failed to register');
@@ -306,18 +388,96 @@ export default function AuthModal({ isOpen, onClose }) {
                   </div>
                 </div>
                 {authMode === 'register' && (
-                  <div className="relative">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone Number</label>
-                    <div className="relative mt-1.5 group">
-                      <input
-                        type="tel"
-                        placeholder="+880 17XX-XXXXXX"
-                        value={phoneVal}
-                        onChange={(e) => setPhoneVal(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:bg-slate-100 focus:hover:bg-white"
-                      />
-                      <Phone className="absolute left-3.5 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-300" size={16} />
-                    </div>
+                  <div className="space-y-3">
+                    {checkoutOtpEnabled ? (
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/60 space-y-3">
+                        <div className="flex items-center gap-1.5 text-slate-800 font-bold text-[10px] uppercase tracking-wider">
+                          <Smartphone size={14} className="text-[#FF6600]" />
+                          Phone Verification
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <div className="relative flex-1 group">
+                            <input
+                              type="tel"
+                              value={phoneVal}
+                              onChange={(e) => {
+                                setPhoneVal(e.target.value);
+                                setSignupPhoneVerified(false);
+                                setSignupOtpSent(false);
+                                setSignupOtpCode('');
+                                setSignupOtpError('');
+                                setSignupOtpSuccess('');
+                              }}
+                              className="w-full pl-11 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-[#FF6600] bg-white text-slate-800 placeholder-slate-400 focus:bg-white"
+                              placeholder="e.g. 01712345678"
+                              required
+                            />
+                            <Phone className="absolute left-3.5 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-300" size={16} />
+                          </div>
+                          {!signupOtpSent ? (
+                            <div className="flex gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleSendSignupOtp('sms')}
+                                disabled={signupOtpLoading}
+                                className="px-3.5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white text-xs font-bold rounded-xl transition duration-300 shadow-md shadow-[#FF6600]/25 whitespace-nowrap border-0 cursor-pointer"
+                              >
+                                {signupOtpLoading ? 'Sending...' : 'SMS'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSendSignupOtp('call')}
+                                disabled={signupOtpLoading}
+                                className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition duration-300 shadow-md shadow-slate-900/25 whitespace-nowrap border-0 cursor-pointer"
+                              >
+                                {signupOtpLoading ? 'Calling...' : 'Call Me'}
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleVerifySignupOtp}
+                              disabled={signupOtpLoading || signupPhoneVerified}
+                              className={`px-4 py-2.5 text-white text-xs font-bold rounded-xl transition duration-300 whitespace-nowrap border-0 ${
+                                signupPhoneVerified ? 'bg-emerald-500 cursor-default' : 'bg-[#FF6600] hover:bg-[#e05a00]'
+                              }`}
+                            >
+                              {signupOtpLoading ? 'Verifying...' : signupPhoneVerified ? 'Verified' : 'Verify'}
+                            </button>
+                          )}
+                        </div>
+                        {signupOtpSent && !signupPhoneVerified && (
+                          <div className="flex gap-2 mt-2 animate-fade-in relative group">
+                            <input
+                              type="text"
+                              placeholder="Enter 6-digit OTP"
+                              maxLength="6"
+                              value={signupOtpCode}
+                              onChange={(e) => setSignupOtpCode(e.target.value)}
+                              className="w-full pl-11 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-[#FF6600] bg-white font-mono tracking-widest text-center text-slate-800"
+                            />
+                            <KeyRound className="absolute left-3.5 top-3 text-slate-400" size={16} />
+                          </div>
+                        )}
+                        {signupOtpError && <p className="text-red-500 text-[10px] font-bold mt-1">{signupOtpError}</p>}
+                        {signupOtpSuccess && <p className="text-emerald-600 text-[10px] font-bold mt-1 flex items-center gap-1">✓ {signupOtpSuccess}</p>}
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone Number</label>
+                        <div className="relative mt-1.5 group">
+                          <input
+                            type="tel"
+                            placeholder="+880 17XX-XXXXXX"
+                            value={phoneVal}
+                            onChange={(e) => setPhoneVal(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:bg-slate-100 focus:hover:bg-white"
+                          />
+                          <Phone className="absolute left-3.5 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-300" size={16} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="relative">

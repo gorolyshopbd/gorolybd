@@ -18,6 +18,8 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
     applyCouponCode,
     setCoupon,
     placeOrder,
+    sendOtpCode,
+    verifyOtpCode,
     fetchAvailableCoupons,
     API_URL,
     currencySymbol,
@@ -40,6 +42,15 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
   const [paymentMethod, setPaymentMethod] = useState('Cash on Delivery');
   const [placing, setPlacing] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
+
+  // OTP states
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [otpSuccess, setOtpSuccess] = useState('');
+  const [checkoutOtpEnabled, setCheckoutOtpEnabled] = useState(true);
 
   // Shipping method states
   const [shippingMethods, setShippingMethods] = useState([]);
@@ -79,6 +90,11 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
             setAdvancePaymentEnabled(d.advancePaymentEnabled || false);
             setAdvancePaymentThreshold(d.advancePaymentThreshold || 1000);
             setAdvancePaymentPercent(d.advancePaymentPercent || 50);
+            const otpOn = d.checkoutOtpEnabled !== false;
+            setCheckoutOtpEnabled(otpOn);
+            if (!otpOn) {
+              setPhoneVerified(true);
+            }
           }
         })
         .catch(() => {});
@@ -123,7 +139,51 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
     }
   };
 
+  const handleSendOtp = async (method = 'sms') => {
+    if (!shippingInfo.phone || shippingInfo.phone.trim().length < 10) {
+      setOtpError(t('enterValidPhone') || 'Please enter a valid phone number');
+      return;
+    }
+    setOtpLoading(true);
+    setOtpError('');
+    setOtpSuccess('');
+    setPhoneVerified(false);
+    const res = await sendOtpCode('phone', shippingInfo.phone, method);
+    setOtpLoading(false);
+    if (res.success) {
+      setOtpSent(true);
+      setOtpSuccess(method === 'call' ? 'Calling your phone with OTP...' : t('otpSentSuccess') || 'OTP sent successfully!');
+      if (res.otp) {
+        setOtpCode(res.otp);
+      }
+    } else {
+      setOtpError(res.error || t('otpSendFailed') || 'Failed to send OTP');
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode || otpCode.length < 4) {
+      setOtpError(t('enterOtpCode') || 'Please enter a valid OTP code');
+      return;
+    }
+    setOtpLoading(true);
+    setOtpError('');
+    const res = await verifyOtpCode('phone', shippingInfo.phone, otpCode, true);
+    setOtpLoading(false);
+    if (res.success) {
+      setPhoneVerified(true);
+      setOtpSuccess(t('phoneVerifiedSuccess') || 'Phone number verified successfully!');
+      setOtpError('');
+    } else {
+      setOtpError(res.error || t('invalidOtpCode') || 'Invalid OTP code');
+    }
+  };
+
   const handleSubmitOrder = async () => {
+    if (checkoutOtpEnabled && !phoneVerified) {
+      alert(t('verifyPhoneAlert') || 'Please verify your phone number via OTP');
+      return;
+    }
     setPlacing(true);
     const orderInfo = {
       ...shippingInfo,
@@ -456,21 +516,91 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                       </div>
                     </div>
                     
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/60 space-y-3">
-                      <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
-                        <Smartphone size={16} className="text-[#FF6600]" />
-                        Phone Number
+                    {/* OTP verification container */}
+                    {checkoutOtpEnabled ? (
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/60 space-y-3">
+                        <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
+                          <Smartphone size={16} className="text-[#FF6600]" />
+                          {t('phoneVerification') || 'Phone Verification'}
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={shippingInfo.phone}
+                            onChange={(e) => {
+                              setShippingInfo({ ...shippingInfo, phone: e.target.value });
+                              setPhoneVerified(false);
+                              setOtpSent(false);
+                              setOtpCode('');
+                              setOtpError('');
+                              setOtpSuccess('');
+                            }}
+                            className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-[#FF6600] bg-white"
+                            placeholder={t('placeholderPhone') || 'Enter phone number'}
+                          />
+                          {!otpSent ? (
+                            <div className="flex gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleSendOtp('sms')}
+                                disabled={otpLoading}
+                                className="px-3.5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white text-xs font-bold rounded-xl transition duration-300 shadow-md shadow-[#FF6600]/25 whitespace-nowrap border-0 cursor-pointer"
+                              >
+                                {otpLoading ? t('sending') || 'Sending...' : 'SMS'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSendOtp('call')}
+                                disabled={otpLoading}
+                                className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition duration-300 shadow-md shadow-slate-900/25 whitespace-nowrap border-0 cursor-pointer"
+                              >
+                                {otpLoading ? 'Calling...' : 'Call Me'}
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleVerifyOtp}
+                              disabled={otpLoading || phoneVerified}
+                              className={`px-4 py-2.5 text-white text-xs font-bold rounded-xl transition duration-300 whitespace-nowrap border-0 ${
+                                phoneVerified ? 'bg-emerald-500 cursor-default' : 'bg-[#FF6600] hover:bg-[#e05a00]'
+                              }`}
+                            >
+                              {otpLoading ? t('verifying') || 'Verifying...' : phoneVerified ? t('verified') || 'Verified' : t('verify') || 'Verify'}
+                            </button>
+                          )}
+                        </div>
+                        {otpSent && !phoneVerified && (
+                          <div className="flex gap-2 mt-2 animate-fade-in">
+                            <input
+                              type="text"
+                              placeholder={t('enterOtp') || 'Enter OTP'}
+                              value={otpCode}
+                              onChange={(e) => setOtpCode(e.target.value)}
+                              className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-[#FF6600] bg-white font-mono tracking-widest text-center"
+                            />
+                          </div>
+                        )}
+                        {otpError && <p className="text-red-500 text-[10px] font-bold mt-1">{otpError}</p>}
+                        {otpSuccess && <p className="text-emerald-600 text-[10px] font-bold mt-1 flex items-center gap-1">✓ {otpSuccess}</p>}
                       </div>
-                      <div className="flex gap-2">
+                    ) : (
+                      /* OTP disabled — simple phone input only */
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/60 space-y-2">
+                        <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
+                          <Smartphone size={16} className="text-[#FF6600]" />
+                          Phone Number
+                        </div>
                         <input
                           type="text"
                           value={shippingInfo.phone}
                           onChange={(e) => setShippingInfo({ ...shippingInfo, phone: e.target.value })}
-                          className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-[#FF6600] bg-white"
-                          placeholder={t('placeholderPhone')}
+                          className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-[#FF6600] bg-white"
+                          placeholder={t('placeholderPhone') || 'Enter phone number'}
                         />
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Shipping Method Selection */}

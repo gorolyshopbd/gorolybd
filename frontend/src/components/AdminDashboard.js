@@ -302,6 +302,10 @@ export default function AdminDashboard({ onTabChange }) {
     topBarStoreLink: 'https://maps.google.com',
     topBarPlayStoreLink: 'https://play.google.com',
     topBarAppStoreLink: 'https://apps.apple.com',
+    sasSmsGatewayUrl: '',
+    sasSmsApiKey: '',
+    sasSmsSecretKey: '',
+    sasSmsSenderId: '',
   });
 
   // Seller Settings local state
@@ -374,6 +378,59 @@ export default function AdminDashboard({ onTabChange }) {
   const [newPkg, setNewPkg] = useState({ name: '', price: '', duration_days: '', product_limit: '' });
   const [editingPkgId, setEditingPkgId] = useState(null);
   const [editPkgForm, setEditPkgForm] = useState({ name: '', price: '', duration_days: '', product_limit: '', is_active: true });
+
+  // Payout request modal states
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState('');
+  const [payoutMethod, setPayoutMethod] = useState('bKash');
+  const [payoutAccount, setPayoutAccount] = useState('');
+  const [payoutError, setPayoutError] = useState('');
+
+  // Seller profile states
+  const [sellerProfileForm, setSellerProfileForm] = useState({ name: '', phone: '', owner_name: '', facebook: '', instagram: '', division: '', district: '', upazila: '', address_details: '', nid_number: '' });
+  const [sellerProfileSaved, setSellerProfileSaved] = useState(false);
+  const [sellerProfileError, setSellerProfileError] = useState('');
+  const [sellerProfileLoading, setSellerProfileLoading] = useState(false);
+  const [nidFrontFile, setNidFrontFile] = useState(null);
+  const [nidFrontPreview, setNidFrontPreview] = useState('');
+  const [nidBackFile, setNidBackFile] = useState(null);
+  const [nidBackPreview, setNidBackPreview] = useState('');
+  const [sellerPwForm, setSellerPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [sellerPwError, setSellerPwError] = useState('');
+  const [sellerPwSuccess, setSellerPwSuccess] = useState(false);
+  const [sellerPwLoading, setSellerPwLoading] = useState(false);
+  const [sellerProfileSubTab, setSellerProfileSubTab] = useState('info');
+
+  const handleSubmitPayout = async (e) => {
+    e.preventDefault();
+    setPayoutError('');
+    if (!payoutAmount || isNaN(payoutAmount) || Number(payoutAmount) <= 0) {
+      setPayoutError('Please enter a valid amount.');
+      return;
+    }
+    const minAmount = settings?.withdraw_min_amount || 500;
+    if (Number(payoutAmount) < minAmount) {
+      setPayoutError(`Minimum withdrawal amount is ${currencySymbol || '৳'}${minAmount}.`);
+      return;
+    }
+    if (!payoutAccount || payoutAccount.trim().length < 11) {
+      setPayoutError('Please enter a valid 11-digit mobile wallet number.');
+      return;
+    }
+    setLoading(true);
+    const res = await requestPayout({
+      amount: Number(payoutAmount),
+      payment_method: payoutMethod,
+      account_details: `${payoutMethod} Wallet: ${payoutAccount}`
+    });
+    setLoading(false);
+    if (res.success) {
+      setShowPayoutModal(false);
+      fetchPayouts();
+    } else {
+      setPayoutError(res.error || 'Failed to submit request.');
+    }
+  };
 
   const ALL_PERMS = ['orders', 'products', 'categories', 'brands', 'coupons', 'shipping', 'pages', 'offers', 'banners', 'chat', 'settings', 'users'];
   const ROLE_PERMS = {
@@ -688,6 +745,27 @@ export default function AdminDashboard({ onTabChange }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
+
+  // Pre-fill seller profile form when user data loads or tab changes
+  useEffect(() => {
+    if (user && activeTab === 'seller_own_profile') {
+      setSellerProfileForm({
+        name: user.name || '',
+        phone: user.phone || '',
+        owner_name: user.owner_name || '',
+        facebook: user.facebook || '',
+        instagram: user.instagram || '',
+        division: user.division || '',
+        district: user.district || '',
+        upazila: user.upazila || '',
+        address_details: user.address_details || '',
+        nid_number: user.nid_number || '',
+      });
+      setSellerProfileSaved(false);
+      setSellerProfileError('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, activeTab]);
 
   // Separate effect for chat polling
   useEffect(() => {
@@ -1925,6 +2003,11 @@ export default function AdminDashboard({ onTabChange }) {
   const getFilteredProducts = (baseList) => {
     let result = [...baseList];
 
+    // Extra safety: If logged in user is a seller, restrict lists to only their products
+    if (user && user.role === 'seller' && !user.isAdmin) {
+      result = result.filter(p => p.user_id === user._id || p.user_id === user.id);
+    }
+
     // Status filter
     if (productStatusFilter === 'published') {
       result = result.filter(p => p.isPublished !== false);
@@ -2059,8 +2142,9 @@ export default function AdminDashboard({ onTabChange }) {
                 { id: 'seller_pkg_offline_history', label: 'Offline Purchase History' }
               ]
             },
-            { id: 'chat', label: 'Support Chat', icon: MessageCircle, badge: chatMessages.filter((m) => !m.isAdmin && !m.isRead).length },
+            { id: 'chat', label: 'Support Chat', icon: MessageCircle, adminOnly: true, badge: chatMessages.filter((m) => !m.isAdmin && !m.isRead).length },
             { id: 'seller_own_payouts', label: 'Payouts', icon: DollarSign, sellerOnly: true },
+            { id: 'seller_own_profile', label: 'My Profile', icon: Settings, sellerOnly: true },
             { id: 'videos', label: 'Videos', icon: Play, adminOnly: true },
             { 
               id: 'rewards', label: 'Reward System', icon: Server, adminOnly: true,
@@ -2155,7 +2239,17 @@ export default function AdminDashboard({ onTabChange }) {
                   <div className={`mt-0.5 ml-4 pl-3 space-y-0.5 ${
                     item.id === 'orders' ? 'border-l border-amber-500/30' : 'border-l border-slate-800'
                   }`}>
-                    {item.subItems.map(sub => {
+                    {item.subItems.filter(sub => {
+                      if (user && user.role === 'seller') {
+                        if (item.id === 'products') {
+                          return sub.id === 'products_add' || sub.id === 'products_all';
+                        }
+                        if (item.id === 'orders') {
+                          return sub.id === 'orders_all';
+                        }
+                      }
+                      return true;
+                    }).map(sub => {
                       const isSubActive = activeTab === sub.id || 
                                           (sub.id === 'products_all' && activeTab === 'products' && productSubTab === 'all') ||
                                           (sub.id === 'products_add' && activeTab === 'products' && productSubTab === 'add') ||
@@ -2625,7 +2719,12 @@ export default function AdminDashboard({ onTabChange }) {
                 { id: 'attributes', label: 'Attributes Sets' },
                 { id: 'attribute_values', label: 'Attribute Values' },
                 { id: 'import', label: 'Import Products' }
-              ].map((subTab) => (
+              ].filter(subTab => {
+                if (user && user.role === 'seller') {
+                  return subTab.id === 'add' || subTab.id === 'all';
+                }
+                return true;
+              }).map((subTab) => (
                 <button
                   key={subTab.id}
                   onClick={() => setProductSubTab(subTab.id)}
@@ -2707,19 +2806,21 @@ export default function AdminDashboard({ onTabChange }) {
                     
                     <div className="flex flex-wrap items-center gap-3 flex-1 md:justify-end">
                       {/* Select Seller */}
-                      <div className="w-full sm:w-44">
-                        <select
-                          value={productSellerFilter}
-                          onChange={(e) => setProductSellerFilter(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-xs text-gray-700 font-semibold cursor-pointer"
-                        >
-                          <option value="all">Select Seller</option>
-                          <option value="admin">Admin Products</option>
-                          {allUsers.filter(u => u.role === 'seller').map((seller) => (
-                            <option key={seller._id} value={seller._id}>{seller.name}</option>
-                          ))}
-                        </select>
-                      </div>
+                      {user?.role !== 'seller' && (
+                        <div className="w-full sm:w-44">
+                          <select
+                            value={productSellerFilter}
+                            onChange={(e) => setProductSellerFilter(e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-xs text-gray-700 font-semibold cursor-pointer"
+                          >
+                            <option value="all">Select Seller</option>
+                            <option value="admin">Admin Products</option>
+                            {allUsers.filter(u => u.role === 'seller').map((seller) => (
+                              <option key={seller._id} value={seller._id}>{seller.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
 
                       {/* Select Category */}
                       <div className="w-full sm:w-44">
@@ -5260,12 +5361,19 @@ export default function AdminDashboard({ onTabChange }) {
                             </div>
                             <div>
                               <div className="flex items-center gap-1.5">
-                                <span className="font-medium text-amber-500 italic">{seller.store_name || seller.name || 'Unverified'}</span>
-                                <span className="text-[9px] text-green-500 font-medium px-1.5 py-0.5 flex items-center gap-0.5">
-                                  Verified
+                                <span className="font-medium text-amber-500 italic">{seller.store_name || seller.owner_name || seller.name}</span>
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                                  seller.verification_status === 'Verified' ? 'bg-green-100 text-green-600' :
+                                  seller.verification_status === 'Pending' ? 'bg-amber-100 text-amber-600' :
+                                  'bg-slate-100 text-slate-500'
+                                }`}>
+                                  {seller.verification_status || 'Unverified'}
                                 </span>
                               </div>
                               <div className="text-[10px] text-gray-400 mt-1">Total Products: {productsList.filter(p => p.user_id === seller.id).length}</div>
+                              {seller.nid_number && (
+                                <div className="text-[10px] text-gray-400">NID: {seller.nid_number}</div>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -5289,6 +5397,16 @@ export default function AdminDashboard({ onTabChange }) {
                         <td className="py-4 px-4 text-[10px]">
                           <div className="text-gray-600 mb-0.5">Current Balance: <span className="font-medium">DT0.00</span></div>
                           <div className="text-gray-400">Last Login : {new Date(seller.updated_at || Date.now()).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).toLowerCase()}</div>
+                          {(seller.nid_image_front || seller.nid_image_back) && (
+                            <div className="flex gap-1 mt-1.5">
+                              {seller.nid_image_front && (
+                                <a href={seller.nid_image_front} target="_blank" rel="noreferrer" className="text-[9px] text-blue-500 underline">NID Front</a>
+                              )}
+                              {seller.nid_image_back && (
+                                <a href={seller.nid_image_back} target="_blank" rel="noreferrer" className="text-[9px] text-blue-500 underline ml-1">NID Back</a>
+                              )}
+                            </div>
+                          )}
                         </td>
                         <td className="py-4 px-4 text-center">
                           <div className="relative inline-block w-9 h-5 align-middle select-none transition duration-200 ease-in">
@@ -5297,12 +5415,35 @@ export default function AdminDashboard({ onTabChange }) {
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <div className="flex items-center justify-center gap-2">
+                          <div className="flex items-center justify-center gap-2 flex-wrap">
+                            {seller.verification_status === 'Pending' && (
+                              <>
+                                <button
+                                  onClick={async () => {
+                                    const res = await fetch(`${API_URL}/users/${seller._id}/verification`, {
+                                      method: 'PUT',
+                                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                                      body: JSON.stringify({ verification_status: 'Verified' })
+                                    });
+                                    if (res.ok) fetchAllUsers();
+                                  }}
+                                  className="px-2 py-1 bg-green-100 text-green-700 rounded-lg text-[9px] font-bold hover:bg-green-200 transition"
+                                >Approve</button>
+                                <button
+                                  onClick={async () => {
+                                    const res = await fetch(`${API_URL}/users/${seller._id}/verification`, {
+                                      method: 'PUT',
+                                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                                      body: JSON.stringify({ verification_status: 'Rejected' })
+                                    });
+                                    if (res.ok) fetchAllUsers();
+                                  }}
+                                  className="px-2 py-1 bg-red-100 text-red-700 rounded-lg text-[9px] font-bold hover:bg-red-200 transition"
+                                >Reject</button>
+                              </>
+                            )}
                             <button className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition">
                               <Edit2 size={12} />
-                            </button>
-                            <button className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition">
-                              <MoreVertical size={12} />
                             </button>
                           </div>
                         </td>
@@ -7671,16 +7812,10 @@ export default function AdminDashboard({ onTabChange }) {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
                   <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">SMS/OTP Gateway</label>
-                    <select
-                      value={settings.otpGateway}
-                      onChange={(e) => setSettings({ ...settings, otpGateway: e.target.value })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                    >
-                      <option value="Simulated">Simulated Gateway (Quick Local Sandbox)</option>
-                      <option value="Twilio">Twilio SMS API</option>
-                      <option value="GreenwebSMS">Greenweb SMS Gateway BD</option>
-                    </select>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">SMS Gateway</label>
+                    <div className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-gray-900 font-semibold cursor-not-allowed opacity-80">
+                      SAS Bulk SMS (sms.sasbulksms.com)
+                    </div>
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OTP Code Length</label>
@@ -7707,67 +7842,49 @@ export default function AdminDashboard({ onTabChange }) {
                   </div>
                 </div>
 
-                {/* Twilio Credentials */}
-                {settings.otpGateway === 'Twilio' && (
-                  <div className="border-t border-slate-100 pt-4 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Account SID</label>
-                      <input
-                        type="text"
-                        value={settings.twilioSid || ''}
-                        onChange={(e) => setSettings({ ...settings, twilioSid: e.target.value })}
-                        placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Auth Token</label>
-                      <input
-                        type="password"
-                        value={settings.twilioAuthToken || ''}
-                        onChange={(e) => setSettings({ ...settings, twilioAuthToken: e.target.value })}
-                        placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Twilio Phone Number</label>
-                      <input
-                        type="text"
-                        value={settings.twilioPhoneNumber || ''}
-                        onChange={(e) => setSettings({ ...settings, twilioPhoneNumber: e.target.value })}
-                        placeholder="+1234567890"
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                      />
-                    </div>
+                {/* SAS Bulk SMS Credentials */}
+                <div className="border-t border-slate-100 pt-4 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gateway URL</label>
+                    <input
+                      type="text"
+                      value={settings.sasSmsGatewayUrl || ''}
+                      onChange={(e) => setSettings({ ...settings, sasSmsGatewayUrl: e.target.value })}
+                      placeholder="http://sms.sasbulksms.com"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                    />
                   </div>
-                )}
-
-                {/* Greenweb SMS Credentials */}
-                {settings.otpGateway === 'GreenwebSMS' && (
-                  <div className="border-t border-slate-100 pt-4 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">API Key / Token</label>
-                      <input
-                        type="password"
-                        value={settings.greenwebApiKey || ''}
-                        onChange={(e) => setSettings({ ...settings, greenwebApiKey: e.target.value })}
-                        placeholder="Greenweb API token"
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Sender ID</label>
-                      <input
-                        type="text"
-                        value={settings.greenwebSenderId || ''}
-                        onChange={(e) => setSettings({ ...settings, greenwebSenderId: e.target.value })}
-                        placeholder="Goroly"
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                      />
-                    </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">API Token</label>
+                    <input
+                      type="password"
+                      value={settings.sasSmsApiKey || ''}
+                      onChange={(e) => setSettings({ ...settings, sasSmsApiKey: e.target.value })}
+                      placeholder="API Token (e.g. 7639814fe75b2cbd)"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                    />
                   </div>
-                )}
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Secret Key</label>
+                    <input
+                      type="password"
+                      value={settings.sasSmsSecretKey || ''}
+                      onChange={(e) => setSettings({ ...settings, sasSmsSecretKey: e.target.value })}
+                      placeholder="Secret Key (e.g. 13382300000000)"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Sender ID</label>
+                    <input
+                      type="text"
+                      value={settings.sasSmsSenderId || ''}
+                      onChange={(e) => setSettings({ ...settings, sasSmsSenderId: e.target.value })}
+                      placeholder="Sender ID (e.g. 8809617633299)"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Payment Gateway Configurations */}
@@ -9287,16 +9404,14 @@ export default function AdminDashboard({ onTabChange }) {
               <p className="text-xs text-gray-400 mt-1">Request payouts and view history.</p>
             </div>
             <button
-              onClick={async () => {
-                const amount = window.prompt('Enter amount to request:');
-                if (!amount || isNaN(amount)) return;
-                const payment_method = window.prompt('Enter payment method (e.g. Bank, PayPal, bKash):');
-                if (!payment_method) return;
-                const account_details = window.prompt('Enter account details (e.g. Account Number):');
-                if (!account_details) return;
-                await requestPayout({ amount: Number(amount), payment_method, account_details });
+              onClick={() => {
+                setPayoutAmount('');
+                setPayoutAccount('');
+                setPayoutMethod('bKash');
+                setPayoutError('');
+                setShowPayoutModal(true);
               }}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-2"
+              className="bg-gradient-to-r from-[#FF6600] to-orange-600 hover:from-orange-600 hover:to-[#FF6600] text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-2"
             >
               <DollarSign size={14} /> REQUEST PAYOUT
             </button>
@@ -9344,6 +9459,549 @@ export default function AdminDashboard({ onTabChange }) {
               </table>
             </div>
           </div>
+        </div>
+      )}
+
+      {showPayoutModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full border border-slate-100 overflow-hidden transform scale-100 transition-all duration-300">
+            {/* Header */}
+            <div className="px-6 py-5 bg-gradient-to-r from-slate-900 to-[#1e293b] text-white flex items-center justify-between">
+              <div>
+                <h3 className="font-extrabold text-sm tracking-tight uppercase">Request Payout</h3>
+                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Withdraw funds from your store earnings</p>
+              </div>
+              <button 
+                onClick={() => setShowPayoutModal(false)}
+                className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-350 hover:text-white hover:bg-white/20 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content */}
+            <form onSubmit={handleSubmitPayout} className="p-6 space-y-5">
+              {payoutError && (
+                <div className="bg-red-50 border border-red-100 rounded-xl p-3.5 text-xs text-red-600 font-semibold flex items-start gap-2">
+                  <span className="text-red-500">⚠</span>
+                  <div>{payoutError}</div>
+                </div>
+              )}
+
+              {/* Select Payout Method */}
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-2.5">Select Payout Method</label>
+                <div className="grid grid-cols-2 gap-3.5">
+                  {/* bKash Selection Card */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPayoutMethod('bKash');
+                      setPayoutError('');
+                    }}
+                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 relative overflow-hidden group ${
+                      payoutMethod === 'bKash'
+                        ? 'border-[#E2125B] bg-[#E2125B]/5 shadow-md shadow-[#E2125B]/10'
+                        : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50/50'
+                    }`}
+                  >
+                    {/* bKash Accent Circle */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${
+                      payoutMethod === 'bKash' ? 'bg-[#E2125B] text-white' : 'bg-pink-50 text-[#E2125B]'
+                    }`}>
+                      b
+                    </div>
+                    <span className={`text-xs font-black mt-2 tracking-tight ${payoutMethod === 'bKash' ? 'text-[#E2125B]' : 'text-slate-700'}`}>bKash</span>
+                  </button>
+
+                  {/* Nagad Selection Card */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPayoutMethod('Nagad');
+                      setPayoutError('');
+                    }}
+                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 relative overflow-hidden group ${
+                      payoutMethod === 'Nagad'
+                        ? 'border-[#F86212] bg-[#F86212]/5 shadow-md shadow-[#F86212]/10'
+                        : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50/50'
+                    }`}
+                  >
+                    {/* Nagad Accent Circle */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${
+                      payoutMethod === 'Nagad' ? 'bg-[#F86212] text-white' : 'bg-orange-50 text-[#F86212]'
+                    }`}>
+                      N
+                    </div>
+                    <span className={`text-xs font-black mt-2 tracking-tight ${payoutMethod === 'Nagad' ? 'text-[#F86212]' : 'text-slate-700'}`}>Nagad</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Amount */}
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Withdrawal Amount</label>
+                <div className="relative rounded-xl shadow-xs">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-extrabold text-sm">
+                    ৳
+                  </div>
+                  <input
+                    type="number"
+                    value={payoutAmount}
+                    onChange={(e) => {
+                      setPayoutAmount(e.target.value);
+                      setPayoutError('');
+                    }}
+                    required
+                    className="w-full pl-8 pr-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF6600] hover:bg-white transition text-sm font-bold text-gray-900"
+                    placeholder={`Min. ${settings?.withdraw_min_amount || 500}`}
+                  />
+                </div>
+              </div>
+
+              {/* Account Number */}
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">{payoutMethod} Wallet Number</label>
+                <input
+                  type="text"
+                  maxLength="11"
+                  value={payoutAccount}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '');
+                    setPayoutAccount(val);
+                    setPayoutError('');
+                  }}
+                  required
+                  className="w-full px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF6600] hover:bg-white transition text-sm font-bold text-gray-900 tracking-wider"
+                  placeholder="e.g. 017XXXXXXXX"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPayoutModal(false)}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all duration-200 text-xs text-center cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 py-3 bg-gradient-to-r from-[#FF6600] to-orange-600 hover:from-orange-600 hover:to-[#FF6600] text-white font-bold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-xs disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {loading ? 'Submitting...' : 'Request Withdrawal'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'seller_own_profile' && (
+        <div className="space-y-6 max-w-3xl w-full animate-fade-in">
+          <div className="border-b border-slate-200 pb-5">
+            <h1 className="text-xl font-bold text-gray-900">My Profile</h1>
+            <p className="text-xs text-gray-400 mt-1">Manage your seller profile, NID verification, and account security.</p>
+          </div>
+
+          {/* Sub-tabs */}
+          <div className="flex gap-2 flex-wrap">
+            {[
+              { id: 'info', label: 'Profile Info' },
+              { id: 'nid', label: 'NID Verification' },
+              { id: 'password', label: 'Change Password' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setSellerProfileSubTab(tab.id)}
+                className={`px-4 py-2 text-xs font-bold rounded-xl transition ${
+                  sellerProfileSubTab === tab.id
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-white border border-slate-200 hover:text-gray-900'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Profile Info Tab */}
+          {sellerProfileSubTab === 'info' && (
+            <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-6">
+              <h2 className="text-sm font-bold text-gray-800 mb-4">Store & Personal Information</h2>
+              {sellerProfileError && (
+                <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
+                  <AlertCircle size={14} /> {sellerProfileError}
+                </div>
+              )}
+              {sellerProfileSaved && (
+                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
+                  <CheckCircle2 size={14} /> Profile updated successfully!
+                </div>
+              )}
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setSellerProfileError('');
+                  setSellerProfileSaved(false);
+                  setSellerProfileLoading(true);
+                  try {
+                    const res = await fetch(`${API_URL}/users/profile`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                      body: JSON.stringify(sellerProfileForm),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      setSellerProfileSaved(true);
+                      const updated = { ...user, ...data };
+                      localStorage.setItem('shop_admin_user', JSON.stringify(updated));
+                      setUser(updated);
+                    } else {
+                      setSellerProfileError(data.message || 'Failed to update profile');
+                    }
+                  } catch (err) {
+                    setSellerProfileError('An error occurred');
+                  } finally {
+                    setSellerProfileLoading(false);
+                  }
+                }}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Full Name</label>
+                    <input
+                      type="text" value={sellerProfileForm.name}
+                      onChange={e => setSellerProfileForm(p => ({ ...p, name: e.target.value }))}
+                      placeholder="Your full name"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Phone</label>
+                    <input
+                      type="text" value={sellerProfileForm.phone}
+                      onChange={e => setSellerProfileForm(p => ({ ...p, phone: e.target.value }))}
+                      placeholder="e.g. 01XXXXXXXXX"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Shop / Owner Name</label>
+                    <input
+                      type="text" value={sellerProfileForm.owner_name}
+                      onChange={e => setSellerProfileForm(p => ({ ...p, owner_name: e.target.value }))}
+                      placeholder="Store or owner name"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Facebook Link</label>
+                    <input
+                      type="text" value={sellerProfileForm.facebook}
+                      onChange={e => setSellerProfileForm(p => ({ ...p, facebook: e.target.value }))}
+                      placeholder="https://facebook.com/yourpage"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Instagram Link</label>
+                    <input
+                      type="text" value={sellerProfileForm.instagram}
+                      onChange={e => setSellerProfileForm(p => ({ ...p, instagram: e.target.value }))}
+                      placeholder="https://instagram.com/yourpage"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Division</label>
+                    <input
+                      type="text" value={sellerProfileForm.division}
+                      onChange={e => setSellerProfileForm(p => ({ ...p, division: e.target.value }))}
+                      placeholder="e.g. Dhaka"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">District</label>
+                    <input
+                      type="text" value={sellerProfileForm.district}
+                      onChange={e => setSellerProfileForm(p => ({ ...p, district: e.target.value }))}
+                      placeholder="e.g. Gazipur"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Upazila / Thana</label>
+                    <input
+                      type="text" value={sellerProfileForm.upazila}
+                      onChange={e => setSellerProfileForm(p => ({ ...p, upazila: e.target.value }))}
+                      placeholder="e.g. Tongi"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Full Address Details</label>
+                  <textarea
+                    rows={2} value={sellerProfileForm.address_details}
+                    onChange={e => setSellerProfileForm(p => ({ ...p, address_details: e.target.value }))}
+                    placeholder="House/Road/Area details"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm resize-none"
+                  />
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={sellerProfileLoading}
+                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition disabled:opacity-50"
+                  >
+                    {sellerProfileLoading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* NID Verification Tab */}
+          {sellerProfileSubTab === 'nid' && (
+            <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-sm font-bold text-gray-800">NID Verification</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">Upload your National ID card for account verification.</p>
+                </div>
+                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
+                  user?.verification_status === 'Verified' ? 'bg-green-100 text-green-700' :
+                  user?.verification_status === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                  'bg-slate-100 text-slate-500'
+                }`}>
+                  {user?.verification_status || 'Unverified'}
+                </span>
+              </div>
+              {user?.verification_status === 'Verified' && (
+                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
+                  <CheckCircle2 size={14} /> Your account is verified. Thank you!
+                </div>
+              )}
+              {sellerProfileError && (
+                <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
+                  <AlertCircle size={14} /> {sellerProfileError}
+                </div>
+              )}
+              {sellerProfileSaved && (
+                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
+                  <CheckCircle2 size={14} /> NID details submitted for review!
+                </div>
+              )}
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setSellerProfileError('');
+                  setSellerProfileSaved(false);
+                  setSellerProfileLoading(true);
+                  try {
+                    let frontUrl = sellerProfileForm.nid_image_front || user?.nid_image_front || '';
+                    let backUrl = sellerProfileForm.nid_image_back || user?.nid_image_back || '';
+                    if (nidFrontFile) frontUrl = await uploadFile(nidFrontFile);
+                    if (nidBackFile) backUrl = await uploadFile(nidBackFile);
+                    const res = await fetch(`${API_URL}/users/profile`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                      body: JSON.stringify({ nid_number: sellerProfileForm.nid_number, nid_image_front: frontUrl, nid_image_back: backUrl }),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      setSellerProfileSaved(true);
+                      const updated = { ...user, ...data };
+                      localStorage.setItem('shop_admin_user', JSON.stringify(updated));
+                      setUser(updated);
+                    } else {
+                      setSellerProfileError(data.message || 'Failed to submit NID');
+                    }
+                  } catch (err) {
+                    setSellerProfileError('An error occurred. Please try again.');
+                  } finally {
+                    setSellerProfileLoading(false);
+                  }
+                }}
+                className="space-y-5"
+              >
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">NID Number</label>
+                  <input
+                    type="text" value={sellerProfileForm.nid_number}
+                    onChange={e => setSellerProfileForm(p => ({ ...p, nid_number: e.target.value }))}
+                    placeholder="Enter your National ID number"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {/* Front Image */}
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">NID Front Side</label>
+                    <div
+                      className="relative border-2 border-dashed border-slate-200 rounded-2xl overflow-hidden hover:border-blue-400 transition cursor-pointer group"
+                      style={{ minHeight: 140 }}
+                      onClick={() => document.getElementById('nid-front-input').click()}
+                    >
+                      {(nidFrontPreview || user?.nid_image_front) ? (
+                        <img src={nidFrontPreview || user?.nid_image_front} alt="NID Front" className="w-full h-36 object-cover" />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-36 text-slate-400 group-hover:text-blue-500 transition">
+                          <Upload size={24} className="mb-2" />
+                          <span className="text-xs font-semibold">Click to upload front</span>
+                        </div>
+                      )}
+                      <input
+                        id="nid-front-input" type="file" accept="image/*" className="hidden"
+                        onChange={e => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            setNidFrontFile(file);
+                            const reader = new FileReader();
+                            reader.onload = ev => setNidFrontPreview(ev.target.result);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {/* Back Image */}
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">NID Back Side</label>
+                    <div
+                      className="relative border-2 border-dashed border-slate-200 rounded-2xl overflow-hidden hover:border-blue-400 transition cursor-pointer group"
+                      style={{ minHeight: 140 }}
+                      onClick={() => document.getElementById('nid-back-input').click()}
+                    >
+                      {(nidBackPreview || user?.nid_image_back) ? (
+                        <img src={nidBackPreview || user?.nid_image_back} alt="NID Back" className="w-full h-36 object-cover" />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-36 text-slate-400 group-hover:text-blue-500 transition">
+                          <Upload size={24} className="mb-2" />
+                          <span className="text-xs font-semibold">Click to upload back</span>
+                        </div>
+                      )}
+                      <input
+                        id="nid-back-input" type="file" accept="image/*" className="hidden"
+                        onChange={e => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            setNidBackFile(file);
+                            const reader = new FileReader();
+                            reader.onload = ev => setNidBackPreview(ev.target.result);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={sellerProfileLoading || user?.verification_status === 'Verified'}
+                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition disabled:opacity-50"
+                  >
+                    {sellerProfileLoading ? 'Submitting...' : 'Submit for Verification'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Change Password Tab */}
+          {sellerProfileSubTab === 'password' && (
+            <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-6 max-w-md">
+              <h2 className="text-sm font-bold text-gray-800 mb-4">Change Password</h2>
+              {sellerPwError && (
+                <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
+                  <AlertCircle size={14} /> {sellerPwError}
+                </div>
+              )}
+              {sellerPwSuccess && (
+                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
+                  <CheckCircle2 size={14} /> Password changed successfully!
+                </div>
+              )}
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setSellerPwError('');
+                  setSellerPwSuccess(false);
+                  if (sellerPwForm.newPassword !== sellerPwForm.confirmPassword) {
+                    setSellerPwError('New passwords do not match.');
+                    return;
+                  }
+                  if (sellerPwForm.newPassword.length < 6) {
+                    setSellerPwError('New password must be at least 6 characters.');
+                    return;
+                  }
+                  setSellerPwLoading(true);
+                  try {
+                    const res = await fetch(`${API_URL}/users/profile/password`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                      body: JSON.stringify({ currentPassword: sellerPwForm.currentPassword, newPassword: sellerPwForm.newPassword }),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      setSellerPwSuccess(true);
+                      setSellerPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                    } else {
+                      setSellerPwError(data.message || 'Failed to change password');
+                    }
+                  } catch (err) {
+                    setSellerPwError('An error occurred. Please try again.');
+                  } finally {
+                    setSellerPwLoading(false);
+                  }
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Current Password</label>
+                  <input
+                    type="password" value={sellerPwForm.currentPassword}
+                    onChange={e => setSellerPwForm(p => ({ ...p, currentPassword: e.target.value }))}
+                    required placeholder="Enter current password"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">New Password</label>
+                  <input
+                    type="password" value={sellerPwForm.newPassword}
+                    onChange={e => setSellerPwForm(p => ({ ...p, newPassword: e.target.value }))}
+                    required placeholder="Min. 6 characters"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Confirm New Password</label>
+                  <input
+                    type="password" value={sellerPwForm.confirmPassword}
+                    onChange={e => setSellerPwForm(p => ({ ...p, confirmPassword: e.target.value }))}
+                    required placeholder="Repeat new password"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                  />
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={sellerPwLoading}
+                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition disabled:opacity-50"
+                  >
+                    {sellerPwLoading ? 'Updating...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       )}
 

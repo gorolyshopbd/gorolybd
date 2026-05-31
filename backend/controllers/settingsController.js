@@ -4,7 +4,7 @@ export const getSettings = async (req, res) => {
   try {
     // We assume there's always one row with id 1
     let { data: settings, error } = await db.database.from('settings').select('*').limit(1).single();
-    
+
     if (!settings) {
       // Default settings if empty
       const defaultSettings = {
@@ -32,12 +32,17 @@ export const getSettings = async (req, res) => {
         top_bar_store_link: 'https://maps.google.com',
         top_bar_play_store_link: 'https://play.google.com',
         top_bar_app_store_link: 'https://apps.apple.com',
-        withdraw_min_amount: 500
+        withdraw_min_amount: 500,
+        // SAS Bulk SMS gateway configuration fields
+        sas_sms_gateway_url: 'http://sms.sasbulksms.com:3040/',
+        sas_sms_api_key: 'e5fb91d8b3275308',
+        sas_sms_secret_key: 'bed1c287',
+        sas_sms_sender_id: '8809640911650'
       };
       const { data: newSettings } = await db.database.from('settings').insert(defaultSettings).select().single();
       settings = newSettings;
     }
-    
+
     const formatted = {
       ...settings,
       otpGateway: settings.otp_gateway,
@@ -70,9 +75,15 @@ export const getSettings = async (req, res) => {
       twilioAuthToken: settings.twilio_auth_token || '',
       twilioPhoneNumber: settings.twilio_phone_number || '',
       greenwebApiKey: settings.greenweb_api_key || '',
-      greenwebSenderId: settings.greenweb_sender_id || ''
+      greenwebSenderId: settings.greenweb_sender_id || '',
+      customSmsApiUrl: settings.custom_sms_api_url || '',
+      // SAS Bulk SMS gateway configuration fields
+      sasSmsGatewayUrl: settings.sas_sms_gateway_url || '',
+      sasSmsApiKey: settings.sas_sms_api_key || '',
+      sasSmsSecretKey: settings.sas_sms_secret_key || '',
+      sasSmsSenderId: settings.sas_sms_sender_id || ''
     };
-    
+
     res.json(formatted);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -112,20 +123,25 @@ export const updateSettings = async (req, res) => {
       twilio_auth_token: req.body.twilioAuthToken,
       twilio_phone_number: req.body.twilioPhoneNumber,
       greenweb_api_key: req.body.greenwebApiKey,
-      greenweb_sender_id: req.body.greenwebSenderId
+      greenweb_sender_id: req.body.greenwebSenderId,
+      custom_sms_api_url: req.body.customSmsApiUrl,
+      sas_sms_gateway_url: req.body.sasSmsGatewayUrl,
+      sas_sms_api_key: req.body.sasSmsApiKey,
+      sas_sms_secret_key: req.body.sasSmsSecretKey,
+      sas_sms_sender_id: req.body.sasSmsSenderId
     };
 
     // Remove undefined values
     Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
 
     const { data: settings, error } = await db.database.from('settings').select('id').limit(1).single();
-    
+
     if (settings) {
       await db.database.from('settings').update(updateData).eq('id', settings.id);
     } else {
       await db.database.from('settings').insert(updateData);
     }
-    
+
     res.json({ message: 'Settings updated successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
