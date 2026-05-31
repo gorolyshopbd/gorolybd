@@ -20,7 +20,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
   const [compareOpen, setCompareOpen] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem('shopio-dark-mode');
+    const stored = localStorage.getItem('goroly-dark-mode');
     const isDark = stored === 'true';
     setDarkMode(isDark);
     document.documentElement.classList.toggle('dark', isDark);
@@ -29,7 +29,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
   const toggleDarkMode = () => {
     const next = !darkMode;
     setDarkMode(next);
-    localStorage.setItem('shopio-dark-mode', next.toString());
+    localStorage.setItem('goroly-dark-mode', next.toString());
     document.documentElement.classList.toggle('dark', next);
   };
 
@@ -65,8 +65,8 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
     setMobileMenuOpen(false);
   };
 
-  return (
-    <>
+  return (<div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-white/95 backdrop-blur-lg">
+    
       <style>{`
         @keyframes bannerSlide {
           0%   { transform: translateX(100%); }
@@ -82,7 +82,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
         .banner-track:hover { animation-play-state: paused; }
         .nav-link-underline {
           position: relative;
-          color: rgba(255, 255, 255, 0.8);
+          color: #ffffff;
           transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .nav-link-underline:hover {
@@ -95,7 +95,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
           left: 0;
           width: 0;
           height: 2px;
-          background: #FF6600;
+          background: #ffffff;
           border-radius: 2px;
           transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -120,22 +120,23 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
           <div className="flex items-center justify-between h-9">
 
             {/* Left */}
-            <div className="flex items-center gap-0 divide-x divide-slate-150">
+            <div className="flex items-center gap-2">
 
-              {/* Language */}
-              <div className="relative pr-4">
+              {/* Language Button */}
+              <div className="relative">
                 <button
                   onClick={() => setShowLangDropdown(!showLangDropdown)}
-                  className="flex items-center gap-1.5 cursor-pointer bg-transparent border-0 text-slate-500 hover:text-[#FF6600] transition font-medium"
+                  className="group flex items-center gap-1.5 px-3.5 py-1 bg-slate-50 hover:bg-[#FF6600]/10 border border-slate-200 hover:border-[#FF6600]/30 rounded-full transition-all duration-300 text-slate-700 hover:text-[#FF6600] cursor-pointer shadow-xs"
                 >
-                  <span className="text-base">{lang === 'en' ? '🌐' : '🇧🇩'}</span>
-                  <span>{lang === 'en' ? 'English' : 'বাংলা'}</span>
-                  <ChevronDown size={11} />
+                  <span className="text-[14px] leading-none">{lang === 'en' ? '🌐' : '🇧🇩'}</span>
+                  <span className="text-[12.5px] font-extrabold tracking-tight">{lang === 'en' ? 'English' : 'বাংলা'}</span>
+                  <ChevronDown size={11} className="text-slate-400 group-hover:text-[#FF6600] transition-colors" />
                 </button>
                 {showLangDropdown && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowLangDropdown(false)} />
-                    <div className="absolute left-0 mt-1 w-32 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50">
+                    <div className="absolute left-0 mt-1.5 w-36 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-50">
+                      <div className="px-3 py-1 text-[9px] font-black text-slate-400 uppercase tracking-widest">Language</div>
                       <button onClick={() => { setLang('en'); setShowLangDropdown(false); }}
                         className={`w-full text-left px-3 py-2 text-[12px] font-semibold hover:bg-orange-50 flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'en' ? 'text-[#FF6600]' : 'text-slate-600'}`}
                       ><span>🇬🇧</span> English</button>
@@ -147,24 +148,29 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 )}
               </div>
 
-              {/* Currency */}
-              <div className="flex items-center gap-1 px-4 cursor-pointer hover:text-[#FF6600] transition font-medium">
-                <span>{headerSettings.currency || 'TN'}</span>
-                <ChevronDown size={11} />
-              </div>
+              {/* Currency / BDT Button */}
+              <button className="group flex items-center gap-1.5 px-3.5 py-1 bg-slate-50 hover:bg-[#FF6600]/10 border border-slate-200 hover:border-[#FF6600]/30 rounded-full transition-all duration-300 text-slate-700 hover:text-[#FF6600] cursor-pointer shadow-xs">
+                <span className="text-[14px] leading-none">💰</span>
+                <span className="text-[12.5px] font-extrabold tracking-tight">{headerSettings.currency || 'BDT'}</span>
+                <ChevronDown size={11} className="text-slate-400 group-hover:text-[#FF6600] transition-colors" />
+              </button>
 
-              {/* Find a Store */}
-              <a href={headerSettings.topBarStoreLink || '#'} className="flex items-center gap-1.5 px-4 hover:text-[#FF6600] transition font-medium no-underline text-slate-500">
-                <MapPin size={11} /> Find a Store
+              {/* Find Store Button */}
+              <a
+                href={headerSettings.topBarStoreLink || '#'}
+                className="group flex items-center gap-1.5 px-3.5 py-1 bg-slate-50 hover:bg-violet-50 border border-slate-200 hover:border-violet-200 rounded-full transition-all duration-300 text-slate-700 hover:text-violet-600 cursor-pointer shadow-xs no-underline"
+              >
+                <Store size={14} className="text-violet-400 group-hover:text-violet-500 transition-colors flex-shrink-0" />
+                <span className="text-[12.5px] font-extrabold tracking-tight">Find Store</span>
               </a>
 
               {/* App Store Badges */}
-              <div className="flex items-center gap-2 pl-4">
+              <div className="hidden lg:flex items-center gap-2 pl-1">
                 {/* Google Play Badge */}
                 <a href={headerSettings.topBarPlayStoreLink || '#'} title="Get it on Google Play"
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-200 hover:border-[#FF6600] hover:text-[#FF6600] transition text-slate-500 no-underline"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-slate-200 hover:border-[#FF6600] hover:text-[#FF6600] transition text-slate-500 no-underline shadow-xs"
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-[#01875f]">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-[#01875f]">
                     <path d="M3.18 23.76c.37.2.8.2 1.18-.02l13.64-7.86-2.9-2.9-11.92 10.78zM.5 1.4C.19 1.77 0 2.28 0 2.93v18.14c0 .65.19 1.16.5 1.53l.08.08 10.16-10.16v-.24L.58 1.32.5 1.4zM20.33 10.27l-2.9-1.67-3.23 3.23 3.23 3.22 2.91-1.68c.83-.48.83-1.62-.01-2.1zM4.36.26L17.99 8.1l-2.9 2.9L3.18.22C3.56.01 4 .01 4.36.26z"/>
                   </svg>
                   <div className="leading-none">
@@ -174,9 +180,9 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 </a>
                 {/* App Store Badge */}
                 <a href={headerSettings.topBarAppStoreLink || '#'} title="Download on the App Store"
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-200 hover:border-[#FF6600] hover:text-[#FF6600] transition text-slate-500 no-underline"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-slate-200 hover:border-[#FF6600] hover:text-[#FF6600] transition text-slate-500 no-underline shadow-xs"
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.7-1.13 1.84-.99 2.94.99.08 2.16-.52 2.82-1.33z"/>
                   </svg>
                   <div className="leading-none">
@@ -188,31 +194,35 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
             </div>
 
             {/* Right */}
-            <div className="flex items-center gap-0 divide-x divide-slate-150">
+            <div className="flex items-center gap-2">
               {/* Compare */}
-              <a href="#" onClick={(e) => { e.preventDefault(); setCompareOpen(true); }}
-                className="flex items-center gap-1.5 pr-4 hover:text-[#FF6600] transition font-medium no-underline text-slate-500"
+              <button
+                onClick={() => setCompareOpen(true)}
+                className="group flex items-center gap-1.5 px-3.5 py-1 bg-slate-50 hover:bg-[#FF6600]/10 border border-slate-200 hover:border-[#FF6600]/30 rounded-full transition-all duration-300 text-slate-700 hover:text-[#FF6600] cursor-pointer shadow-xs"
               >
-                <GitCompare size={11} />
-                <span>Compare</span>
+                <GitCompare size={14} className="text-slate-400 group-hover:text-[#FF6600] transition-colors flex-shrink-0" />
+                <span className="text-[12.5px] font-extrabold tracking-tight">Compare</span>
                 {compareList.length > 0 && (
-                  <span className="bg-[#FF6600] text-white text-[8px] font-black rounded-full px-1 py-0.5 leading-none">{compareList.length}</span>
+                  <span className="bg-[#FF6600] text-white text-[8px] font-black rounded-full px-1.5 py-0.5 leading-none">{compareList.length}</span>
                 )}
-              </a>
+              </button>
 
               {/* Track Order */}
-              <button onClick={() => onTabChange('dashboard')}
-                className="flex items-center gap-1.5 px-4 hover:text-[#FF6600] transition font-medium bg-transparent border-0 cursor-pointer text-slate-500"
+              <button
+                onClick={() => onTabChange('dashboard')}
+                className="group flex items-center gap-1.5 px-3.5 py-1 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-full transition-all duration-300 text-slate-700 hover:text-blue-600 cursor-pointer shadow-xs"
               >
-                <Truck size={11} /> Track Order
+                <Truck size={14} className="text-blue-400 group-hover:text-blue-500 transition-colors flex-shrink-0" />
+                <span className="text-[12.5px] font-extrabold tracking-tight">Track Order</span>
               </button>
 
               {/* Helpline */}
-              <a href={`tel:${headerSettings.topBarHelpline || '8801234567890'}`}
-                className="flex items-center gap-1.5 pl-4 hover:text-[#FF6600] transition font-medium no-underline text-slate-500"
+              <a
+                href={`tel:${headerSettings.topBarHelpline || '8801234567890'}`}
+                className="group flex items-center gap-1.5 px-3.5 py-1 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 rounded-full transition-all duration-300 text-slate-700 hover:text-emerald-600 cursor-pointer shadow-xs no-underline"
               >
-                <PhoneCall size={11} />
-                <span>Helpline {headerSettings.topBarHelpline || '8801234567890'}</span>
+                <PhoneCall size={14} className="text-emerald-500 group-hover:text-emerald-600 transition-colors flex-shrink-0" />
+                <span className="text-[12.5px] font-extrabold tracking-tight">Helpline: {headerSettings.topBarHelpline || '8801234567890'}</span>
               </a>
             </div>
 
@@ -228,26 +238,14 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
         {/* Main Navbar */}
         <div className="bg-white/95 backdrop-blur-lg border-b border-slate-100 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center h-14 gap-4">
+            <div className="flex items-center h-16 gap-4">
 
               {/* Logo */}
               <button
                 onClick={() => onTabChange('home')}
                 className="flex items-center gap-2 flex-shrink-0 group"
               >
-                {headerSettings.headerLogo ? (
-                  <img src={headerSettings.headerLogo} alt={headerSettings.siteTitle || 'Goroly Shop'} className="h-8 w-auto object-contain" />
-                ) : (
-                  <>
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FF6600] to-[#e05a00] flex items-center justify-center shadow-md shadow-[#FF6600]/30 group-hover:shadow-[#FF6600]/50 transition">
-                      <Store size={16} className="text-white" />
-                    </div>
-                    <div className="leading-none">
-                      <span className="text-lg font-black text-slate-900 tracking-tight">Goroly</span>
-                      <span className="text-lg font-black text-[#FF6600] tracking-tight"> Shop</span>
-                    </div>
-                  </>
-                )}
+                <img src={headerSettings.headerLogo || '/logo.png'} alt={headerSettings.siteTitle || 'Goroly Shop'} className="h-14 w-auto object-contain" />
               </button>
 
               {/* Search Bar */}
@@ -373,7 +371,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
         </div>
 
         {/* ── SECONDARY NAV BAR (Desktop) ── */}
-        <div className="hidden md:block bg-[#0f172a] dark:bg-[#090d16] select-none border-b border-slate-800 dark:border-slate-900/60 shadow-md">
+        <div className="hidden md:block bg-[#FF6600] select-none border-b border-orange-600/20 shadow-md">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-12">
 
             {/* Left: Category dropdown + nav links */}
@@ -405,7 +403,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 </div>
               </div>
 
-              {/* Nav Links */}
+               {/* Nav Links */}
               <div className="flex items-center gap-6 h-full ml-4">
                 {[
                   { label: t('products'), action: () => { onSearchChange(''); onTabChange('shop'); } },
@@ -415,7 +413,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                   <button
                     key={item.label}
                     onClick={item.action}
-                    className="nav-link-underline text-white/90 hover:text-white font-semibold text-xs transition bg-transparent border-0 cursor-pointer py-1"
+                    className="nav-link-underline text-white hover:text-white font-semibold text-xs transition bg-transparent border-0 cursor-pointer py-1"
                   >
                     {item.label}
                   </button>
@@ -423,7 +421,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
 
                 {/* Pages Dropdown */}
                 <div className="dropdown-parent relative h-full flex items-center">
-                  <button className="nav-link-underline flex items-center gap-1 text-white/90 hover:text-white font-semibold text-xs transition bg-transparent border-0 cursor-pointer py-1">
+                  <button className="nav-link-underline flex items-center gap-1 text-white hover:text-white font-semibold text-xs transition bg-transparent border-0 cursor-pointer py-1">
                     {t('pages')} <ChevronDown size={11} className="text-white/60" />
                   </button>
                   <div className="dropdown-menu absolute left-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-slate-100 dark:border-slate-800/80 p-2 z-50">
@@ -450,9 +448,9 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
             {/* Right: Deals Button */}
             <button
               onClick={() => { onSearchChange('Sale'); onTabChange('shop'); }}
-              className="flex items-center gap-1.5 bg-gradient-to-r from-[#FF6600] to-[#ff7e1b] text-white px-4 py-2 rounded-xl text-xs font-black shadow-md hover:shadow-orange-500/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer border-0"
+              className="flex items-center gap-1.5 bg-white text-[#FF6600] px-4 py-2 rounded-xl text-xs font-black shadow-md hover:bg-orange-50 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer border-0"
             >
-              <Zap size={13} className="fill-white text-white animate-pulse" />
+              <Zap size={13} className="fill-[#FF6600] text-[#FF6600] animate-pulse" />
               <span>{t('dailyDeals')}</span>
             </button>
 
@@ -554,6 +552,6 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
       </header>
 
       <CompareModal isOpen={compareOpen} onClose={() => setCompareOpen(false)} />
-    </>
+    </div>
   );
 }

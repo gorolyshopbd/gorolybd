@@ -4,6 +4,7 @@ import React, { useContext, useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
+import Head from 'next/head';
 import Header from '@/components/Header';
 import CartDrawer from '@/components/CartDrawer';
 import AuthModal from '@/components/AuthModal';
@@ -110,7 +111,7 @@ export default function ProductDetailPage() {
   // Set document title from product meta
   useEffect(() => {
     if (!product) return;
-    document.title = product.metaTitle || product.name || 'Product - Shopio';
+    document.title = product.metaTitle || product.name || 'Product - Goroly Shop';
   }, [product]);
 
   useEffect(() => {
@@ -160,6 +161,17 @@ export default function ProductDetailPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
+      <Head>
+        <title>{product?.metaTitle || product?.name || 'Product - Goroly Shop'}</title>
+        <meta name="description" content={product?.metaDescription || (product?.description ? product.description.slice(0,160) : '')} />
+        <meta property="og:title" content={product?.metaTitle || product?.name || 'Product'} />
+        <meta property="og:description" content={product?.metaDescription || (product?.description ? product.description.slice(0,160) : '')} />
+        <meta property="og:image" content={product?.image ? getImageUrl(product.image) : ''} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={product?.metaTitle || product?.name || 'Product - Goroly Shop'} />
+        <meta name="twitter:description" content={product?.metaDescription || (product?.description ? product.description.slice(0,160) : '')} />
+        <meta name="twitter:image" content={product?.image ? getImageUrl(product.image) : ''} />
+      </Head>
       <Header
         onCartClick={() => setCartOpen(true)}
         onAuthClick={() => setAuthOpen(true)}
@@ -188,7 +200,7 @@ export default function ProductDetailPage() {
               <ArrowLeft size={14} /> {t('backToStore')}
             </button>
 
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden p-4 sm:p-6 lg:p-8">
+            <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-white/95 backdrop-blur-lg p-4 sm:p-6 lg:p-8">
               <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                 {/* Left: Images */}
                 <div className="lg:w-1/2 space-y-4">

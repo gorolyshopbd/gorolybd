@@ -8,7 +8,7 @@ import {
   Keyboard, Sparkles, Info, Copy, CopyCheck
 } from 'lucide-react';
 
-const DEMO_EMAIL = 'admin@shopio.com';
+const DEMO_EMAIL = 'admin@gorolyshop.com';
 const DEMO_PASS = 'admin123';
 
 export default function AdminLoginPage() {
@@ -113,7 +113,7 @@ export default function AdminLoginPage() {
               <ShieldCheck size={30} className="text-white" strokeWidth={2.5} />
             </div>
             <h1 className="text-[1.65rem] font-extrabold text-slate-800 tracking-tight leading-tight">
-              Shopio Workspace
+              Goroly Shop Workspace
             </h1>
             <p className="text-[0.65rem] font-bold text-slate-400 mt-1.5 uppercase tracking-[0.2em]">
               Admin Control Panel
@@ -139,7 +139,7 @@ export default function AdminLoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyDown={handleKeyDown}
                   onKeyUp={handleKeyUp}
-                  placeholder="admin@shopio.com"
+                  placeholder="admin@gorolyshop.com"
                   className="w-full pl-11 pr-4 py-3.5 bg-slate-50/90 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400/70 placeholder:font-medium focus:outline-none focus:ring-4 focus:ring-indigo-500/12 focus:border-indigo-500 focus:bg-white transition-all duration-300 shadow-sm"
                 />
               </div>

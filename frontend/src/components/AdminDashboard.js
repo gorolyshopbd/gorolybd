@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
@@ -207,6 +207,7 @@ export default function AdminDashboard({ onTabChange }) {
     image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=300&auto=format&fit=crop',
     images: [''],
     discountPercent: '0',
+    discountType: 'percent',
     isFlashSale: false,
     flashSaleStart: '',
     flashSaleEnd: '',
@@ -232,7 +233,7 @@ export default function AdminDashboard({ onTabChange }) {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editForm, setEditForm] = useState({
     name: '', price: '', category: '', brand: '', countInStock: '',
-    description: '', image: '', images: [], discountPercent: '0',
+    description: '', image: '', images: [], discountPercent: '0', discountType: 'percent',
     isFlashSale: false, flashSaleStart: '', flashSaleEnd: '', isDigital: false, digitalFileUrl: '',
     metaTitle: '', metaDescription: '', tags: '', youtubeUrl: '',
     unit: 'pc', minOrderQty: '1', barcode: '', slug: '',
@@ -292,10 +293,11 @@ export default function AdminDashboard({ onTabChange }) {
     codEnabled: true,
     facebookPixelId: '',
     ga4MeasurementId: '',
-    siteTitle: 'Shopio - MERN E-Commerce',
+    siteTitle: 'Goroly Shop - Premium E-Commerce',
     faviconUrl: '',
     headerLogo: '',
     footerLogo: '',
+    footerDescription: '',
     topBarHelpline: '8801234567890',
     topBarStoreLink: 'https://maps.google.com',
     topBarPlayStoreLink: 'https://play.google.com',
@@ -814,6 +816,7 @@ export default function AdminDashboard({ onTabChange }) {
           image: mainImageUrl,
           images: additionalImageUrls,
           discountPercent: Number(newProduct.discountPercent),
+          discountType: newProduct.discountType || 'percent',
           isFlashSale: newProduct.isFlashSale,
           flashSaleStart: newProduct.flashSaleStart || null,
           flashSaleEnd: newProduct.flashSaleEnd || null,
@@ -1987,11 +1990,11 @@ export default function AdminDashboard({ onTabChange }) {
               className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition group"
               title="Visit Store (Opens in new tab)"
             >
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-md shadow-blue-600/10 group-hover:scale-105 transition-transform duration-200">
-                <ShoppingBag size={15} className="text-white" />
+              <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-md shadow-blue-600/10 group-hover:scale-105 transition-transform duration-200">
+                <ShoppingBag size={18} className="text-white" />
               </div>
-              <div className="text-lg font-extrabold text-white tracking-tight flex items-center">
-                Shopio<span className="text-blue-500 font-black">.</span>
+              <div className="text-2xl font-black text-white tracking-tight flex items-center gap-1" style={{ fontWeight: 900 }}>
+                Goroly<span className="text-[#FF6600] font-black" style={{ fontWeight: 900 }}>Shop</span>
               </div>
             </div>
           </div>
@@ -3582,52 +3585,64 @@ export default function AdminDashboard({ onTabChange }) {
                           <div className="p-4 bg-gray-50 border border-slate-200 rounded-2xl space-y-3">
                             <div className="flex items-center justify-between">
                               <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Additional Images (Upload)</label>
-                              <button
-                                type="button"
-                                onClick={() => setAdditionalImageFiles([...additionalImageFiles, null])}
-                                className="px-2.5 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md text-[10px] font-bold rounded-xl transition cursor-pointer"
-                              >
-                                + Add Image
-                              </button>
-                            </div>
-                            {additionalImageFiles.length === 0 && (
-                              <p className="text-[10px] text-gray-500 italic">No additional images selected.</p>
-                            )}
-                            {additionalImageFiles.map((file, idx) => (
-                              <div key={idx} className="flex gap-2 items-center">
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => {
-                                    const f = e.target.files[0];
-                                    if (f) {
-                                      const updated = [...additionalImageFiles];
-                                      updated[idx] = f;
-                                      setAdditionalImageFiles(updated);
-                                    }
-                                  }}
-                                  className="flex-1 text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:text-[10px] file:font-bold hover:file:bg-blue-700 file:cursor-pointer"
-                                />
-                                {file && (
-                                  <img
-                                    src={URL.createObjectURL(file)}
-                                    alt=""
-                                    className="w-10 h-10 object-cover rounded border border-gray-300"
-                                  />
-                                )}
+                              {additionalImageFiles.length > 0 && (
                                 <button
                                   type="button"
-                                  onClick={() => {
-                                    const updated = additionalImageFiles.filter((_, i) => i !== idx);
-                                    setAdditionalImageFiles(updated);
-                                  }}
-                                  className="p-1.5 text-gray-500 hover:text-red-400 transition cursor-pointer"
+                                  onClick={() => setAdditionalImageFiles([])}
+                                  className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-600 text-[10px] font-bold rounded-xl transition cursor-pointer"
                                 >
-                                  <X size={14} />
+                                  Clear All
                                 </button>
+                              )}
+                            </div>
+
+                            {/* Multi-file drop zone */}
+                            <label className="flex flex-col items-center justify-center gap-2 w-full py-5 border-2 border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/50 hover:bg-blue-50 rounded-xl cursor-pointer transition-all duration-200 group">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                onChange={(e) => {
+                                  const files = Array.from(e.target.files || []);
+                                  if (files.length > 0) {
+                                    setAdditionalImageFiles(prev => [...prev, ...files]);
+                                  }
+                                  e.target.value = '';
+                                }}
+                              />
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-blue-400 group-hover:text-blue-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                              <span className="text-xs font-bold text-blue-500 group-hover:text-blue-700">Click to select images</span>
+                              <span className="text-[10px] text-gray-400">Select multiple images at once</span>
+                            </label>
+
+                            {/* Image Previews Grid */}
+                            {additionalImageFiles.length > 0 && (
+                              <div className="grid grid-cols-4 gap-2 mt-2">
+                                {additionalImageFiles.map((file, idx) => (
+                                  <div key={idx} className="relative group">
+                                    <img
+                                      src={URL.createObjectURL(file)}
+                                      alt={`img-${idx}`}
+                                      className="w-full h-16 object-cover rounded-lg border border-gray-200"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setAdditionalImageFiles(prev => prev.filter((_, i) => i !== idx))}
+                                      className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow"
+                                    >
+                                      <X size={11} />
+                                    </button>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            )}
+
+                            {additionalImageFiles.length > 0 && (
+                              <p className="text-[10px] text-blue-600 font-semibold">{additionalImageFiles.length} image{additionalImageFiles.length > 1 ? 's' : ''} selected</p>
+                            )}
                           </div>
+
 
                           {/* YouTube Link */}
                           <div>
@@ -3646,191 +3661,404 @@ export default function AdminDashboard({ onTabChange }) {
                       {/* TAB 3: PRODUCT PRICE & STOCK */}
                       {formActiveTab === 'price' && (
                         <div className="space-y-5">
-                          <div className="border-b border-slate-100 pb-3">
-                            <h3 className="font-bold text-gray-900 text-sm">Product Price & Stock</h3>
-                          </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* ── PRODUCT PRICE CARD ── */}
+                          <div className="border border-slate-200 rounded-2xl p-5 space-y-4">
+                            <h3 className="font-bold text-gray-900 text-sm border-b border-slate-100 pb-3">Product Price & Stock</h3>
+
+                            {/* Unit Price */}
                             <div>
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Base Price ({currencyCode}) *</label>
+                              <label className="text-[11px] font-bold text-gray-600">Unit Price ({currencyCode}) *</label>
                               <input
                                 type="number"
                                 required
-                                placeholder="0.00"
+                                placeholder="0"
                                 value={newProduct.price}
                                 onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                                className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
+                                className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-300 transition"
                               />
                             </div>
-                            <div>
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Discount Percent (%)</label>
-                              <input
-                                type="number"
-                                placeholder="0"
-                                value={newProduct.discountPercent}
-                                onChange={(e) => setNewProduct({ ...newProduct, discountPercent: e.target.value })}
-                                className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
-                              />
-                            </div>
-                          </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Stock Count *</label>
-                              <input
-                                type="number"
-                                required={!newProduct.isDigital}
-                                disabled={newProduct.isDigital}
-                                placeholder={newProduct.isDigital ? 'Unlimited' : 'e.g. 25'}
-                                value={newProduct.isDigital ? '' : newProduct.countInStock}
-                                onChange={(e) => setNewProduct({ ...newProduct, countInStock: e.target.value })}
-                                className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition disabled:opacity-50"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Flash Sale Option */}
-                          <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-4">
-                            <div className="flex items-center justify-between">
+                            {/* Special Discount Type + Special Discount */}
+                            <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <span className="text-[11px] font-extrabold text-gray-700 uppercase tracking-wide block font-bold">Promote to Flash Sale</span>
-                                <span className="text-[10px] text-gray-400 font-medium">Add product to flash sale schedules</span>
+                                <label className="text-[11px] font-bold text-gray-600">Special Discount Type</label>
+                                <select
+                                  value={newProduct.discountType || 'percent'}
+                                  onChange={(e) => setNewProduct({ ...newProduct, discountType: e.target.value })}
+                                  className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-300 transition"
+                                >
+                                  <option value="">Select Type</option>
+                                  <option value="percent">Percent (%)</option>
+                                  <option value="flat">Flat (৳)</option>
+                                </select>
                               </div>
-                              <label className="relative inline-flex items-center cursor-pointer">
-                                <input 
-                                  type="checkbox" 
-                                  checked={newProduct.isFlashSale}
-                                  onChange={(e) => setNewProduct({ ...newProduct, isFlashSale: e.target.checked })}
+                              <div>
+                                <label className="text-[11px] font-bold text-gray-600">Special Discount</label>
+                                <input
+                                  type="number"
+                                  placeholder="Discount"
+                                  min="0"
+                                  max={newProduct.discountType === 'percent' ? '100' : undefined}
+                                  value={newProduct.discountPercent}
+                                  onChange={(e) => setNewProduct({ ...newProduct, discountPercent: e.target.value })}
+                                  className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-300 transition"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Special Discount Period */}
+                            <div>
+                              <label className="text-[11px] font-bold text-gray-600">Special Discount Period</label>
+                              <div className="grid grid-cols-2 gap-4 mt-1.5">
+                                <input
+                                  type="datetime-local"
+                                  value={newProduct.flashSaleStart ? newProduct.flashSaleStart.slice(0,16) : ''}
+                                  onChange={(e) => setNewProduct({ ...newProduct, flashSaleStart: e.target.value, isFlashSale: !!e.target.value })}
+                                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 text-xs hover:border-slate-300 transition"
+                                />
+                                <input
+                                  type="datetime-local"
+                                  value={newProduct.flashSaleEnd ? newProduct.flashSaleEnd.slice(0,16) : ''}
+                                  onChange={(e) => setNewProduct({ ...newProduct, flashSaleEnd: e.target.value })}
+                                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 text-xs hover:border-slate-300 transition"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Vat & Tax */}
+                            <div>
+                              <label className="text-[11px] font-bold text-gray-600">Vat & Tax</label>
+                              <select className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-300 transition">
+                                <option value="">Select</option>
+                                <option value="0">0% VAT</option>
+                                <option value="5">5% VAT</option>
+                                <option value="10">10% VAT</option>
+                                <option value="15">15% VAT</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* ── PRODUCT STOCK CARD ── */}
+                          <div className="border border-slate-200 rounded-2xl p-5 space-y-4">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                              <h3 className="font-bold text-gray-900 text-sm">Product Stock</h3>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={newProduct.isDigital || false}
+                                  onChange={(e) => setNewProduct({ ...newProduct, isDigital: e.target.checked })}
                                   className="sr-only peer"
                                 />
-                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                                <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500 relative"></div>
+                                <span className="text-[11px] font-bold text-gray-600">Has Variant</span>
                               </label>
                             </div>
 
-                            {newProduct.isFlashSale && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Flash Sale Start</label>
-                                  <input type="datetime-local" value={newProduct.flashSaleStart ? newProduct.flashSaleStart.slice(0,16) : ''}
-                                    onChange={(e) => setNewProduct({ ...newProduct, flashSaleStart: e.target.value })}
-                                    className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 text-xs"
+                            {/* Min Stock Warning + Stock Visibility */}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-[11px] font-bold text-gray-600">Minimum Stock Warning</label>
+                                <input
+                                  type="number"
+                                  placeholder="Enter min stock amount to notify"
+                                  min="0"
+                                  className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 text-xs hover:border-slate-300 transition"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[11px] font-bold text-gray-600">Stock Visibility</label>
+                                <select className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-300 transition">
+                                  <option value="show">Show Stock</option>
+                                  <option value="hide">Hide Stock</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* SKU + Current Stock */}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-[11px] font-bold text-gray-600">SKU *</label>
+                                <div className="flex gap-2 mt-1.5">
+                                  <input
+                                    type="text"
+                                    placeholder="Enter product sku"
+                                    value={newProduct.barcode || ''}
+                                    onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })}
+                                    className="flex-1 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 text-xs hover:border-slate-300 transition"
                                   />
-                                </div>
-                                <div>
-                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Flash Sale End</label>
-                                  <input type="datetime-local" value={newProduct.flashSaleEnd ? newProduct.flashSaleEnd.slice(0,16) : ''}
-                                    onChange={(e) => setNewProduct({ ...newProduct, flashSaleEnd: e.target.value })}
-                                    className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 text-xs"
-                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setNewProduct({ ...newProduct, barcode: 'SKU-' + Math.random().toString(36).substr(2,8).toUpperCase() })}
+                                    className="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl transition cursor-pointer"
+                                    title="Generate SKU"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                                  </button>
                                 </div>
                               </div>
-                            )}
+                              <div>
+                                <label className="text-[11px] font-bold text-gray-600">Current Stock *</label>
+                                <input
+                                  type="number"
+                                  required={!newProduct.isDigital}
+                                  disabled={newProduct.isDigital}
+                                  placeholder="Enter current available quantity"
+                                  value={newProduct.isDigital ? '' : newProduct.countInStock}
+                                  onChange={(e) => setNewProduct({ ...newProduct, countInStock: e.target.value })}
+                                  className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 text-xs hover:border-slate-300 transition disabled:opacity-50 disabled:bg-slate-50"
+                                />
+                              </div>
+                            </div>
                           </div>
+
                         </div>
                       )}
+
 
                       {/* TAB 4: DESCRIPTION & SPECIFICATION */}
                       {formActiveTab === 'description' && (
                         <div className="space-y-5">
-                          <div className="border-b border-slate-100 pb-3">
-                            <h3 className="font-bold text-gray-900 text-sm">Description & Specification</h3>
+
+                          {/* ── PRODUCT DESCRIPTION CARD ── */}
+                          <div className="border border-slate-200 rounded-2xl p-5 space-y-4">
+                            <h3 className="font-bold text-gray-900 text-sm border-b border-slate-100 pb-3">Product Description</h3>
+
+                            {/* Short Description */}
+                            <div>
+                              <label className="text-[11px] font-bold text-gray-600">Short Description</label>
+                              <div className="relative mt-1.5">
+                                <textarea
+                                  maxLength={200}
+                                  rows={3}
+                                  placeholder="Write a short description..."
+                                  value={newProduct.shortDescription || ''}
+                                  onChange={(e) => setNewProduct({ ...newProduct, shortDescription: e.target.value })}
+                                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 text-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-300 transition resize-none"
+                                />
+                                <span className="absolute bottom-2 right-3 text-[10px] text-gray-400 font-medium">
+                                  {200 - (newProduct.shortDescription?.length || 0)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Long Description with toolbar */}
+                            <div>
+                              <label className="text-[11px] font-bold text-gray-600">Long Description</label>
+                              <div className="mt-1.5 border border-slate-200 rounded-xl overflow-hidden focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/20 transition">
+                                {/* Toolbar */}
+                                <div className="flex items-center gap-1 px-3 py-2 bg-slate-50 border-b border-slate-200 flex-wrap">
+                                  {[
+                                    { label: 'B', title: 'Bold', cmd: 'bold', cls: 'font-black' },
+                                    { label: 'U', title: 'Underline', cmd: 'underline', cls: 'underline' },
+                                    { label: 'I', title: 'Italic', cmd: 'italic', cls: 'italic' },
+                                  ].map(btn => (
+                                    <button
+                                      key={btn.cmd}
+                                      type="button"
+                                      onMouseDown={(e) => { e.preventDefault(); document.execCommand(btn.cmd, false, null); }}
+                                      title={btn.title}
+                                      className={`px-2 py-1 text-xs ${btn.cls} hover:bg-slate-200 rounded transition cursor-pointer`}
+                                    >{btn.label}</button>
+                                  ))}
+                                  <div className="w-px h-4 bg-slate-300 mx-1" />
+                                  {[
+                                    { label: '≡', title: 'Unordered List', cmd: 'insertUnorderedList' },
+                                    { label: '≔', title: 'Ordered List', cmd: 'insertOrderedList' },
+                                    { label: '⇔', title: 'Justify', cmd: 'justifyFull' },
+                                  ].map(btn => (
+                                    <button
+                                      key={btn.cmd}
+                                      type="button"
+                                      onMouseDown={(e) => { e.preventDefault(); document.execCommand(btn.cmd, false, null); }}
+                                      title={btn.title}
+                                      className="px-2 py-1 text-xs hover:bg-slate-200 rounded transition cursor-pointer"
+                                    >{btn.label}</button>
+                                  ))}
+                                  <div className="w-px h-4 bg-slate-300 mx-1" />
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => { e.preventDefault(); document.execCommand('removeFormat', false, null); }}
+                                    title="Clear Formatting"
+                                    className="px-2 py-1 text-xs hover:bg-slate-200 rounded transition cursor-pointer"
+                                  >✕</button>
+                                </div>
+                                {/* Editable area */}
+                                <div
+                                  contentEditable
+                                  suppressContentEditableWarning
+                                  onBlur={(e) => setNewProduct({ ...newProduct, description: e.currentTarget.innerHTML })}
+                                  dangerouslySetInnerHTML={{ __html: newProduct.description || '' }}
+                                  className="min-h-[160px] px-3 py-2.5 bg-white text-gray-900 text-sm outline-none"
+                                  style={{ resize: 'vertical', overflowY: 'auto' }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Description Image */}
+                            <div>
+                              <label className="text-[11px] font-bold text-gray-600">Description Image</label>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-gray-500 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-slate-100 file:text-gray-700 file:text-[11px] file:font-bold hover:file:bg-slate-200 file:cursor-pointer hover:border-slate-300 transition"
+                              />
+                            </div>
                           </div>
-                          
-                          <div>
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Product Description *</label>
-                            <textarea
-                              required
-                              placeholder="Write descriptive content for store details..."
-                              rows="6"
-                              value={newProduct.description}
-                              onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                              className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
-                            ></textarea>
+
+                          {/* ── PDF SPECIFICATION CARD ── */}
+                          <div className="border border-slate-200 rounded-2xl p-5 space-y-4">
+                            <h3 className="font-bold text-gray-900 text-sm border-b border-slate-100 pb-3">PDF Specification</h3>
+                            <div>
+                              <label className="text-[11px] font-bold text-gray-600">PDF Specification</label>
+                              <div className="flex items-center gap-3 mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition">
+                                <span className="flex-1 text-[11px] text-gray-400 truncate" id="pdf-filename">file chosen</span>
+                                <label className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg text-[11px] font-bold text-gray-700 cursor-pointer transition flex-shrink-0">
+                                  Choose File
+                                  <input
+                                    type="file"
+                                    accept=".pdf"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const f = e.target.files?.[0];
+                                      const el = document.getElementById('pdf-filename');
+                                      if (el) el.textContent = f ? f.name : 'file chosen';
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            </div>
                           </div>
+
                         </div>
                       )}
+
 
                       {/* TAB 5: SHIPPING INFO */}
                       {formActiveTab === 'shipping' && (
                         <div className="space-y-5">
-                          <div className="border-b border-slate-100 pb-3">
-                            <h3 className="font-bold text-gray-900 text-sm">Shipping Information</h3>
-                          </div>
-                          <p className="text-xs text-gray-500 italic">Shipping parameters use global courier configuration rates.</p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                          {/* ── SHIPPING INFO CARD ── */}
+                          <div className="border border-slate-200 rounded-2xl p-5 space-y-5">
+                            <h3 className="font-bold text-gray-900 text-sm border-b border-slate-100 pb-3">Shipping Info</h3>
+
+                            {/* Notice */}
+                            <p className="text-[11px] text-gray-500">
+                              Product base shipping fee is disabled. Configure your shipping fee here{' '}
+                              <span className="text-blue-500 font-semibold cursor-pointer hover:underline">Shipping Configuration</span>
+                            </p>
+
+                            {/* Estimated Shipping Days & COD heading */}
+                            <div className="flex items-center gap-2">
+                              <span className="w-6 h-2 rounded-full bg-amber-400 flex-shrink-0"></span>
+                              <span className="font-extrabold text-gray-800 text-sm">Estimated Shipping Days &amp; COD</span>
+                            </div>
+
+                            {/* Cash On Delivery toggle */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-gray-600">Cash On Delivery</span>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={newProduct.cashOnDelivery || false}
+                                  onChange={(e) => setNewProduct({ ...newProduct, cashOnDelivery: e.target.checked })}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500 relative"></div>
+                                <span className="text-[11px] text-gray-400">Collect cash after delivery</span>
+                              </label>
+                            </div>
+
+                            {/* Shipping Days */}
                             <div>
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Package Weight (kg)</label>
+                              <label className="text-[11px] font-bold text-gray-600">Shipping Days</label>
                               <input
                                 type="number"
-                                placeholder="0.00"
-                                className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Package Dimensions (cm)</label>
-                              <input
-                                type="text"
-                                placeholder="e.g. 10 x 20 x 15"
-                                className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900"
+                                min="0"
+                                placeholder="0"
+                                value={newProduct.shippingDays || ''}
+                                onChange={(e) => setNewProduct({ ...newProduct, shippingDays: e.target.value })}
+                                className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-300 transition"
                               />
                             </div>
                           </div>
+
                         </div>
                       )}
+
 
                       {/* TAB 6: OTHERS */}
                       {formActiveTab === 'others' && (
                         <div className="space-y-5">
-                          <div className="border-b border-slate-100 pb-3">
-                            <h3 className="font-bold text-gray-900 text-sm">Other Configuration Options</h3>
-                          </div>
-                          <div className="flex gap-4">
-                            <label className="flex items-center gap-2 cursor-pointer bg-slate-50 border p-4 rounded-xl flex-1 select-none">
-                              <input type="checkbox" defaultChecked className="accent-blue-600" />
-                              <div>
-                                <span className="font-bold block text-[11px] text-gray-700">Published Status</span>
-                                <span className="text-[10px] text-gray-400 font-medium">Visible to frontend buyers catalog</span>
-                              </div>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer bg-slate-50 border p-4 rounded-xl flex-1 select-none">
-                              <input type="checkbox" className="accent-blue-600" />
-                              <div>
-                                <span className="font-bold block text-[11px] text-gray-700">Featured Badge</span>
-                                <span className="text-[10px] text-gray-400 font-medium">Render in featured lists and slide highlights</span>
-                              </div>
-                            </label>
+                          {/* ── OTHERS INFO CARD ── */}
+                          <div className="border border-slate-200 rounded-2xl p-5 space-y-5">
+                            <h3 className="font-bold text-gray-900 text-sm border-b border-slate-100 pb-3">Other Options</h3>
+
+                            {/* Published Status toggle */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-gray-600">Published Status</span>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={newProduct.published || false}
+                                  onChange={(e) => setNewProduct({ ...newProduct, published: e.target.checked })}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500 relative"></div>
+                                <span className="text-[11px] text-gray-400">{newProduct.published ? 'Visible' : 'Hidden'}</span>
+                              </label>
+                            </div>
+
+                            {/* Featured Badge toggle */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-gray-600">Featured Badge</span>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={newProduct.featuredBadge || false}
+                                  onChange={(e) => setNewProduct({ ...newProduct, featuredBadge: e.target.checked })}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500 relative"></div>
+                                <span className="text-[11px] text-gray-400">{newProduct.featuredBadge ? 'Enabled' : 'Disabled'}</span>
+                              </label>
+                            </div>
                           </div>
                         </div>
                       )}
 
-                      {/* TAB 7: SEO */}
-                      {formActiveTab === 'seo' && (
-                        <div className="space-y-5">
-                          <div className="border-b border-slate-100 pb-3">
-                            <h3 className="font-bold text-gray-900 text-sm">SEO Search Optimization Settings</h3>
+                      {
+                        formActiveTab === 'seo' && (
+                          <div className="space-y-5">
+                            <div className="border border-slate-200 rounded-2xl p-5 space-y-4">
+                              <h3 className="font-bold text-gray-900 text-sm border-b border-slate-100 pb-3">SEO Settings</h3>
+                              <div className="grid gap-4">
+                                <div>
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Meta Title</label>
+                                  <input
+                                    type="text"
+                                    value={newProduct.metaTitle || ''}
+                                    onChange={(e) => setNewProduct({ ...newProduct, metaTitle: e.target.value })}
+                                    placeholder="Leave empty to use product name"
+                                    className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Meta Description</label>
+                                  <textarea
+                                    rows={4}
+                                    value={newProduct.metaDescription || ''}
+                                    onChange={(e) => setNewProduct({ ...newProduct, metaDescription: e.target.value })}
+                                    placeholder="Brief description for search engines..."
+                                    className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 text-sm"
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Meta Title</label>
-                            <input 
-                              type="text" 
-                              value={newProduct.metaTitle}
-                              onChange={(e) => setNewProduct({ ...newProduct, metaTitle: e.target.value })}
-                              placeholder="Leave empty to use product name"
-                              className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Meta Description</label>
-                            <textarea 
-                              rows="4" 
-                              value={newProduct.metaDescription}
-                              onChange={(e) => setNewProduct({ ...newProduct, metaDescription: e.target.value })}
-                              placeholder="Brief description for search engines..."
-                              className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 text-sm"
-                            ></textarea>
-                          </div>
-                        </div>
-                      )}
+                        )
+                      }
 
                       {/* Form Submission Button */}
                       <div className="border-t border-slate-100 pt-5 flex justify-end gap-3">
@@ -6143,17 +6371,15 @@ export default function AdminDashboard({ onTabChange }) {
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Page Title</label>
                     <input type="text" required placeholder="e.g. About Us" value={pageForm.title}
-                      onChange={(e) => setPageForm({ ...pageForm, title: e.target.value, slug: editingPage ? pageForm.slug : e.target.value.toLowerCase().replace(/s+/g, '-').replace(/[^a-z0-9-]/g, '') })}
+                      onChange={(e) => setPageForm({ ...pageForm, title: e.target.value, slug: editingPage ? pageForm.slug : e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })}
                       className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
-                  {!editingPage && (
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Slug (auto-generated)</label>
-                      <input type="text" required placeholder="about-us" value={pageForm.slug}
-                        onChange={(e) => setPageForm({ ...pageForm, slug: e.target.value })}
-                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-mono" />
-                    </div>
-                  )}
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Slug (URL identifier)</label>
+                    <input type="text" required placeholder="about-us" value={pageForm.slug}
+                      onChange={(e) => setPageForm({ ...pageForm, slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })}
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-mono" />
+                  </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Content (HTML supported)</label>
                     <textarea rows="6" placeholder="Write page content here..." value={pageForm.content}
@@ -7536,7 +7762,7 @@ export default function AdminDashboard({ onTabChange }) {
                         type="text"
                         value={settings.greenwebSenderId || ''}
                         onChange={(e) => setSettings({ ...settings, greenwebSenderId: e.target.value })}
-                        placeholder="Shopio"
+                        placeholder="Goroly"
                         className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
                       />
                     </div>
@@ -7842,6 +8068,10 @@ export default function AdminDashboard({ onTabChange }) {
                   Footer Settings
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="md:col-span-2">
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Footer About / Brand Description</label>
+                    <textarea rows="3" value={settings.footerDescription || ''} onChange={(e) => setSettings({ ...settings, footerDescription: e.target.value })} className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner leading-relaxed" />
+                  </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email</label>
                     <input type="text" value={settings.footerEmail || ''} onChange={(e) => setSettings({ ...settings, footerEmail: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
@@ -8413,15 +8643,48 @@ export default function AdminDashboard({ onTabChange }) {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Discount Percent (%)</label>
-                      <input
-                        type="number"
-                        placeholder="0"
-                        value={editForm.discountPercent}
-                        onChange={(e) => setEditForm({ ...editForm, discountPercent: e.target.value })}
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
-                      />
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Discount Value</label>
+                      <div className="flex mt-1.5 gap-2">
+                        {/* Flat / Percent toggle */}
+                        <div className="flex rounded-xl overflow-hidden border border-slate-200 flex-shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setEditForm({ ...editForm, discountType: 'flat' })}
+                            className={`px-3 py-2 text-[11px] font-extrabold transition-all cursor-pointer ${
+                              editForm.discountType === 'flat'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-slate-500 hover:bg-slate-50'
+                            }`}
+                          >
+                            Flat ৳
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditForm({ ...editForm, discountType: 'percent' })}
+                            className={`px-3 py-2 text-[11px] font-extrabold transition-all cursor-pointer ${
+                              editForm.discountType === 'percent'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-slate-500 hover:bg-slate-50'
+                            }`}
+                          >
+                            % Off
+                          </button>
+                        </div>
+                        <input
+                          type="number"
+                          placeholder={editForm.discountType === 'flat' ? '0.00' : '0'}
+                          min="0"
+                          max={editForm.discountType === 'percent' ? '100' : undefined}
+                          value={editForm.discountPercent}
+                          onChange={(e) => setEditForm({ ...editForm, discountPercent: e.target.value })}
+                          className="flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
+                        />
+                        <span className="flex items-center px-2 text-[12px] font-bold text-slate-400">
+                          {editForm.discountType === 'flat' ? '৳' : '%'}
+                        </span>
+                      </div>
                     </div>
+
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

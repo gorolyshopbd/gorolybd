@@ -203,7 +203,7 @@ export default function AuthModal({ isOpen, onClose }) {
         <div className="hidden md:flex md:w-1/2 bg-blue-600 relative items-center justify-center p-8 overflow-hidden">
           <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1607082349566-187342175e2f?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center"></div>
           <div className="relative z-10 text-white space-y-6 max-w-sm">
-            <h2 className="text-4xl font-black leading-tight">Welcome to Shopio!</h2>
+            <h2 className="text-4xl font-black leading-tight">Welcome to Goroly Shop!</h2>
             <p className="text-sm text-blue-100 font-medium">Discover top brands, exclusive offers, and a seamless shopping experience.</p>
             <div className="pt-6 flex items-center gap-4">
               <div className="flex -space-x-3">

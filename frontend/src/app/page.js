@@ -20,6 +20,11 @@ import ChatWidget from '@/components/ChatWidget';
 import CustomPageView from '@/components/CustomPageView';
 import VideoReelsView from '@/components/VideoReelsView';
 import BecomeSellerPage from '@/components/BecomeSellerPage';
+import SellerPolicyPage from '@/components/SellerPolicyPage';
+import AboutUsPage from '@/components/AboutUsPage';
+import TermsPage from '@/components/TermsPage';
+import PrivacyPage from '@/components/PrivacyPage';
+import ReturnRefundPage from '@/components/ReturnRefundPage';
 import { ShoppingCart, Star, Heart, ArrowRight, Eye, LayoutGrid, List, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -179,7 +184,18 @@ export default function Storefront() {
   return (
     <div className="flex flex-col min-h-screen bg-white justify-between">
       {/* Header */}
-      {activeTab !== 'videos' && activeTab !== 'page-become-a-seller' && (
+      {activeTab !== 'videos' &&
+        activeTab !== 'page-become-a-seller' &&
+        activeTab !== 'page-seller-policy' &&
+        activeTab !== 'page-product-policy' &&
+        activeTab !== 'page-pickup-delivery-policy' &&
+        activeTab !== 'page-seller-exchange-return-policy' &&
+        activeTab !== 'page-about-us' &&
+        activeTab !== 'page-terms-conditions' &&
+        activeTab !== 'page-terms-&-conditions' &&
+        activeTab !== 'page-privacy-policy' &&
+        activeTab !== 'page-return-refund-policy' &&
+        activeTab !== 'page-return-&-refund-policy' && (
         <Header 
           onCartClick={() => setCartOpen(true)}
           onAuthClick={() => setAuthOpen(true)}
@@ -610,7 +626,54 @@ export default function Storefront() {
           <BecomeSellerPage onBackToHome={() => setActiveTab('home')} onAuthClick={() => setAuthOpen(true)} />
         )}
 
-        {activeTab.startsWith('page-') && activeTab !== 'page-become-a-seller' && (
+        {(activeTab === 'page-seller-policy' ||
+          activeTab === 'page-product-policy' ||
+          activeTab === 'page-pickup-delivery-policy' ||
+          activeTab === 'page-seller-exchange-return-policy') && (
+          <SellerPolicyPage
+            onBackToHome={() => setActiveTab('home')}
+            onAuthClick={() => setAuthOpen(true)}
+            onTabChange={setActiveTab}
+            initialTab={
+              activeTab === 'page-product-policy'
+                ? 'product-policy'
+                : activeTab === 'page-pickup-delivery-policy'
+                ? 'pickup-delivery-policy'
+                : activeTab === 'page-seller-exchange-return-policy'
+                ? 'seller-exchange-return-policy'
+                : 'product-policy'
+            }
+          />
+        )}
+
+        {activeTab === 'page-about-us' && (
+          <AboutUsPage onBackToHome={() => setActiveTab('home')} onTabChange={setActiveTab} />
+        )}
+
+        {(activeTab === 'page-terms-conditions' || activeTab === 'page-terms-&-conditions') && (
+          <TermsPage onBackToHome={() => setActiveTab('home')} />
+        )}
+
+        {activeTab === 'page-privacy-policy' && (
+          <PrivacyPage onBackToHome={() => setActiveTab('home')} />
+        )}
+
+        {(activeTab === 'page-return-refund-policy' || activeTab === 'page-return-&-refund-policy') && (
+          <ReturnRefundPage onBackToHome={() => setActiveTab('home')} />
+        )}
+
+        {activeTab.startsWith('page-') &&
+          activeTab !== 'page-become-a-seller' &&
+          activeTab !== 'page-seller-policy' &&
+          activeTab !== 'page-product-policy' &&
+          activeTab !== 'page-pickup-delivery-policy' &&
+          activeTab !== 'page-seller-exchange-return-policy' &&
+          activeTab !== 'page-about-us' &&
+          activeTab !== 'page-terms-conditions' &&
+          activeTab !== 'page-terms-&-conditions' &&
+          activeTab !== 'page-privacy-policy' &&
+          activeTab !== 'page-return-refund-policy' &&
+          activeTab !== 'page-return-&-refund-policy' && (
           <CustomPageView slug={activeTab.replace('page-', '')} onBackToHome={() => setActiveTab('home')} />
         )}
 
@@ -633,7 +696,7 @@ export default function Storefront() {
       {/* Chat Support */}
       {activeTab !== 'videos' && <ChatWidget />}
       {/* Footer */}
-      {activeTab !== 'videos' && activeTab !== 'page-become-a-seller' && (
+      {activeTab !== 'videos' && (
         <Footer onTabChange={setActiveTab} onCartClick={() => setCartOpen(true)} />
       )}
     </div>

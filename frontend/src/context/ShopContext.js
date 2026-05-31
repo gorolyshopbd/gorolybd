@@ -731,7 +731,7 @@ export const ShopProvider = ({ children }) => {
         return prev;
       }
       if (prev.length >= 3) {
-        const isBn = typeof window !== 'undefined' && localStorage.getItem('shopio-lang') === 'bn';
+        const isBn = typeof window !== 'undefined' && localStorage.getItem('goroly-lang') === 'bn';
         alert(isBn ? "আপনি সর্বোচ্চ ৩টি পণ্য তুলনা করতে পারেন!" : "You can compare up to 3 products!");
         return prev;
       }

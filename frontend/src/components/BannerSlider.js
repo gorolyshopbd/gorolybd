@@ -53,8 +53,8 @@ export default function BannerSlider({ onShopClick }) {
       ))}
       {banners.length > 1 && (
         <>
-          <button onClick={() => setCurrent((c) => (c - 1 + banners.length) % banners.length)} className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/40 transition"><ChevronLeft size={18} className="text-white" /></button>
-          <button onClick={() => setCurrent((c) => (c + 1) % banners.length)} className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/40 transition"><ChevronRight size={18} className="text-white" /></button>
+          <button onClick={() => setCurrent((c) => (c - 1 + banners.length) % banners.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-4 bg-white/25 backdrop-blur-md border border-white/30 rounded-full hover:bg-white/50 hover:scale-110 transition-all duration-200 shadow-lg group"><ChevronLeft size={28} className="text-white group-hover:scale-110 transition-transform" /></button>
+          <button onClick={() => setCurrent((c) => (c + 1) % banners.length)} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-4 bg-white/25 backdrop-blur-md border border-white/30 rounded-full hover:bg-white/50 hover:scale-110 transition-all duration-200 shadow-lg group"><ChevronRight size={28} className="text-white group-hover:scale-110 transition-transform" /></button>
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
             {banners.map((_, i) => (
               <button key={i} onClick={() => goTo(i)} className={`w-2 h-2 rounded-full transition-all ${i === current ? 'bg-white w-5' : 'bg-white/50 hover:bg-white/70'}`} />

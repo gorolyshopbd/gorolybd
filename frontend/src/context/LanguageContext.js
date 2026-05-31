@@ -430,7 +430,7 @@ export function LanguageProvider({ children }) {
   const [lang, setLangState] = useState('en');
 
   useEffect(() => {
-    const stored = localStorage.getItem('shopio-lang');
+    const stored = localStorage.getItem('goroly-lang');
     if (stored === 'bn' || stored === 'en') {
       setLangState(stored);
       document.documentElement.setAttribute('lang', stored === 'bn' ? 'bn' : 'en');
@@ -439,7 +439,7 @@ export function LanguageProvider({ children }) {
 
   const setLang = (newLang) => {
     setLangState(newLang);
-    localStorage.setItem('shopio-lang', newLang);
+    localStorage.setItem('goroly-lang', newLang);
     document.documentElement.setAttribute('lang', newLang === 'bn' ? 'bn' : 'en');
   };
 

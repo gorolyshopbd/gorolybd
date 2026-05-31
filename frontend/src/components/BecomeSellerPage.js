@@ -2,12 +2,222 @@
 
 import React, { useState, useContext } from 'react';
 import { ShopContext } from '@/context/ShopContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Store, Lock, Mail, Phone, User, Globe, ChevronDown, ArrowLeft, ArrowRight, Eye, EyeOff, Users, ShoppingBag, Calendar, Package, MessageSquare, Banknote, ShieldCheck, Smartphone, LayoutGrid } from 'lucide-react';
 
 import { DIVISION_DISTRICTS, DISTRICT_UPAZILAS } from './bdLocations';
 
+const sT = {
+  en: {
+    // Header
+    sellerCenter: 'Seller Center',
+    sellerDashboard: 'Seller Dashboard',
+    logOut: 'Log Out',
+    logIn: 'Log In',
+    signUp: 'Sign Up',
+    
+    // Landing Page
+    landingTitle: 'Start your\nonline shop\non Goroly Shop in\nminutes',
+    growWithUs: 'Grow with us, and unlock rewards along the way.',
+    exclusiveBenefits: 'Exclusive Seller Benefits — Coming Soon',
+    benefitsSub: "We're building programs to recognize and reward the sellers who grow with Goroly Shop.",
+    benefit1: "Early sellers get first access to new features and benefits",
+    benefit2: "Priority access to programs and early launches",
+    benefit3: "Dedicated support to help you reach your first sale faster",
+    benefit4: "A chance to co-create the future of seller rewards with us",
+    helpSub: 'Goroly Shop helps you reach your first customer faster - and grow from there.',
+    
+    // Metrics
+    community: 'Seller community',
+    onlineBusiness: 'Online Business',
+    payoutCycle: 'Weekly Payout Cycle',
+    orders: 'Countrywide Orders',
+    
+    // Why
+    whyTitle: 'Why do sellers love\nselling on Goroly Shop?',
+    whySub: "From first sale to full-scale growth Goroly Shop gives you the tools, visibility, and support to succeed. 100k+ customers across Bangladesh trust Goroly Shop as their go-to online marketplace. It's no wonder over 5.6K sellers choose us to showcase and sell their products 24/7.",
+    oppTitle: 'Opportunity (reach more customers)',
+    oppSub: '100k+ customers & access to 500+ seasonal sales events, promotions, and campaigns to boost your visibility.',
+    supTitle: 'Support (24/7 dedicated helper)',
+    supSub: 'Direct access to our dedicated merchant support team and resources to help you solve store issues instantly.',
+    
+    // Success Stories
+    successTitle: 'Seller Success Stories',
+    successSub: '5.6K+ sellers already trust Goroly Shop to grow their online business.',
+    stories: [
+      { text: "Goroly Shop has opened a new door of opportunity for us. Through this platform, we can easily reach customers. We believe that in the future, this platform will take our business further." },
+      { text: "Goroly Shop has added a new dimension to our business. We can present our products properly and connect with customers easily. Due to reliable service and modern management, it is a highly effective solution for sellers." },
+      { text: "Wishing Goroly Shop continued success and growth ahead. It was a pleasure being part of the journey with you. Reliable system and extremely convenient support." },
+      { text: "Onboarding was smooth and direct. Our order volumes went up significantly. The weekly payout cycle ensures we always have steady working capital to expand." }
+    ],
+    
+    // Login
+    welcomeBack: 'Welcome Back',
+    loginSub: 'Login to your Goroly Shop Seller Center dashboard',
+    emailLabel: 'Email Address',
+    passwordLabel: 'Password',
+    loginButton: 'Login to Dashboard',
+    authenticating: 'Authenticating...',
+    noAccount: "Don't have a seller account?",
+    createAccount: 'Create Account',
+    accessDenied: 'Access denied. Only seller accounts can access the dashboard.',
+    
+    // Register
+    shopRegistration: 'Shop Registration',
+    registerSub: 'If you are willing to become a seller on Goroly Shop, register here',
+    shopName: 'Shop Name',
+    ownerName: 'Owner / Representative Name',
+    email: 'Email Address',
+    password: 'Password',
+    phone: 'Owner / Representative Phone',
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    socialMedia: 'Social Media Links',
+    address: 'Address',
+    division: 'Division',
+    district: 'District',
+    upazila: 'Police Station/Upazila',
+    addressDetails: 'House / Road & Additional Instruction',
+    submitInfo: 'Submit Information',
+    submittingInfo: 'Submitting Information...',
+    alreadyHaveAccount: 'Already have an account?',
+    chooseDivision: '-- Please choose your division --',
+    chooseDistrict: '-- Please choose your city/district --',
+    chooseUpazila: '-- Enter your Police Station/Upazila --',
+    enterShopName: 'Enter your shop name',
+    enterFullName: 'Enter your full name',
+    enterEmail: 'Enter your email address',
+    enterPassword: 'Enter password',
+    enterPhone: 'Enter your phone number',
+    enterFacebook: 'Enter your Facebook page link',
+    enterInstagram: 'Enter your Instagram page link',
+    enterAddressDetails: 'Enter house / road & additional instruction',
+    sendSms: 'Send SMS',
+    callMe: 'Call Me',
+    sending: 'Sending...',
+    calling: 'Calling...',
+    verifying: 'Verifying...',
+    verified: 'Verified',
+    verify: 'Verify',
+    enterOtpLabel: 'Enter 6-digit OTP code',
+    enterOtpPlaceholder: 'Enter OTP',
+    phoneRequiredWarning: 'Please verify your phone number using OTP first.',
+    otpSentSuccess: 'OTP sent to your phone!',
+    otpCallSuccess: 'Calling your phone with OTP...',
+    phoneVerifiedSuccess: 'Phone number verified successfully!',
+    
+    // Alerts
+    validPhoneAlert: 'Please enter a valid phone number.',
+    enterOtpAlert: 'Please enter the OTP code.',
+  },
+  bn: {
+    // Header
+    sellerCenter: 'সেলার সেন্টার',
+    sellerDashboard: 'সেলার ড্যাশবোর্ড',
+    logOut: 'লগ আউট',
+    logIn: 'লগ ইন',
+    signUp: 'সাইন আপ',
+    
+    // Landing Page
+    landingTitle: 'কয়েক মিনিটে\nআপনার অনলাইন শপ\nশুরু করুন\nগোরোলি শপ-এ',
+    growWithUs: 'আমাদের সাথে বৃদ্ধি পান এবং পথেই আকর্ষণীয় পুরস্কার আনলক করুন।',
+    exclusiveBenefits: 'এক্সক্লুসিভ বিক্রেতা সুবিধা — শীঘ্রই আসছে',
+    benefitsSub: 'যারা গোরোলি শপের সাথে ব্যবসা বৃদ্ধি করছেন, তাদের সম্মানিত ও পুরস্কৃত করার জন্য আমরা প্রোগ্রাম তৈরি করছি।',
+    benefit1: 'প্রাথমিক বিক্রেতারা নতুন ফিচার ও সুবিধার প্রথম অ্যাক্সেস পাবেন',
+    benefit2: 'বিশেষ ক্যাম্পেইন ও আগে লঞ্চ হওয়া প্রোগ্রামে অগ্রাধিকার',
+    benefit3: 'আপনার প্রথম বিক্রি দ্রুত পেতে ডেডিকেটেড মার্চেন্ট সাপোর্ট',
+    benefit4: 'আমাদের সাথে সেলার রিওয়ার্ডের ভবিষ্যৎ তৈরি করার সুযোগ',
+    helpSub: 'গোরোলি শপ আপনাকে দ্রুত প্রথম কাস্টমার পেতে সাহায্য করে - এবং সেখান থেকে ব্যবসা বড় করতে সাহায্য করে।',
+    
+    // Metrics
+    community: 'বিক্রেতা সম্প্রদায়',
+    onlineBusiness: 'অনলাইন ব্যবসা',
+    payoutCycle: 'সাপ্তাহিক পেমেন্ট চক্র',
+    orders: 'দেশব্যাপী অর্ডার',
+    
+    // Why
+    whyTitle: 'বিক্রেতারা কেন\nগোরোলি শপে বিক্রি করতে ভালোবাসেন?',
+    whySub: 'প্রথম বিক্রি থেকে শুরু করে ব্যবসার পূর্ণ প্রসার পর্যন্ত গোরোলি শপ আপনাকে সফল হওয়ার সব টুলস, ভিজিবিলিটি এবং সাপোর্ট প্রদান করে। বাংলাদেশ জুড়ে ১ লাখের বেশি ক্রেতা গোরোলি শপকে তাদের পছন্দের অনলাইন মার্কেটপ্লেস হিসেবে বিশ্বাস করেন। তাই ৫.৬ হাজারের বেশি বিক্রেতা তাদের পণ্য ২৪/৭ বিক্রির জন্য আমাদের বেছে নিয়েছেন।',
+    oppTitle: 'সুযোগ (অধিক ক্রেতার কাছে পৌঁছান)',
+    oppSub: '১ লাখ+ ক্রেতা এবং ৫০০+ সিজনাল সেলস ইভেন্ট, প্রোমোশন ও ক্যাম্পেইনে অংশ নিয়ে আপনার বিক্রি বাড়িয়ে নেওয়ার সুযোগ।',
+    supTitle: 'সাপোর্ট (২৪/৭ ডেডিকেটেড মার্চেন্ট হেল্পার)',
+    supSub: 'যেকোনো সমস্যা তাৎক্ষণিকভাবে সমাধান করতে আমাদের ডেডিকেটেড মার্চেন্ট সাপোর্ট টিম ও রিসোর্সে সরাসরি যোগাযোগের সুযোগ।',
+    
+    // Success Stories
+    successTitle: 'বিক্রেতাদের সাফল্যের গল্প',
+    successSub: '৫.৬K+ বিক্রেতা ইতিমধ্যেই তাদের অনলাইন ব্যবসা বাড়াতে গোরোলি শপকে বিশ্বাস করেছেন।',
+    stories: [
+      { text: "Goroly Shop আমাদের জন্য নতুন এক সুযোগের দরজা খুলেছে। এই প্ল্যাটফর্মের মাধ্যমে আমরা সহজে গ্রাহকের কাছে পৌঁছাতে পারছি। আমরা বিশ্বাস করি, ভবিষ্যতে এই প্ল্যাটফর্ম আমাদের ব্যবসাকে আরও এগিয়ে নেবে।" },
+      { text: "Goroly Shop আমাদের ব্যবসায় নতুন মাত্রা যোগ করেছে। এই প্ল্যাটফর্মে আমরা আমাদের পণ্য সঠিকভাবে উপস্থাপন করতে পারছি এবং গ্রাহকের সাথে সহজে যুক্ত হতে পারছি। নির্ভরযোগ্য সেবা ও আধুনিক ব্যবস্থাপনার কারণে Goroly Shop বিক্রেতাদের জন্য একটি কার্যকর সমাধান হয়ে উঠেছে।" },
+      { text: "গোরোলি শপের অব্যাহত সাফল্য ও প্রবৃদ্ধি কামনা করছি। আপনাদের সাথে এই যাত্রার অংশ হতে পেরে অত্যন্ত আনন্দিত। নির্ভরযোগ্য সিস্টেম এবং অত্যন্ত সুবিধাজনক মার্চেন্ট সাপোর্ট।" },
+      { text: "অনবোর্ডিং অত্যন্ত সহজ এবং সরাসরি ছিল। আমাদের অর্ডারের সংখ্যা উল্লেখযোগ্যভাবে বৃদ্ধি পেয়েছে। সাপ্তাহিক পেমেন্ট চক্র নিশ্চিত করে যে আমাদের কাছে ব্যবসার প্রসারের জন্য সবসময় প্রয়োজনীয় মূলধন থাকে।" }
+    ],
+    
+    // Login
+    welcomeBack: 'স্বাগতম',
+    loginSub: 'আপনার গোরোলি শপ সেলার সেন্টার ড্যাশবোর্ডে লগইন করুন',
+    emailLabel: 'ইমেইল অ্যাড্রেস',
+    passwordLabel: 'পাসওয়ার্ড',
+    loginButton: 'ড্যাশবোর্ডে লগইন করুন',
+    authenticating: 'যাচাই করা হচ্ছে...',
+    noAccount: 'কোনো সেলার অ্যাকাউন্ট নেই?',
+    createAccount: 'অ্যাকাউন্ট তৈরি করুন',
+    accessDenied: 'প্রবেশাধিকার নেই। শুধুমাত্র বিক্রেতা অ্যাকাউন্টগুলো ড্যাশবোর্ডে প্রবেশ করতে পারবে।',
+    
+    // Register
+    shopRegistration: 'শপ রেজিস্ট্রেশন',
+    registerSub: 'আপনি যদি গোরোলি শপ-এ একজন বিক্রেতা হতে চান, তবে এখানে নিবন্ধন করুন',
+    shopName: 'দোকানের নাম (Shop Name)',
+    ownerName: 'মালিক / প্রতিনিধির নাম',
+    email: 'ইমেইল ঠিকানা',
+    password: 'পাসওয়ার্ড',
+    phone: 'মালিক / প্রতিনিধির ফোন নম্বর',
+    facebook: 'ফেসবুক',
+    instagram: 'ইনস্টাগ্রাম',
+    socialMedia: 'সোশ্যাল মিডিয়া লিঙ্কসমূহ',
+    address: 'ঠিকানা',
+    division: 'বিভাগ',
+    district: 'জেলা',
+    upazila: 'থানা / উপজেলা',
+    addressDetails: 'বাসা / রোড নম্বর এবং অতিরিক্ত নির্দেশনা',
+    submitInfo: 'তথ্য জমা দিন',
+    submittingInfo: 'তথ্য জমা দেওয়া হচ্ছে...',
+    alreadyHaveAccount: 'ইতিমধ্যেই একটি অ্যাকাউন্ট আছে?',
+    chooseDivision: '-- অনুগ্রহ করে আপনার বিভাগ নির্বাচন করুন --',
+    chooseDistrict: '-- অনুগ্রহ করে আপনার জেলা নির্বাচন করুন --',
+    chooseUpazila: '-- আপনার থানা / উপজেলা নির্বাচন করুন --',
+    enterShopName: 'আপনার দোকানের নাম লিখুন',
+    enterFullName: 'আপনার পূর্ণ নাম লিখুন',
+    enterEmail: 'আপনার ইমেল ঠিকানা লিখুন',
+    enterPassword: 'পাসওয়ার্ড লিখুন',
+    enterPhone: 'আপনার ফোন নম্বর লিখুন',
+    enterFacebook: 'আপনার ফেসবুক পেজের লিঙ্ক লিখুন',
+    enterInstagram: 'আপনার ইনস্টাগ্রাম পেজের লিঙ্ক লিখুন',
+    enterAddressDetails: 'বাসা / রোড নম্বর এবং অতিরিক্ত নির্দেশনা লিখুন',
+    sendSms: 'SMS পাঠান',
+    callMe: 'কল করুন',
+    sending: 'পাঠানো হচ্ছে...',
+    calling: 'কল করা হচ্ছে...',
+    verifying: 'যাচাই করা হচ্ছে...',
+    verified: 'যাচাইকৃত',
+    verify: 'যাচাই করুন',
+    enterOtpLabel: '৬ সংখ্যার ওটিপি (OTP) কোড লিখুন',
+    enterOtpPlaceholder: 'OTP লিখুন',
+    phoneRequiredWarning: 'অনুগ্রহ করে প্রথমে ওটিপি (OTP) দিয়ে আপনার ফোন নম্বর যাচাই করুন।',
+    otpSentSuccess: 'আপনার ফোনে ওটিপি পাঠানো হয়েছে!',
+    otpCallSuccess: 'ওটিপি সহ আপনার ফোনে কল করা হচ্ছে...',
+    phoneVerifiedSuccess: 'ফোন নম্বর সফলভাবে যাচাই করা হয়েছে!',
+    
+    // Alerts
+    validPhoneAlert: 'অনুগ্রহ করে একটি সঠিক ফোন নম্বর লিখুন।',
+    enterOtpAlert: 'অনুগ্রহ করে ওটিপি (OTP) কোডটি লিখুন।',
+  }
+};
+
 export default function BecomeSellerPage({ onBackToHome }) {
   const { user, logout, login, sendOtpCode } = useContext(ShopContext);
+  const { lang, setLang } = useLanguage();
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
   const [authMode, setAuthMode] = useState('landing'); // landing, login, register
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -36,9 +246,14 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+  const t = (key) => {
+    return sT[lang]?.[key] || sT['en']?.[key] || key;
+  };
+  const stories = sT[lang]?.stories || sT['en']?.stories || [];
+
   const handleSendOtp = async (method = 'sms') => {
     if (!phone || phone.trim().length < 10) {
-      setOtpError('Please enter a valid phone number.');
+      setOtpError(t('validPhoneAlert'));
       return;
     }
     setOtpLoading(true);
@@ -51,7 +266,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
       setOtpLoading(false);
       if (res.success) {
         setOtpSent(true);
-        setOtpSuccess(method === 'call' ? 'Calling your phone with OTP...' : 'OTP sent to your phone!');
+        setOtpSuccess(method === 'call' ? t('otpCallSuccess') : t('otpSentSuccess'));
       } else {
         setOtpError(res.error || 'Failed to send OTP');
       }
@@ -63,7 +278,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
   const handleVerifyOtp = async () => {
     if (!otpCode || otpCode.length < 4) {
-      setOtpError('Please enter the OTP code.');
+      setOtpError(t('enterOtpAlert'));
       return;
     }
     setOtpLoading(true);
@@ -80,7 +295,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
       setOtpLoading(false);
       if (res.ok) {
         setPhoneVerified(true);
-        setOtpSuccess('Phone number verified successfully!');
+        setOtpSuccess(t('phoneVerifiedSuccess'));
         setOtpError('');
       } else {
         setOtpError(data.message || 'Invalid OTP code');
@@ -96,7 +311,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
     setErrorMsg('');
 
     if (!phoneVerified) {
-      setErrorMsg('Please verify your phone number using OTP first.');
+      setErrorMsg(t('phoneRequiredWarning'));
       return;
     }
 
@@ -161,7 +376,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
       if (res.role === 'seller' || res.isAdmin) {
         window.location.href = '/admin';
       } else {
-        setErrorMsg('Access denied. Only seller accounts can access the dashboard.');
+        setErrorMsg(t('accessDenied'));
       }
     } catch (error) {
       setLoading(false);
@@ -191,13 +406,6 @@ export default function BecomeSellerPage({ onBackToHome }) {
     setOtpSuccess('');
   };
 
-  const getBrandIcon = (name) => {
-    if (name === 'TRADESWORTH') return <Store size={18} className="text-[#FF6600]" />;
-    if (name === 'Avonee') return <ShoppingBag size={18} className="text-[#FF6600]" />;
-    if (name === 'Team') return <Globe size={18} className="text-[#FF6600]" />;
-    return <Package size={18} className="text-[#FF6600]" />;
-  };
-
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
       
@@ -210,16 +418,16 @@ export default function BecomeSellerPage({ onBackToHome }) {
             onClick={() => authMode === 'landing' ? onBackToHome() : handleModeChange('landing')} 
             className="cursor-pointer flex items-center gap-3"
           >
-            {/* Shopping Bag Icon in Pink/Magenta Gradient */}
+            {/* Shopping Bag Icon */}
             <div className="relative w-10 h-10 flex items-center justify-center bg-gradient-to-br from-[#EC4899] to-[#D946EF] rounded-xl shadow-md">
               <div className="absolute top-1.5 w-4 h-4 border-2 border-white rounded-t-full opacity-90" style={{ borderBottom: 'none' }} />
               <svg className="w-5 h-5 text-white mt-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
             </div>
-            <div className="leading-none">
+            <div className="leading-none text-left">
               <span className="text-2xl font-black text-[#00A8E8] tracking-tight">Goroly Shop</span>
-              <span className="block text-[10px] font-bold text-slate-400 tracking-wider uppercase mt-0.5">seller center</span>
+              <span className="block text-[10px] font-bold text-slate-400 tracking-wider uppercase mt-0.5">{t('sellerCenter')}</span>
             </div>
           </div>
         </div>
@@ -237,14 +445,14 @@ export default function BecomeSellerPage({ onBackToHome }) {
                   onClick={() => window.location.href = '/admin'}
                   className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-6 py-2 rounded-full font-bold text-sm transition shadow-md shadow-[#FF6600]/10 flex items-center gap-1.5 cursor-pointer"
                 >
-                  <LayoutGrid size={13} /> Seller Dashboard
+                  <LayoutGrid size={13} /> {t('sellerDashboard')}
                 </button>
               ) : (
                 <button 
                   onClick={logout}
                   className="border-2 border-[#FF6600] text-[#FF6600] hover:bg-[#FF6600]/5 px-5 py-1.5 rounded-full font-bold text-sm transition cursor-pointer"
                 >
-                  Log out
+                  {t('logOut')}
                 </button>
               )}
             </div>
@@ -258,14 +466,14 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     : 'border-2 border-[#FF6600] text-[#FF6600] hover:bg-[#FF6600]/5'
                 }`}
               >
-                <Lock size={13} /> Log in
+                <Lock size={13} /> {t('logIn')}
               </button>
               
               <button 
                 onClick={() => handleModeChange('register')}
                 className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-6 py-2 rounded-full font-bold text-sm transition shadow-md shadow-[#FF6600]/10 cursor-pointer"
               >
-                Sign up
+                {t('signUp')}
               </button>
             </>
           )}
@@ -278,9 +486,33 @@ export default function BecomeSellerPage({ onBackToHome }) {
           </div>
 
           {/* Language selector */}
-          <div className="hidden md:flex items-center gap-1.5 cursor-pointer text-slate-600 hover:text-slate-900 transition">
-            <span className="text-xs font-bold">English</span>
-            <ChevronDown size={14} className="text-slate-400" />
+          <div className="relative">
+            <button
+              onClick={() => setShowLangDropdown(!showLangDropdown)}
+              className="flex items-center gap-1 text-slate-600 hover:text-slate-900 transition font-bold text-xs bg-transparent border-0 cursor-pointer"
+            >
+              <span>{lang === 'en' ? 'English' : 'বাংলা'}</span>
+              <ChevronDown size={14} className="text-slate-400" />
+            </button>
+            {showLangDropdown && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowLangDropdown(false)} />
+                <div className="absolute right-0 mt-1 w-32 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50">
+                  <button 
+                    onClick={() => { setLang('en'); setShowLangDropdown(false); }}
+                    className={`w-full text-left px-3 py-2 text-[12px] font-semibold hover:bg-orange-50 flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'en' ? 'text-[#FF6600]' : 'text-slate-600'}`}
+                  >
+                    <span>🇬🇧</span> English
+                  </button>
+                  <button 
+                    onClick={() => { setLang('bn'); setShowLangDropdown(false); }}
+                    className={`w-full text-left px-3 py-2 text-[12px] font-semibold hover:bg-orange-50 flex items-center gap-2 bg-transparent border-0 cursor-pointer ${lang === 'bn' ? 'text-[#FF6600]' : 'text-slate-600'}`}
+                  >
+                    <span>🇧🇩</span> বাংলা
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -289,8 +521,6 @@ export default function BecomeSellerPage({ onBackToHome }) {
       {/* ── MAIN CONTENT ── */}
       <main className="flex-grow flex flex-col justify-center bg-gradient-to-tr from-[#e5f8ff] via-[#f5fdff] to-white">
         
-
-
         {/* 1. LANDING MODE */}
         {authMode === 'landing' && (
           <div className="w-full flex flex-col items-center">
@@ -298,18 +528,15 @@ export default function BecomeSellerPage({ onBackToHome }) {
             <div className="max-w-7xl mx-auto px-6 sm:px-12 py-12 md:py-16 grid md:grid-cols-12 gap-12 items-center w-full">
               {/* Left Info Column */}
               <div className="md:col-span-5 space-y-8 text-left">
-                <h1 className="text-4xl sm:text-[50px] font-black text-[#0f2a4a] leading-[1.12] tracking-tight">
-                  Start your<br />
-                  online shop<br />
-                  on Goroly Shop in<br />
-                  minutes
+                <h1 className="text-4xl sm:text-[50px] font-black text-[#0f2a4a] leading-[1.12] tracking-tight whitespace-pre-line">
+                  {t('landingTitle')}
                 </h1>
                 
                 <button 
                   onClick={() => handleModeChange('register')}
-                  className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-9 py-3.5 rounded-full font-bold text-base transition shadow-lg shadow-[#FF6600]/25 hover:-translate-y-0.5"
+                  className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-9 py-3.5 rounded-full font-bold text-base transition shadow-lg shadow-[#FF6600]/25 hover:-translate-y-0.5 cursor-pointer"
                 >
-                  Sign up
+                  {t('signUp')}
                 </button>
               </div>
 
@@ -318,7 +545,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                 <div className="relative w-full max-w-[620px] transition duration-500 hover:scale-[1.01]">
                   <img 
                     src="/seller_mockup.png" 
-                    alt="Goroly Shop Seller Center Mockup" 
+                    alt={t('sellerCenter')} 
                     className="w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,168,232,0.15)]"
                   />
                 </div>
@@ -328,7 +555,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
             {/* Divider / Sub-header Section */}
             <div className="w-full bg-white py-12 border-t border-slate-100 flex justify-center items-center">
               <h2 className="text-xl sm:text-2xl font-bold text-slate-500 text-center max-w-2xl px-6">
-                Goroly Shop helps you reach your first customer faster - and grow from there.
+                {t('helpSub')}
               </h2>
             </div>
 
@@ -350,27 +577,26 @@ export default function BecomeSellerPage({ onBackToHome }) {
               <div className="md:col-span-7 space-y-6 text-left">
                 {/* Pill badge */}
                 <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FFF5F0] text-[#FF6600] rounded-full text-xs sm:text-sm font-extrabold">
-                  <span>🔥</span> Grow with us, and unlock rewards along the way.
+                  <span>🔥</span> {t('growWithUs')}
                 </div>
 
                 {/* Big Heading */}
                 <h2 className="text-3xl sm:text-4xl font-black text-[#0f2a4a] leading-tight">
-                  Exclusive Seller Benefits<br />
-                  — Coming Soon
+                  {t('exclusiveBenefits')}
                 </h2>
 
                 {/* Subtitle */}
                 <p className="text-slate-500 text-sm font-semibold max-w-xl">
-                  We're building programs to recognize and reward the sellers who grow with Goroly Shop.
+                  {t('benefitsSub')}
                 </p>
 
                 {/* Benefit points in a light-orange box */}
                 <div className="bg-[#FFF5F0] rounded-3xl p-6 sm:p-8 space-y-4">
                   {[
-                    "Early sellers get first access to new features and benefits",
-                    "Priority access to programs and early launches",
-                    "Dedicated support to help you reach your first sale faster",
-                    "A chance to co-create the future of seller rewards with us"
+                    t('benefit1'),
+                    t('benefit2'),
+                    t('benefit3'),
+                    t('benefit4')
                   ].map((text, idx) => (
                     <div key={idx} className="flex items-start gap-3">
                       <div className="mt-0.5 flex-shrink-0 text-[#FF6600] font-black">
@@ -398,7 +624,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     <Users size={24} />
                   </div>
                   <div className="text-3xl sm:text-4xl font-black text-blue-600">5.6K+</div>
-                  <div className="text-xs sm:text-sm font-bold text-slate-500">Seller community</div>
+                  <div className="text-xs sm:text-sm font-bold text-slate-500">{t('community')}</div>
                 </div>
 
                 {/* Metric 2 */}
@@ -407,7 +633,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     <ShoppingBag size={24} />
                   </div>
                   <div className="text-3xl sm:text-4xl font-black text-[#059669]">24×7</div>
-                  <div className="text-xs sm:text-sm font-bold text-slate-500">Online Business</div>
+                  <div className="text-xs sm:text-sm font-bold text-slate-500">{t('onlineBusiness')}</div>
                 </div>
 
                 {/* Metric 3 */}
@@ -416,7 +642,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     <Calendar size={24} />
                   </div>
                   <div className="text-3xl sm:text-4xl font-black text-[#D97706]">7</div>
-                  <div className="text-xs sm:text-sm font-bold text-slate-500">Weekly Payout Cycle</div>
+                  <div className="text-xs sm:text-sm font-bold text-slate-500">{t('payoutCycle')}</div>
                 </div>
 
                 {/* Metric 4 */}
@@ -425,7 +651,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     <Package size={24} />
                   </div>
                   <div className="text-3xl sm:text-4xl font-black text-[#7C3AED]">240037+</div>
-                  <div className="text-xs sm:text-sm font-bold text-slate-500">Countrywide Orders</div>
+                  <div className="text-xs sm:text-sm font-bold text-slate-500">{t('orders')}</div>
                 </div>
               </div>
             </div>
@@ -436,16 +662,13 @@ export default function BecomeSellerPage({ onBackToHome }) {
               {/* Left Side: Text and benefits features */}
               <div className="md:col-span-7 space-y-6 text-left">
                 {/* Big Heading */}
-                <h2 className="text-3xl sm:text-4xl font-black text-[#0f2a4a] leading-tight">
-                  Why do sellers love<br />
-                  <span className="text-[#FF6600]">selling on Goroly Shop?</span>
+                <h2 className="text-3xl sm:text-4xl font-black text-[#0f2a4a] leading-tight whitespace-pre-line">
+                  {t('whyTitle')}
                 </h2>
 
                 {/* Subtitle Paragraph */}
                 <p className="text-slate-500 text-sm sm:text-base font-semibold leading-relaxed max-w-xl">
-                  From first sale to full-scale growth Goroly Shop gives you the tools, visibility, and support to succeed. 
-                  100k+ customers across Bangladesh trust Goroly Shop as their go-to online marketplace. It's no wonder over 
-                  5.6K sellers choose us to showcase and sell their products 24/7.
+                  {t('whySub')}
                 </p>
 
                 {/* Features detail list */}
@@ -457,10 +680,10 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     </div>
                     <div className="space-y-1">
                       <h4 className="font-extrabold text-slate-800 text-sm sm:text-base">
-                        Opportunity (reach more customers)
+                        {t('oppTitle')}
                       </h4>
                       <p className="text-slate-500 text-xs sm:text-sm font-semibold max-w-lg leading-relaxed">
-                        100k+ customers & access to 500+ seasonal sales events, promotions, and campaigns to boost your visibility.
+                        {t('oppSub')}
                       </p>
                     </div>
                   </div>
@@ -472,10 +695,10 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     </div>
                     <div className="space-y-1">
                       <h4 className="font-extrabold text-slate-800 text-sm sm:text-base">
-                        Support (24/7 dedicated helper)
+                        {t('supTitle')}
                       </h4>
                       <p className="text-slate-500 text-xs sm:text-sm font-semibold max-w-lg leading-relaxed">
-                        Direct access to our dedicated merchant support team and resources to help you solve store issues instantly.
+                        {t('supSub')}
                       </p>
                     </div>
                   </div>
@@ -512,8 +735,8 @@ export default function BecomeSellerPage({ onBackToHome }) {
               `}} />
 
               <div className="max-w-7xl mx-auto px-6 sm:px-12 text-center space-y-4 mb-12">
-                <h2 className="text-3xl sm:text-4xl font-black text-[#0f2a4a]">Seller Success Stories</h2>
-                <p className="text-slate-500 text-sm sm:text-base font-semibold">5.6K+ sellers already trust Goroly Shop to grow their online business.</p>
+                <h2 className="text-3xl sm:text-4xl font-black text-[#0f2a4a]">{t('successTitle')}</h2>
+                <p className="text-slate-500 text-sm sm:text-base font-semibold">{t('successSub')}</p>
               </div>
 
               {/* Slider Track */}
@@ -525,32 +748,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                 {/* Marquee Wrapper scrolling Left to Right */}
                 <div className="flex gap-6 w-max animate-marquee-reverse">
                   {/* First list of cards */}
-                  {[
-                    {
-                      text: "Goroly Shop আমাদের জন্য নতুন এক সুযোগের দরজা খুলেছে। এই প্ল্যাটফর্মের মাধ্যমে আমরা সহজে গ্রাহকের কাছে পৌঁছাতে পারছি। আমরা বিশ্বাস করি, ভবিষ্যতে এই প্ল্যাটফর্ম আমাদের ব্যবসাকে আরও এগিয়ে নেবে।",
-                      logoText: "TW",
-                      name: "TRADESWORTH",
-                      title: "TRADESWORTH HOUSEHOLD LTD."
-                    },
-                    {
-                      text: "Goroly Shop আমাদের ব্যবসায় নতুন মাত্রা যোগ করেছে। এই প্ল্যাটফর্মে আমরা আমাদের পণ্য সঠিকভাবে উপস্থাপন করতে পারছি এবং গ্রাহকের সাথে সহজে যুক্ত হতে পারছি। নির্ভরযোগ্য সেবা ও আধুনিক ব্যবস্থাপনার কারণে Goroly Shop বিক্রেতাহাদের জন্য একটি কার্যকর সমাধান হয়ে উঠেছে।",
-                      logoText: "AV",
-                      name: "Avonee",
-                      title: "Avonee"
-                    },
-                    {
-                      text: "Wishing Goroly Shop continued success and growth ahead. It was a pleasure being part of the journey with you. Reliable system and extremely convenient support.",
-                      logoText: "TL",
-                      name: "Team",
-                      title: "Team Lotto"
-                    },
-                    {
-                      text: "Onboarding was smooth and direct. Our order volumes went up significantly. The weekly payout cycle ensures we always have steady working capital to expand.",
-                      logoText: "AS",
-                      name: "Apex",
-                      title: "Apex Footwear Ltd."
-                    }
-                  ].map((t, idx) => (
+                  {stories.map((st, idx) => (
                     <div key={`c1-${idx}`} className="bg-white rounded-[32px] border border-slate-100 p-8 w-[360px] sm:w-[420px] flex-shrink-0 shadow-sm hover:shadow-md transition duration-300">
                       <div className="space-y-6 text-left">
                         {/* Blue Quote Icon */}
@@ -558,39 +756,14 @@ export default function BecomeSellerPage({ onBackToHome }) {
                         
                         {/* Review text */}
                         <p className="text-slate-600 text-sm font-semibold leading-relaxed">
-                          {t.text}
+                          {st.text}
                         </p>
                       </div>
                     </div>
                   ))}
 
                   {/* Second identical list of cards for infinite looping */}
-                  {[
-                    {
-                      text: "Goroly Shop আমাদের জন্য নতুন এক সুযোগের দরজা খুলেছে। এই প্ল্যাটফর্মের মাধ্যমে আমরা সহজে গ্রাহকের কাছে পৌঁছাতে পারছি। আমরা বিশ্বাস করি, ভবিষ্যতে এই প্ল্যাটফর্ম আমাদের ব্যবসাকে আরও এগিয়ে নেবে।",
-                      logoText: "TW",
-                      name: "TRADESWORTH",
-                      title: "TRADESWORTH HOUSEHOLD LTD."
-                    },
-                    {
-                      text: "Goroly Shop আমাদের ব্যবসায় নতুন মাত্রা যোগ করেছে। এই প্ল্যাটফর্মে আমরা আমাদের পণ্য সঠিকভাবে উপস্থাপন করতে পারছি এবং গ্রাহকের সাথে সহজে যুক্ত হতে পারছি। নির্ভরযোগ্য সেবা ও আধুনিক ব্যবস্থাপনার কারণে Goroly Shop বিক্রেতাহাদের জন্য একটি কার্যকর সমাধান হয়ে উঠেছে।",
-                      logoText: "AV",
-                      name: "Avonee",
-                      title: "Avonee"
-                    },
-                    {
-                      text: "Wishing Goroly Shop continued success and growth ahead. It was a pleasure being part of the journey with you. Reliable system and extremely convenient support.",
-                      logoText: "TL",
-                      name: "Team",
-                      title: "Team Lotto"
-                    },
-                    {
-                      text: "Onboarding was smooth and direct. Our order volumes went up significantly. The weekly payout cycle ensures we always have steady working capital to expand.",
-                      logoText: "AS",
-                      name: "Apex",
-                      title: "Apex Footwear Ltd."
-                    }
-                  ].map((t, idx) => (
+                  {stories.map((st, idx) => (
                     <div key={`c2-${idx}`} className="bg-white rounded-[32px] border border-slate-100 p-8 w-[360px] sm:w-[420px] flex-shrink-0 shadow-sm hover:shadow-md transition duration-300">
                       <div className="space-y-6 text-left">
                         {/* Blue Quote Icon */}
@@ -598,7 +771,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                         
                         {/* Review text */}
                         <p className="text-slate-600 text-sm font-semibold leading-relaxed">
-                          {t.text}
+                          {st.text}
                         </p>
                       </div>
                     </div>
@@ -619,8 +792,8 @@ export default function BecomeSellerPage({ onBackToHome }) {
                 <div className="mx-auto w-12 h-12 bg-[#FF6600]/10 rounded-2xl flex items-center justify-center text-[#FF6600]">
                   <Store size={24} />
                 </div>
-                <h2 className="text-2xl font-black text-slate-800">Welcome Back</h2>
-                <p className="text-slate-400 text-xs font-semibold">Login to your Goroly Shop Seller Center dashboard</p>
+                <h2 className="text-2xl font-black text-slate-800">{t('welcomeBack')}</h2>
+                <p className="text-slate-400 text-xs font-semibold">{t('loginSub')}</p>
               </div>
 
               {errorMsg && (
@@ -631,7 +804,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
               <form onSubmit={handleLoginSubmit} className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 ml-1">Email Address</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 ml-1">{t('emailLabel')}</label>
                   <div className="relative">
                     <input
                       type="email"
@@ -646,7 +819,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 ml-1">Password</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 ml-1">{t('passwordLabel')}</label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
@@ -660,7 +833,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     <button 
                       type="button" 
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-3.5 text-slate-400 hover:text-slate-600 transition"
+                      className="absolute right-4 top-3.5 text-slate-400 hover:text-slate-600 transition border-0 bg-transparent cursor-pointer"
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -670,16 +843,16 @@ export default function BecomeSellerPage({ onBackToHome }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-2xl shadow-lg shadow-[#FF6600]/10 transition flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-2xl shadow-lg shadow-[#FF6600]/10 transition flex items-center justify-center gap-2 cursor-pointer border-0"
                 >
                   {loading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Authenticating...
+                      {t('authenticating')}
                     </>
                   ) : (
                     <>
-                      Login to Dashboard
+                      {t('loginButton')}
                       <ArrowRight size={16} />
                     </>
                   )}
@@ -688,13 +861,13 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
               <div className="border-t border-slate-100 pt-4 text-center">
                 <p className="text-xs text-slate-500">
-                  Don't have a seller account?{' '}
+                  {t('noAccount')}{' '}
                   <button
                     type="button"
                     onClick={() => handleModeChange('register')}
-                    className="text-[#FF6600] font-extrabold hover:underline"
+                    className="text-[#FF6600] font-extrabold hover:underline cursor-pointer border-0 bg-transparent"
                   >
-                    Create Account
+                    {t('createAccount')}
                   </button>
                 </p>
               </div>
@@ -710,8 +883,8 @@ export default function BecomeSellerPage({ onBackToHome }) {
               
               <div className="text-center flex flex-col items-center">
                 <div className="inline-flex flex-col items-center bg-[#FFF5F0] border-2 border-[#FF6600] rounded-3xl px-8 py-4 shadow-md transition duration-300 hover:scale-[1.02] cursor-default">
-                  <h2 className="text-2xl sm:text-3xl font-black text-[#FF6600] tracking-tight">Shop Registration</h2>
-                  <p className="text-[#FF6600]/80 text-xs sm:text-sm font-extrabold mt-1.5">If you are willing to become a seller on Goroly Shop, register here</p>
+                  <h2 className="text-2xl sm:text-3xl font-black text-[#FF6600] tracking-tight">{t('shopRegistration')}</h2>
+                  <p className="text-[#FF6600]/80 text-xs sm:text-sm font-extrabold mt-1.5">{t('registerSub')}</p>
                 </div>
               </div>
 
@@ -727,11 +900,11 @@ export default function BecomeSellerPage({ onBackToHome }) {
                   <div className="space-y-4">
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        Shop Name <span className="text-orange-500">*</span>
+                        {t('shopName')} <span className="text-orange-500">*</span>
                       </label>
                       <input
                         type="text"
-                        placeholder="Enter your shop name"
+                        placeholder={t('enterShopName')}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
@@ -741,11 +914,11 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        Owner / Representative Name <span className="text-orange-500">*</span>
+                        {t('ownerName')} <span className="text-orange-500">*</span>
                       </label>
                       <input
                         type="text"
-                        placeholder="Enter your full name"
+                        placeholder={t('enterFullName')}
                         value={ownerName}
                         onChange={(e) => setOwnerName(e.target.value)}
                         className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
@@ -755,11 +928,11 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        Email Address <span className="text-orange-500">*</span>
+                        {t('email')} <span className="text-orange-500">*</span>
                       </label>
                       <input
                         type="email"
-                        placeholder="Enter your email address"
+                        placeholder={t('enterEmail')}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
@@ -769,12 +942,12 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        Password <span className="text-orange-500">*</span>
+                        {t('password')} <span className="text-orange-500">*</span>
                       </label>
                       <div className="relative">
                         <input
                           type={showPassword ? "text" : "password"}
-                          placeholder="Enter password"
+                          placeholder={t('enterPassword')}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           className="w-full pl-4 pr-11 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
@@ -783,7 +956,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                         <button 
                           type="button" 
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-4 top-3.5 text-slate-400 hover:text-slate-600 transition"
+                          className="absolute right-4 top-3.5 text-slate-400 hover:text-slate-600 transition border-0 bg-transparent cursor-pointer"
                         >
                           {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
@@ -793,12 +966,12 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1 flex items-center gap-1">
                         <Smartphone size={16} className="text-[#FF6600]" />
-                        Owner / Representative Phone <span className="text-orange-500">*</span>
+                        {t('phone')} <span className="text-orange-500">*</span>
                       </label>
                       <div className="flex gap-2">
                         <input
                           type="tel"
-                          placeholder="Enter your phone number"
+                          placeholder={t('enterPhone')}
                           value={phone}
                           onChange={(e) => {
                             setPhone(e.target.value);
@@ -820,7 +993,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                               disabled={otpLoading}
                               className="px-3.5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white text-xs font-bold rounded-lg transition duration-300 cursor-pointer whitespace-nowrap border-0"
                             >
-                              {otpLoading ? 'Sending...' : 'Send SMS'}
+                              {otpLoading ? t('sending') : t('sendSms')}
                             </button>
                             <button
                               type="button"
@@ -828,7 +1001,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                               disabled={otpLoading}
                               className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition duration-300 cursor-pointer whitespace-nowrap border-0"
                             >
-                              {otpLoading ? 'Calling...' : 'Call Me'}
+                              {otpLoading ? t('calling') : t('callMe')}
                             </button>
                           </div>
                         ) : (
@@ -840,7 +1013,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                               phoneVerified ? 'bg-emerald-500 cursor-default' : 'bg-[#FF6600] hover:bg-[#e05a00] cursor-pointer'
                             }`}
                           >
-                            {otpLoading ? 'Verifying...' : phoneVerified ? 'Verified' : 'Verify'}
+                            {otpLoading ? t('verifying') : phoneVerified ? t('verified') : t('verify')}
                           </button>
                         )}
                       </div>
@@ -848,11 +1021,11 @@ export default function BecomeSellerPage({ onBackToHome }) {
                       {otpSent && !phoneVerified && (
                         <div className="mt-3 space-y-1.5">
                           <label className="text-xs font-bold text-slate-700 block ml-1">
-                            Enter 6-digit OTP code <span className="text-orange-500">*</span>
+                            {t('enterOtpLabel')} <span className="text-orange-500">*</span>
                           </label>
                           <input
                             type="text"
-                            placeholder="Enter OTP"
+                            placeholder={t('enterOtpPlaceholder')}
                             value={otpCode}
                             onChange={(e) => setOtpCode(e.target.value)}
                             className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300 font-mono tracking-widest text-center"
@@ -866,14 +1039,14 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     </div>
 
                     <div>
-                      <h3 className="text-[#FF6600] font-bold text-base mt-6 mb-3 ml-1">Social Media Links</h3>
+                      <h3 className="text-[#FF6600] font-bold text-base mt-6 mb-3 ml-1">{t('socialMedia')}</h3>
                       
                       <div className="space-y-4">
                         <div>
-                          <label className="text-sm font-semibold text-slate-700 block mb-1.5 ml-1">Facebook</label>
+                          <label className="text-sm font-semibold text-slate-700 block mb-1.5 ml-1">{t('facebook')}</label>
                           <input
                             type="url"
-                            placeholder="Enter your Facebook page link"
+                            placeholder={t('enterFacebook')}
                             value={facebook}
                             onChange={(e) => setFacebook(e.target.value)}
                             className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
@@ -881,10 +1054,10 @@ export default function BecomeSellerPage({ onBackToHome }) {
                         </div>
 
                         <div>
-                          <label className="text-sm font-semibold text-slate-700 block mb-1.5 ml-1">Instagram</label>
+                          <label className="text-sm font-semibold text-slate-700 block mb-1.5 ml-1">{t('instagram')}</label>
                           <input
                             type="url"
-                            placeholder="Enter your Instagram page link"
+                            placeholder={t('enterInstagram')}
                             value={instagram}
                             onChange={(e) => setInstagram(e.target.value)}
                             className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300"
@@ -896,11 +1069,11 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                   {/* Right Column (Address Details) */}
                   <div className="md:pl-8 space-y-4">
-                    <h3 className="text-[#FF6600] font-bold text-base mb-3">Address</h3>
+                    <h3 className="text-[#FF6600] font-bold text-base mb-3">{t('address')}</h3>
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        Division <span className="text-orange-500">*</span>
+                        {t('division')} <span className="text-orange-500">*</span>
                       </label>
                       <div className="relative">
                         <select
@@ -913,7 +1086,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                           className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300 appearance-none cursor-pointer"
                           required
                         >
-                          <option value="" disabled>-- Please choose your division --</option>
+                          <option value="" disabled>{t('chooseDivision')}</option>
                           {Object.keys(DIVISION_DISTRICTS).map((div) => (
                             <option key={div} value={div}>{div}</option>
                           ))}
@@ -924,7 +1097,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        District <span className="text-orange-500">*</span>
+                        {t('district')} <span className="text-orange-500">*</span>
                       </label>
                       <div className="relative">
                         <select
@@ -937,7 +1110,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                           required
                           disabled={!division}
                         >
-                          <option value="" disabled>-- Please choose your city/district --</option>
+                          <option value="" disabled>{t('chooseDistrict')}</option>
                           {division && DIVISION_DISTRICTS[division].map((dist) => (
                             <option key={dist} value={dist}>{dist}</option>
                           ))}
@@ -948,7 +1121,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        Police Station/Upazila <span className="text-orange-500">*</span>
+                        {t('upazila')} <span className="text-orange-500">*</span>
                       </label>
                       <div className="relative">
                         <select
@@ -958,7 +1131,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
                           required
                           disabled={!district}
                         >
-                          <option value="" disabled>-- Enter your Police Station/Upazila --</option>
+                          <option value="" disabled>{t('chooseUpazila')}</option>
                           {district && (DISTRICT_UPAZILAS[district] || [`${district} Sadar`]).map((upz) => (
                             <option key={upz} value={upz}>{upz}</option>
                           ))}
@@ -969,11 +1142,11 @@ export default function BecomeSellerPage({ onBackToHome }) {
 
                     <div>
                       <label className="text-sm font-bold text-slate-800 block mb-1.5 ml-1">
-                        House / Road & Additional Instruction <span className="text-orange-500">*</span>
+                        {t('addressDetails')} <span className="text-orange-500">*</span>
                       </label>
                       <textarea
                         rows="3"
-                        placeholder="Enter house / road & additional instruction"
+                        placeholder={t('enterAddressDetails')}
                         value={addressDetails}
                         onChange={(e) => setAddressDetails(e.target.value)}
                         className="w-full px-4 py-2.5 bg-slate-50 border border-[#FF6600] rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#FF6600]/10 focus:border-[#FF6600] transition duration-300 resize-none"
@@ -988,28 +1161,28 @@ export default function BecomeSellerPage({ onBackToHome }) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full max-w-lg py-3.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-full transition shadow-lg shadow-[#FF6600]/15 flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full max-w-lg py-3.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-full transition shadow-lg shadow-[#FF6600]/15 flex items-center justify-center gap-2 cursor-pointer border-0"
                   >
                     {loading ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Submitting Information...
+                        {t('submittingInfo')}
                       </>
                     ) : (
                       <>
-                        Submit Information
+                        {t('submitInfo')}
                       </>
                     )}
                   </button>
 
                   <p className="text-sm text-slate-500 font-bold">
-                    Already have an account ?{' '}
+                    {t('alreadyHaveAccount')}{' '}
                     <button
                       type="button"
                       onClick={() => handleModeChange('login')}
-                      className="text-[#FF6600] font-extrabold hover:underline cursor-pointer"
+                      className="text-[#FF6600] font-extrabold hover:underline cursor-pointer border-0 bg-transparent"
                     >
-                      Log In
+                      {t('logIn')}
                     </button>
                   </p>
                 </div>

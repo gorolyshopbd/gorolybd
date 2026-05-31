@@ -115,8 +115,8 @@ export default function UserDashboard() {
         <aside className="w-full md:w-64 bg-[#0B1329] text-white border-r border-slate-950/20 p-6 flex flex-col justify-between">
           <div className="space-y-6">
             <div className="space-y-1.5">
-              <h2 className="text-lg font-bold text-white tracking-tight flex items-center">
-                Shopio<span className="text-blue-500 font-black">.</span>
+              <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-1" style={{ fontWeight: 900 }}>
+                Goroly<span className="text-[#FF6600] font-black" style={{ fontWeight: 900 }}>Shop</span>
               </h2>
               <p className="text-xs text-slate-400">Manage orders and configurations.</p>
             </div>
