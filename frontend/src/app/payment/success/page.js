@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState('Verifying...');
@@ -42,24 +42,32 @@ export default function PaymentSuccessPage() {
   }, [searchParams]);
 
   return (
+    <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center space-y-6">
+      {success ? (
+        <CheckCircle className="mx-auto text-emerald-500 w-20 h-20" />
+      ) : (
+        <XCircle className="mx-auto text-red-500 w-20 h-20" />
+      )}
+      <h1 className="text-2xl font-black text-slate-800">
+        {success ? 'Payment Successful' : 'Payment Status'}
+      </h1>
+      <p className="text-slate-600 font-medium">{status}</p>
+      <button
+        onClick={() => router.push('/')}
+        className="w-full py-3 bg-[#FF6600] text-white font-bold rounded-xl hover:bg-orange-600 transition flex items-center justify-center gap-2"
+      >
+        Return to Store <ArrowRight size={16} />
+      </button>
+    </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center space-y-6">
-        {success ? (
-          <CheckCircle className="mx-auto text-emerald-500 w-20 h-20" />
-        ) : (
-          <XCircle className="mx-auto text-red-500 w-20 h-20" />
-        )}
-        <h1 className="text-2xl font-black text-slate-800">
-          {success ? 'Payment Successful' : 'Payment Status'}
-        </h1>
-        <p className="text-slate-600 font-medium">{status}</p>
-        <button
-          onClick={() => router.push('/')}
-          className="w-full py-3 bg-[#FF6600] text-white font-bold rounded-xl hover:bg-orange-600 transition flex items-center justify-center gap-2"
-        >
-          Return to Store <ArrowRight size={16} />
-        </button>
-      </div>
+      <Suspense fallback={<div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center">Loading...</div>}>
+        <PaymentSuccessContent />
+      </Suspense>
     </div>
   );
 }
