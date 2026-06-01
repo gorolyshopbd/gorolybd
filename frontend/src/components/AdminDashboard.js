@@ -71,12 +71,12 @@ export default function AdminDashboard({ onTabChange }) {
       if (!parsedUser.token) {
         localStorage.removeItem('shop_admin_user');
         localStorage.removeItem('shop_admin_token');
-        window.location.href = '/admin/login';
+        window.location.href = '/secure-login';
       } else {
         setUser(parsedUser);
       }
     } else {
-      window.location.href = '/admin/login';
+      window.location.href = '/secure-login';
     }
   }, []);
   const [metrics, setMetrics] = useState({
@@ -2362,7 +2362,7 @@ export default function AdminDashboard({ onTabChange }) {
               if (confirm('Are you sure you want to logout?')) {
                 localStorage.removeItem('shop_admin_token');
                 localStorage.removeItem('shop_admin_user');
-                window.location.href = '/admin/login';
+                window.location.href = '/secure-login';
               }
             }}
             className="p-3 rounded-2xl flex items-center gap-3 hover:bg-slate-800/25 transition cursor-pointer group"
@@ -2474,7 +2474,7 @@ export default function AdminDashboard({ onTabChange }) {
                   if (confirm('Are you sure you want to logout?')) {
                     localStorage.removeItem('shop_admin_token');
                     localStorage.removeItem('shop_admin_user');
-                    window.location.href = '/admin/login';
+                    window.location.href = '/secure-login';
                   }
                 }}
                 className="h-10 bg-white border border-slate-200 rounded-lg pl-2 pr-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition flex items-center gap-2 cursor-pointer shadow-xs"

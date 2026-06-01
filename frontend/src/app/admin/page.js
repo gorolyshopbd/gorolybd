@@ -12,7 +12,7 @@ export default function AdminPage() {
   useEffect(() => {
     const token = localStorage.getItem('shop_admin_token');
     if (!token) {
-      router.push('/admin/login');
+      router.push('/secure-login');
       // Keep checking true so we don't flash content before redirect
     } else {
       setAuthorized(true);
