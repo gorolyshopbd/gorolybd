@@ -29,7 +29,13 @@ services:
       - backend_uploads:/app/uploads
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: https://gorolyshop.com/api
+        NEXT_PUBLIC_API_BASE_URL: https://gorolyshop.com
+        NEXT_PUBLIC_INSFORGE_URL: https://z6zhffa4.ap-southeast.insforge.app
+        NEXT_PUBLIC_INSFORGE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5NzcyMjh9.J0pgpMzyXmtwsXlvYx2LA-1_76b5maqA8d7FkfQjm2c
     container_name: shopio-frontend
     restart: unless-stopped
     expose:

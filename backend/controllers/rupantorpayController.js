@@ -141,19 +141,35 @@ const initiateSellerPayment = async (req, res) => {
 
 // @desc    Verify a RupantorPay payment
 // @route   POST /api/rupantorpay/verify
-// @access  Private
+// @access  Public (called from success page after redirect — user may not be logged in)
 const verifyPayment = async (req, res) => {
   const { transactionId, orderId } = req.body;
-
-  if (!transactionId) {
-    return res.status(400).json({ message: 'transactionId is required' });
-  }
 
   if (!RUPANTORPAY_API_KEY) {
     return res.status(500).json({ message: 'RupantorPay API key not configured on server' });
   }
 
   try {
+    // If no transactionId, check the order status directly (webhook may have updated it)
+    if (!transactionId) {
+      if (orderId) {
+        const { data: order } = await db.database
+          .from('orders')
+          .select('is_paid, payment_result_status, payment_result_id')
+          .eq('id', orderId)
+          .single();
+
+        if (order?.is_paid || order?.payment_result_status === 'SUCCESS') {
+          return res.json({
+            success: true,
+            status: 'completed',
+            data: order,
+          });
+        }
+      }
+      return res.status(400).json({ message: 'transactionId is required' });
+    }
+
     const response = await fetch(`${RUPANTORPAY_API_URL}/verify`, {
       method: 'POST',
       headers: {
@@ -163,7 +179,7 @@ const verifyPayment = async (req, res) => {
       body: JSON.stringify({ transaction_id: transactionId }),
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       console.error('RupantorPay verify error:', data);

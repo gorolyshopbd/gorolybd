@@ -199,32 +199,8 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
         alert(res.error || t('orderPlaceError'));
         return;
       }
-      try {
-        const baseUrl = window.location.origin;
-        const initRes = await fetch(`${API_URL}/rupantorpay/initiate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${user.token}`,
-          },
-          body: JSON.stringify({
-            orderId: res.order._id || res.order.id,
-            amount: totalPrice,
-            successUrl: `${baseUrl}?payment=success&orderId=${res.order._id || res.order.id}`,
-            cancelUrl: `${baseUrl}?payment=cancel&orderId=${res.order._id || res.order.id}`,
-          }),
-        });
-        const initData = await initRes.json();
-        if (initData.success && initData.payment_url) {
-          window.location.href = initData.payment_url;
-        } else {
-          setPlacing(false);
-          alert(initData.message || 'Failed to initiate payment');
-        }
-      } catch (error) {
-        setPlacing(false);
-        alert('Payment initiation failed. Please try again.');
-      }
+      // placeOrder() already initiates RupantorPay and redirects to checkout
+      // No additional action needed here
     } else {
       const res = await placeOrder(orderInfo, paymentMethod, selectedShipping);
       setPlacing(false);

@@ -11,10 +11,16 @@ function PaymentSuccessContent() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    const transactionId = searchParams.get('transaction_id') || searchParams.get('id');
+    const transactionId = searchParams.get('transaction_id')
+      || searchParams.get('tran_id')
+      || searchParams.get('trx_id')
+      || searchParams.get('payment_id')
+      || searchParams.get('txn_id')
+      || searchParams.get('ref_id')
+      || searchParams.get('id');
     const orderId = searchParams.get('orderId');
 
-    if (!transactionId) {
+    if (!transactionId && !orderId) {
       setStatus('No transaction ID found.');
       return;
     }
@@ -26,7 +32,7 @@ function PaymentSuccessContent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ transactionId, orderId }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (data.success) {
           setSuccess(true);
           setStatus('Payment verified successfully!');
