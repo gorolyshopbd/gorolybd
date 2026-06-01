@@ -341,7 +341,7 @@ export default function AuthModal({ isOpen, onClose }) {
             <>
             {/* Title */}
             <div className="text-center space-y-1 mb-6">
-              <h2 className="text-xl font-bold text-slate-800">
+              <h2 className="text-xl font-bold text-[#FF6600]">
                 {authMode === 'login' && 'Welcome Back!'}
                 {authMode === 'register' && 'Create Account'}
                 {authMode === 'otp' && 'OTP Verification'}

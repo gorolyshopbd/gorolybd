@@ -1479,6 +1479,7 @@ export default function AdminDashboard({ onTabChange }) {
           order: catForm.order
         }),
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setCatForm({
           name: '', image: '', order: 0, rootCategory: '', slug: '',
@@ -1486,8 +1487,12 @@ export default function AdminDashboard({ onTabChange }) {
           featured: false, status: true
         });
         fetchCategories();
+      } else {
+        alert(data.message || 'Failed to create category');
       }
-    } catch {}
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   const handleUpdateCategory = async (e) => {
@@ -1502,6 +1507,7 @@ export default function AdminDashboard({ onTabChange }) {
           order: catForm.order
         }),
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setEditingCat(null);
         setCatForm({
@@ -1510,16 +1516,27 @@ export default function AdminDashboard({ onTabChange }) {
           featured: false, status: true
         });
         fetchCategories();
+      } else {
+        alert(data.message || 'Failed to update category');
       }
-    } catch {}
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   const handleDeleteCategory = async (id) => {
     if (!confirm('Delete this category?')) return;
     try {
       const res = await fetch(`${API_URL}/categories/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${user.token}` } });
-      if (res.ok) fetchCategories();
-    } catch {}
+      if (res.ok) {
+        fetchCategories();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.message || 'Failed to delete category');
+      }
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   // Brand CRUD

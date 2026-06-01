@@ -28,7 +28,6 @@ export const createCategory = async (req, res) => {
     const { data: category, error } = await db.database.from('categories').insert({
       name,
       image_url: image || '',
-      banner_url: req.body.banner || '',
       sort_order: order || 0
     }).select().single();
     
@@ -41,12 +40,11 @@ export const createCategory = async (req, res) => {
 
 export const updateCategory = async (req, res) => {
   try {
-    const { name, image, order, banner } = req.body;
+    const { name, image, order } = req.body;
     
     const updateData = {};
     if (name) updateData.name = name;
     if (image !== undefined) updateData.image_url = image;
-    if (banner !== undefined) updateData.banner_url = banner;
     if (order !== undefined) updateData.sort_order = order;
     
     const { data: category, error } = await db.database.from('categories').update(updateData).eq('id', req.params.id).select().single();
