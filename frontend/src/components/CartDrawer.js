@@ -17,6 +17,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
     coupon,
     applyCouponCode,
     setCoupon,
+    clearCart,
     placeOrder,
     sendOtpCode,
     verifyOtpCode,
@@ -190,13 +191,56 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
       advancePayment: needsAdvancePayment,
       advanceAmount: needsAdvancePayment ? advanceAmount : 0,
     };
-    const res = await placeOrder(orderInfo, paymentMethod, selectedShipping);
-    setPlacing(false);
-    if (res.success) {
-      setPlacedOrder(res.order);
-      setCheckoutStep('success');
+
+    if (paymentMethod === 'RupantorPay') {
+      const res = await placeOrder(orderInfo, paymentMethod, selectedShipping);
+      if (!res.success) {
+        setPlacing(false);
+        alert(res.error || t('orderPlaceError'));
+        return;
+      }
+      try {
+        const baseUrl = window.location.origin;
+        const initRes = await fetch(`${API_URL}/rupantorpay/initiate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({
+            orderId: res.order._id || res.order.id,
+            amount: totalPrice,
+            successUrl: `${baseUrl}?payment=success&orderId=${res.order._id || res.order.id}`,
+            cancelUrl: `${baseUrl}?payment=cancel&orderId=${res.order._id || res.order.id}`,
+          }),
+        });
+        const initData = await initRes.json();
+        if (initData.success && initData.payment_url) {
+          window.location.href = initData.payment_url;
+        } else {
+          setPlacing(false);
+          alert(initData.message || 'Failed to initiate payment');
+        }
+      } catch (error) {
+        setPlacing(false);
+        alert('Payment initiation failed. Please try again.');
+      }
     } else {
-      alert(res.error || t('orderPlaceError'));
+      const res = await placeOrder(orderInfo, paymentMethod, selectedShipping);
+      setPlacing(false);
+      if (res.success) {
+        setPlacedOrder(res.order);
+        setCheckoutStep('success');
+      } else {
+        alert(res.error || t('orderPlaceError'));
+        if (
+          res.error === 'One or more products in your cart no longer exist. Please clear your cart and try again.' ||
+          res.error === 'Invalid product items in cart. Please clear your cart and try again.'
+        ) {
+          clearCart();
+          setCheckoutStep('cart');
+        }
+      }
     }
   };
 
@@ -729,6 +773,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                       { id: 'bKash', name: 'bKash Wallet', sub: t('instantMobilePayment') },
                       { id: 'Nagad', name: 'Nagad Wallet', sub: t('fastMobileBanking') },
                       { id: 'SSLCommerz', name: 'SSLCommerz Gateway', sub: t('gatewayMethods') },
+                      { id: 'RupantorPay', name: 'RupantorPay', sub: t('gatewayMethods') },
                     ].map((method) => (
                       <button
                         key={method.id}

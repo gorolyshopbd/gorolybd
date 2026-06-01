@@ -21,6 +21,8 @@ import sellerSettingsRoutes from './routes/sellerSettingsRoutes.js';
 import sellerPackageRoutes from './routes/sellerPackageRoutes.js';
 import sellerSubscriptionRoutes from './routes/sellerSubscriptionRoutes.js';
 import rewardRoutes from './routes/rewardRoutes.js';
+import rupantorpayRoutes from './routes/rupantorpayRoutes.js';
+import subscriberRoutes from './routes/subscriberRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -32,6 +34,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/users', userRoutes);
@@ -53,6 +56,8 @@ app.use('/api/seller-settings', sellerSettingsRoutes);
 app.use('/api/seller-packages', sellerPackageRoutes);
 app.use('/api/seller-subscriptions', sellerSubscriptionRoutes);
 app.use('/api/rewards', rewardRoutes);
+app.use('/api/rupantorpay', rupantorpayRoutes);
+app.use('/api/subscribers', subscriberRoutes);
 
 // Serve static uploads folder
 const __filename = fileURLToPath(import.meta.url);

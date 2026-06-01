@@ -51,6 +51,11 @@ const authUser = async (req, res) => {
     console.log('Login attempt:', email, user, error);
     
     if (user && await bcrypt.compare(password, user.password_hash)) {
+      if (req.body.accountType) {
+        if (req.body.accountType === 'seller' && user.role === 'customer' && !user.is_admin) {
+          return res.status(401).json({ message: 'Access denied. You are not a seller.' });
+        }
+      }
       res.json({
         ...sanitizeUser(user),
         token: generateToken(user.id),
@@ -116,6 +121,7 @@ const registerUser = async (req, res) => {
 
     if (error) throw error;
 
+    let subscriptionId = null;
     if (assignedRole === 'seller' && package_id) {
       const subData = {
         user_id: user.id,
@@ -125,15 +131,18 @@ const registerUser = async (req, res) => {
         status: (payment_method && payment_method !== 'Cash on Delivery') ? 'pending' : 'active',
         start_date: new Date().toISOString(),
       };
-      const { error: subError } = await db.database.from('seller_subscriptions').insert([subData]);
+      const { data: subRet, error: subError } = await db.database.from('seller_subscriptions').insert([subData]).select().single();
       if (subError) {
         console.error('Subscription creation failed:', subError);
+      } else if (subRet) {
+        subscriptionId = subRet.id;
       }
     }
 
     res.status(201).json({
       ...sanitizeUser(user),
       token: generateToken(user.id),
+      subscriptionId,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -474,7 +483,37 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// @desc    Reset password using OTP
+// @route   POST /api/users/reset-password-otp
+// @access  Public
+const resetPasswordWithOtp = async (req, res) => {
+  const { phone, otp, newPassword } = req.body;
 
+  if (!phone || !otp || !newPassword) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  const isValid = checkOTP(phone, otp);
+  if (!isValid) {
+    return res.status(400).json({ message: 'Invalid or expired OTP code' });
+  }
+
+  try {
+    const { data: users } = await db.database.from('users').select('id').or(`phone.eq.${phone},email.eq.${phone}@shopio.com`);
+    const user = users && users.length > 0 ? users[0] : null;
+    if (user) {
+      const salt = await bcrypt.genSalt(10);
+      const password_hash = await bcrypt.hash(newPassword, salt);
+      
+      await db.database.from('users').update({ password_hash }).eq('id', user.id);
+      return res.json({ message: 'Password reset successful' });
+    }
+
+    res.status(404).json({ message: 'Account not found with this phone number' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 // @desc    OAuth authentication
 // @route   POST /api/users/oauth
 // @access  Public
@@ -757,6 +796,7 @@ export {
   changeEmail,
   forgotPassword,
   resetPassword,
+  resetPasswordWithOtp,
   oauthLogin,
   getUsers,
   getUserById,

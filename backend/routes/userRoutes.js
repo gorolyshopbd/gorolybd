@@ -12,6 +12,7 @@ import {
   changeEmail,
   forgotPassword,
   resetPassword,
+  resetPasswordWithOtp,
   oauthLogin,
   getUsers,
   getUserById,
@@ -74,6 +75,7 @@ router.post('/otp/send', sendOTP);
 router.post('/otp/verify', verifyOTPCode);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
+router.post('/reset-password-otp', resetPasswordWithOtp);
 router.post('/oauth', oauthLogin);
 
 // Private routes (user profile)

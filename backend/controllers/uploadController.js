@@ -12,13 +12,20 @@ const uploadToInsForge = async (file, folder = 'products') => {
 
   if (error) throw error;
 
-  const storageKey = data.key || key;
+  const storageKey = data.key || data.path || key;
+
+  // Get the public URL — storage.upload() only returns path/id, not a URL
+  const { data: publicUrlData } = db.storage
+    .from('product')
+    .getPublicUrl(storageKey);
+
+  const publicUrl = publicUrlData?.publicUrl || publicUrlData?.url || '';
 
   const { error: imgError } = await db.database.from('images').insert({
     filename: storageKey,
     original_name: file.originalname,
     storage_path: storageKey,
-    public_url: data.url,
+    public_url: publicUrl,
     mime_type: file.mimetype,
     size_bytes: file.size,
     bucket: 'product',
@@ -26,7 +33,7 @@ const uploadToInsForge = async (file, folder = 'products') => {
 
   if (imgError) console.error('Failed to save image record:', imgError);
 
-  return { url: data.url, key: storageKey };
+  return { url: publicUrl, key: storageKey };
 };
 
 const uploadImage = async (req, res) => {

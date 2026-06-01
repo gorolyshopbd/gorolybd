@@ -475,13 +475,13 @@ export const ShopProvider = ({ children }) => {
   }, [cartItems]);
 
   // Auth Functions
-  const login = async (email, password) => {
+  const login = async (email, password, accountType) => {
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/users/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, accountType }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Login failed');
@@ -669,6 +669,24 @@ export const ShopProvider = ({ children }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, token, newPassword }),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (!res.ok) throw new Error(data.message || 'Failed to reset password');
+      return { success: true };
+    } catch (error) {
+      setLoading(false);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const resetPasswordWithOtp = async (phone, otp, newPassword) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/users/reset-password-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, otp, newPassword }),
       });
       const data = await res.json();
       setLoading(false);
@@ -877,6 +895,32 @@ export const ShopProvider = ({ children }) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to place order');
 
+      if (paymentMethod === 'RupantorPay') {
+        try {
+          const initiateRes = await fetch(`${API_URL}/rupantorpay/initiate`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${user.token}`,
+            },
+            body: JSON.stringify({
+              orderId: data._id || data.id,
+              amount: shippingAddress?.advancePayment ? shippingAddress.advanceAmount : totalPrice,
+            }),
+          });
+          const initiateData = await initiateRes.json();
+          if (initiateRes.ok && initiateData.payment_url) {
+            clearCart();
+            window.location.href = initiateData.payment_url;
+            return { success: true, order: data, redirecting: true };
+          } else {
+            return { success: false, error: initiateData.message || 'Failed to initiate RupantorPay' };
+          }
+        } catch (initErr) {
+          return { success: false, error: 'Failed to initiate RupantorPay checkout' };
+        }
+      }
+
       clearCart();
       return { success: true, order: data };
     } catch (error) {
@@ -997,6 +1041,7 @@ export const ShopProvider = ({ children }) => {
         changeUserEmail,
         forgotPasswordRequest,
         resetPasswordSubmit,
+        resetPasswordWithOtp,
         socialOauthLogin,
         addToCart,
         removeFromCart,

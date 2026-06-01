@@ -9,7 +9,8 @@ export const getCategories = async (req, res) => {
       ...c,
       _id: c.id,
       order: c.sort_order,
-      image: c.image_url
+      image: c.image_url,
+      banner: c.banner_url || ''
     }));
     res.json(formatted);
   } catch (error) {
@@ -27,6 +28,7 @@ export const createCategory = async (req, res) => {
     const { data: category, error } = await db.database.from('categories').insert({
       name,
       image_url: image || '',
+      banner_url: req.body.banner || '',
       sort_order: order || 0
     }).select().single();
     
@@ -39,17 +41,18 @@ export const createCategory = async (req, res) => {
 
 export const updateCategory = async (req, res) => {
   try {
-    const { name, image, order } = req.body;
+    const { name, image, order, banner } = req.body;
     
     const updateData = {};
     if (name) updateData.name = name;
     if (image !== undefined) updateData.image_url = image;
+    if (banner !== undefined) updateData.banner_url = banner;
     if (order !== undefined) updateData.sort_order = order;
     
     const { data: category, error } = await db.database.from('categories').update(updateData).eq('id', req.params.id).select().single();
     
     if (error || !category) return res.status(404).json({ message: 'Category not found' });
-    res.json({ ...category, _id: category.id });
+    res.json({ message: 'Category updated successfully', ...category, _id: category.id });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -59,7 +62,7 @@ export const deleteCategory = async (req, res) => {
   try {
     const { error } = await db.database.from('categories').delete().eq('id', req.params.id);
     if (error) throw error;
-    res.json({ success: true });
+    res.json({ message: 'Category deleted successfully', success: true });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

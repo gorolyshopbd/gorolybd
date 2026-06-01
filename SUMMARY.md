@@ -35,9 +35,11 @@
 - `onTabChange` prop passed to AdminDashboard for "Back" navigation to store
 
 ## Next Steps
-1. Update CategorySection frontend component to fetch categories from API instead of hardcoded array
-2. Wire up "Subscribe" button in Footer to email collection API
-3. End-to-end test chat flow and flash sale filtering
+1. End-to-end test chat flow and flash sale filtering
+
+## Done Recently
+- **Category API**: Verified `CategorySection.js` is already fetching from the API (`/categories`).
+- **Newsletter Subscription**: Added `subscribers` schema, `POST /api/subscribers` route, and wired up the Subscribe button state and API call in `Footer.js`.
 
 ## Relevant Files
 - `backend/models/Category.js`, `Brand.js`, `ChatMessage.js` (isClosed), `User.js` (phone), `Product.js` (flashSaleStart/End), `Settings.js` (customHeaderCode)

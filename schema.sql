@@ -286,6 +286,11 @@ CREATE TABLE IF NOT EXISTS settings (
   nagad_mode                   TEXT DEFAULT 'Sandbox',
   nagad_enabled                BOOLEAN DEFAULT true,
   nagad_merchant_id            TEXT DEFAULT 'NAGAD12345',
+  -- Rupantor Pay
+  rupantor_pay_mode            TEXT DEFAULT 'Sandbox',
+  rupantor_pay_enabled         BOOLEAN DEFAULT true,
+  rupantor_pay_store_id        TEXT DEFAULT '',
+  rupantor_pay_signature_key   TEXT DEFAULT '',
   -- SSLCommerz
   sslcommerz_mode              TEXT DEFAULT 'Sandbox',
   sslcommerz_enabled           BOOLEAN DEFAULT true,
@@ -297,6 +302,7 @@ CREATE TABLE IF NOT EXISTS settings (
   advance_payment_percent      NUMERIC(5,2) DEFAULT 50,
   -- Analytics
   facebook_pixel_id            TEXT DEFAULT '',
+  facebook_access_token        TEXT DEFAULT '',
   ga4_measurement_id           TEXT DEFAULT '',
   -- Footer
   footer_email                 TEXT DEFAULT 'support@shopio.com',

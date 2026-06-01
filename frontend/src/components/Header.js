@@ -371,7 +371,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
         </div>
 
         {/* ── SECONDARY NAV BAR (Desktop) ── */}
-        <div className="hidden md:block bg-[#FF6600] select-none border-b border-orange-600/20 shadow-md">
+        <div className="hidden md:block bg-gradient-to-r from-amber-500 via-orange-600 to-amber-700 bg-opacity-90 backdrop-blur-sm select-none border-b border-white/20 rounded-b-xl shadow-lg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-12">
 
             {/* Left: Category dropdown + nav links */}
@@ -504,25 +504,25 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
         {/* Mobile Drawer */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-slate-100 px-4 py-4 space-y-3 shadow-lg">
-            <div className="relative flex items-center bg-slate-50/60 focus-within:bg-white border-2 border-slate-100 focus-within:border-[#FF6600] rounded-xl transition duration-300 pr-1 py-1">
-              <Search size={14} className="absolute left-3 text-slate-400" />
+            <div className="relative flex items-center bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg transition duration-300 pr-2 py-2">
+              <Search size={16} className="absolute left-4 text-slate-300" />
               <input
                 type="text"
                 placeholder="Search products..."
                 value={currentSearch}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full pl-9 pr-8 bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none py-1.5"
+                className="w-full pl-10 pr-12 bg-transparent text-sm font-medium text-slate-200 placeholder-gray-400 focus:outline-none"
               />
               {currentSearch && (
                 <button 
                   onClick={() => onSearchChange('')}
-                  className="absolute right-12 p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200 transition cursor-pointer border-0 bg-transparent"
+                  className="absolute right-4 p-1 text-slate-300 hover:text-white rounded-full hover:bg-white/20 transition cursor-pointer border-0"
                 >
-                  <X size={11} />
+                  <X size={14} />
                 </button>
               )}
               <button
-                className="bg-[#FF6600] text-white px-3 py-1.5 rounded-lg text-xs font-extrabold border-0 flex-shrink-0 cursor-pointer"
+                className="ml-2 bg-[#FF6600] hover:bg-[#e05a00] text-white px-4 py-1.5 rounded-lg text-sm font-bold border-0 shadow-md hover:shadow-lg transition-all"
               >
                 Go
               </button>

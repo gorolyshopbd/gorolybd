@@ -8,6 +8,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function Footer({ onTabChange, onCartClick }) {
   const [settings, setSettings] = useState(null);
   const [pages, setPages] = useState([]);
+  const [email, setEmail] = useState('');
+  const [subscribeStatus, setSubscribeStatus] = useState('');
 
   useEffect(() => {
     fetch(`${API_URL}/settings/public`)
@@ -20,6 +22,29 @@ export default function Footer({ onTabChange, onCartClick }) {
       .then((d) => setPages(d || []))
       .catch(() => {});
   }, []);
+
+  const handleSubscribe = async () => {
+    if (!email) return;
+    try {
+      setSubscribeStatus('subscribing');
+      const res = await fetch(`${API_URL}/subscribers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSubscribeStatus('success');
+        setEmail('');
+        setTimeout(() => setSubscribeStatus(''), 3000);
+      } else {
+        setSubscribeStatus('error');
+        alert(data.message || 'Subscription failed');
+      }
+    } catch (err) {
+      setSubscribeStatus('error');
+    }
+  };
 
   const s = settings || {};
 
@@ -80,11 +105,16 @@ export default function Footer({ onTabChange, onCartClick }) {
             <div className="md:w-1/2 w-full flex items-center gap-2">
               <input 
                 type="email" 
-                placeholder="" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email address" 
                 className="flex-1 px-3 py-2.5 rounded-lg text-slate-900 focus:outline-none text-sm"
               />
-              <button className="bg-[#FF6600] hover:bg-[#e65c00] text-white font-bold px-6 py-2.5 rounded-lg transition text-sm shadow-[0_0_12px_rgba(255,102,0,0.3)]">
-                Subscribe
+              <button 
+                onClick={handleSubscribe}
+                disabled={subscribeStatus === 'subscribing'}
+                className="bg-[#FF6600] hover:bg-[#e65c00] disabled:bg-slate-500 text-white font-bold px-6 py-2.5 rounded-lg transition text-sm shadow-[0_0_12px_rgba(255,102,0,0.3)]">
+                {subscribeStatus === 'subscribing' ? '...' : subscribeStatus === 'success' ? 'Done!' : 'Subscribe'}
               </button>
             </div>
           </div>
@@ -96,35 +126,30 @@ export default function Footer({ onTabChange, onCartClick }) {
             
             {/* Col 1: Brand & Socials */}
             <div className="space-y-4">
-              {/* Modern Goroly Shop Logo — white pill background */}
-              <div className="inline-flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 shadow-md">
-                {/* Shopping Cart Icon */}
-                <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  {/* Cart body */}
-                  <rect x="14" y="26" width="36" height="22" rx="3" fill="#2d3e50" />
-                  {/* Cart front panel */}
-                  <rect x="16" y="28" width="32" height="18" rx="2" fill="#3a5068" />
-                  {/* Shopping bag inside */}
-                  <rect x="22" y="22" width="20" height="20" rx="3" fill="#FF6600" />
-                  <rect x="27" y="18" width="3" height="6" rx="1.5" fill="#FF6600" />
-                  <rect x="34" y="18" width="3" height="6" rx="1.5" fill="#FF6600" />
-                  {/* Wheels */}
-                  <circle cx="22" cy="50" r="4" fill="#2d3e50" />
-                  <circle cx="22" cy="50" r="2" fill="#6b7280" />
-                  <circle cx="42" cy="50" r="4" fill="#2d3e50" />
-                  <circle cx="42" cy="50" r="2" fill="#6b7280" />
-                  {/* Handle */}
-                  <path d="M8 20 L14 26" stroke="#2d3e50" strokeWidth="3" strokeLinecap="round" />
-                  <circle cx="7" cy="19" r="3" fill="#e53e3e" />
-                </svg>
-                {/* Brand Name */}
-                <div className="flex flex-col leading-none">
-                  <span className="text-[#FF6600] font-black text-lg tracking-widest uppercase" style={{fontFamily: 'inherit', letterSpacing: '0.15em'}}>
-                    GOROLY
-                  </span>
-                  <span className="text-[#FF6600] font-black text-lg tracking-widest uppercase" style={{letterSpacing: '0.18em'}}>
-                    SHOP
-                  </span>
+
+              {/* Logo with modern white background card */}
+              <div className="inline-flex">
+                <div className="bg-white rounded-xl px-4 py-2.5 shadow-[0_4px_20px_rgba(255,255,255,0.15)] border border-white/20 hover:shadow-[0_6px_28px_rgba(255,102,0,0.18)] transition-shadow duration-300">
+                  <img
+                    src="/logo.png"
+                    alt="Goroly Shop"
+                    className="h-14 w-auto object-contain"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  {/* Fallback SVG logo if image fails */}
+                  <div style={{ display: 'none' }} className="items-center gap-2">
+                    <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+                      <rect width="40" height="40" rx="10" fill="#FF6600"/>
+                      <path d="M10 14h3l2 10h10l2-10h3" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <circle cx="16" cy="28" r="1.5" fill="white"/>
+                      <circle cx="24" cy="28" r="1.5" fill="white"/>
+                      <path d="M13 14l1-3h12l1 3" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+                    </svg>
+                    <span className="text-[#FF6600] font-black text-sm tracking-tight">GOROLY <span className="text-slate-800">SHOP</span></span>
+                  </div>
                 </div>
               </div>
 

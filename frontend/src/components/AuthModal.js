@@ -10,11 +10,11 @@ import {
 export default function AuthModal({ isOpen, onClose }) {
   const { 
     login, register, sendOtpCode, verifyOtpCode, 
-    forgotPasswordRequest, resetPasswordSubmit, socialOauthLogin, loading, API_URL 
+    forgotPasswordRequest, resetPasswordSubmit, resetPasswordWithOtp, socialOauthLogin, loading, API_URL 
   } = useContext(ShopContext);
   
   const [authMode, setAuthMode] = useState('login'); // login, register, otp, forgot
-  const [otpType, setOtpType] = useState('email'); // email, phone
+  const [otpType, setOtpType] = useState('phone'); // email, phone
   const [otpSent, setOtpSent] = useState(false);
 
   // Form fields
@@ -82,6 +82,7 @@ export default function AuthModal({ isOpen, onClose }) {
     setSignupOtpLoading(false);
     setSignupOtpError('');
     setSignupOtpSuccess('');
+    setOtpType('phone');
   };
 
   const handleModeChange = (mode) => {
@@ -126,21 +127,33 @@ export default function AuthModal({ isOpen, onClose }) {
     }
   };
 
-  const handleForgotRequest = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
+  const handleForgotRequest = async (e, method = 'sms') => {
+    if (e) e.preventDefault();
     setErrorMsg('');
 
-    if (!recoveryEmail) {
-      setErrorMsg('Email address is required');
-      return;
-    }
-
-    const res = await forgotPasswordRequest(recoveryEmail);
-    if (res.success) {
-      setRecoveryStage(2);
+    if (otpType === 'email') {
+      if (!recoveryEmail) {
+        setErrorMsg('Email address is required');
+        return;
+      }
+      const res = await forgotPasswordRequest(recoveryEmail);
+      if (res.success) {
+        setRecoveryStage(2);
+      } else {
+        setErrorMsg(res.error || 'Failed to request reset token');
+      }
     } else {
-      setErrorMsg(res.error || 'Failed to request reset token');
+      if (!phoneVal) {
+        setErrorMsg('Phone number is required');
+        return;
+      }
+      const res = await sendOtpCode('phone', phoneVal, method);
+      if (res.success) {
+        setOtpSent(true);
+        setRecoveryStage(2);
+      } else {
+        setErrorMsg(res.error || 'Failed to send OTP code');
+      }
     }
   };
 
@@ -148,17 +161,35 @@ export default function AuthModal({ isOpen, onClose }) {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!recoveryToken || !newRecoveryPassword) {
-      setErrorMsg('All fields are required');
+    if (!newRecoveryPassword) {
+      setErrorMsg('New password is required');
       return;
     }
 
-    const res = await resetPasswordSubmit(recoveryEmail, recoveryToken, newRecoveryPassword);
-    if (res.success) {
-      alert('Password updated successfully! You can now log in.');
-      handleModeChange('login');
+    if (otpType === 'email') {
+      if (!recoveryToken) {
+        setErrorMsg('Verification token is required');
+        return;
+      }
+      const res = await resetPasswordSubmit(recoveryEmail, recoveryToken, newRecoveryPassword);
+      if (res.success) {
+        alert('Password updated successfully! You can now log in.');
+        handleModeChange('login');
+      } else {
+        setErrorMsg(res.error || 'Reset failed. Verify your token.');
+      }
     } else {
-      setErrorMsg(res.error || 'Reset failed. Verify your token.');
+      if (!otpVal) {
+        setErrorMsg('OTP code is required');
+        return;
+      }
+      const res = await resetPasswordWithOtp(phoneVal, otpVal, newRecoveryPassword);
+      if (res.success) {
+        alert('Password updated successfully! You can now log in.');
+        handleModeChange('login');
+      } else {
+        setErrorMsg(res.error || 'Reset failed. Verify your OTP.');
+      }
     }
   };
 
@@ -232,7 +263,7 @@ export default function AuthModal({ isOpen, onClose }) {
     setErrorMsg('');
 
     if (authMode === 'login') {
-      const res = await login(email, password);
+      const res = await login(email, password, accountType);
       if (res.success) {
         onClose();
         resetForm();
@@ -334,7 +365,7 @@ export default function AuthModal({ isOpen, onClose }) {
             {/* LOGIN AND REGISTER FORMS */}
             {['login', 'register'].includes(authMode) && (
               <form onSubmit={handleSubmit} className="space-y-4">
-                {authMode === 'register' && (
+                {['login', 'register'].includes(authMode) && (
                   <>
                     <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-xl text-xs font-bold text-center mb-2">
                       <button
@@ -356,6 +387,10 @@ export default function AuthModal({ isOpen, onClose }) {
                         Seller
                       </button>
                     </div>
+                  </>
+                )}
+                {authMode === 'register' && (
+                  <>
                     <div className="relative">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
                       <div className="relative mt-1.5 group">
@@ -636,47 +671,115 @@ export default function AuthModal({ isOpen, onClose }) {
             {/* PASSWORD RECOVERY FORM */}
             {authMode === 'forgot' && (
               <div className="space-y-4">
+                {recoveryStage === 1 && !otpSent && (
+                  <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-xl text-xs font-bold text-center">
+                    <button
+                      onClick={() => setOtpType('email')}
+                      className={`py-2 rounded-lg transition ${
+                        otpType === 'email' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      Email Address
+                    </button>
+                    <button
+                      onClick={() => setOtpType('phone')}
+                      className={`py-2 rounded-lg transition ${
+                        otpType === 'phone' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      Phone Number
+                    </button>
+                  </div>
+                )}
+                
                 {recoveryStage === 1 ? (
                   <form onSubmit={handleForgotRequest} className="space-y-4">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
-                      <div className="relative mt-1.5 group">
-                        <input
-                          type="email"
-                          placeholder="Enter registered email"
-                          value={recoveryEmail}
-                          onChange={(e) => setRecoveryEmail(e.target.value)}
-                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:bg-slate-100 focus:hover:bg-white"
-                          required
-                        />
-                        <Mail className="absolute left-3.5 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-300" size={16} />
+                    {otpType === 'email' ? (
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+                        <div className="relative mt-1.5 group">
+                          <input
+                            type="email"
+                            placeholder="Enter registered email"
+                            value={recoveryEmail}
+                            onChange={(e) => setRecoveryEmail(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:bg-slate-100 focus:hover:bg-white"
+                            required
+                          />
+                          <Mail className="absolute left-3.5 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-300" size={16} />
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone Number</label>
+                        <div className="relative mt-1.5 group">
+                          <input
+                            type="tel"
+                            placeholder="e.g. 01712345678"
+                            value={phoneVal}
+                            onChange={(e) => setPhoneVal(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:bg-slate-100 focus:hover:bg-white"
+                            required
+                          />
+                          <Phone className="absolute left-3.5 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-300" size={16} />
+                        </div>
+                      </div>
+                    )}
 
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition"
-                    >
-                      {loading ? 'Requesting...' : 'Request Reset Token'}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition"
+                      >
+                        {loading ? 'Requesting...' : otpType === 'email' ? 'Request Reset Token' : 'Send SMS'}
+                      </button>
+                      {otpType === 'phone' && (
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={(e) => handleForgotRequest(e, 'call')}
+                          className="flex-1 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl shadow-lg transition"
+                        >
+                          {loading ? 'Calling...' : 'Call Me'}
+                        </button>
+                      )}
+                    </div>
                   </form>
                 ) : (
                   <form onSubmit={handleResetSubmit} className="space-y-4">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Verification Token</label>
-                      <div className="relative mt-1.5 group">
-                        <input
-                          type="text"
-                          placeholder="RESET-XXXXXX"
-                          value={recoveryToken}
-                          onChange={(e) => setRecoveryToken(e.target.value)}
-                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:bg-slate-100 focus:hover:bg-white tracking-wider font-mono font-bold"
-                          required
-                        />
-                        <Key className="absolute left-3.5 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-300" size={16} />
+                    {otpType === 'email' ? (
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Verification Token</label>
+                        <div className="relative mt-1.5 group">
+                          <input
+                            type="text"
+                            placeholder="RESET-XXXXXX"
+                            value={recoveryToken}
+                            onChange={(e) => setRecoveryToken(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:bg-slate-100 focus:hover:bg-white tracking-wider font-mono font-bold"
+                            required
+                          />
+                          <Key className="absolute left-3.5 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-300" size={16} />
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Enter OTP Code</label>
+                        <div className="relative mt-1.5 group">
+                          <input
+                            type="text"
+                            placeholder="e.g. 123456"
+                            maxLength="6"
+                            value={otpVal}
+                            onChange={(e) => setOtpVal(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:bg-slate-100 focus:hover:bg-white tracking-widest font-mono text-center font-bold"
+                            required
+                          />
+                          <KeyRound className="absolute left-3.5 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-300" size={16} />
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">New Password</label>

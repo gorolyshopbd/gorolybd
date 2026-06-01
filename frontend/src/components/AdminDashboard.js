@@ -287,11 +287,16 @@ export default function AdminDashboard({ onTabChange }) {
     nagadMode: 'Sandbox',
     nagadEnabled: true,
     nagadMerchantId: 'NAGAD12345',
+    rupantorPayMode: 'Sandbox',
+    rupantorPayEnabled: true,
+    rupantorPayStoreId: '',
+    rupantorPaySignatureKey: '',
     sslcommerzMode: 'Sandbox',
     sslcommerzEnabled: true,
     sslcommerzStoreId: '',
     codEnabled: true,
     facebookPixelId: '',
+    facebookAccessToken: '',
     ga4MeasurementId: '',
     siteTitle: 'Goroly Shop - Premium E-Commerce',
     faviconUrl: '',
@@ -307,6 +312,7 @@ export default function AdminDashboard({ onTabChange }) {
     sasSmsSecretKey: '',
     sasSmsSenderId: '',
   });
+  const [fbConnectionStatus, setFbConnectionStatus] = useState({ loading: false, success: '', error: '' });
 
   // Seller Settings local state
   const [localSellerSettings, setLocalSellerSettings] = useState({
@@ -610,6 +616,37 @@ export default function AdminDashboard({ onTabChange }) {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTestFacebookPixel = async () => {
+    if (!settings.facebookPixelId || !settings.facebookAccessToken) {
+      setFbConnectionStatus({ loading: false, success: '', error: 'Pixel ID and Access Token are required.' });
+      return;
+    }
+    setFbConnectionStatus({ loading: true, success: '', error: '' });
+    try {
+      const res = await fetch(`${API_URL}/settings/test-fb-pixel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({
+          pixelId: settings.facebookPixelId,
+          accessToken: settings.facebookAccessToken
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setFbConnectionStatus({ loading: false, success: data.message, error: '' });
+        // Automatically save settings as well
+        handleSaveSettings({ preventDefault: () => {} });
+      } else {
+        setFbConnectionStatus({ loading: false, success: '', error: data.message || 'Failed to connect.' });
+      }
+    } catch (error) {
+      setFbConnectionStatus({ loading: false, success: '', error: error.message });
     }
   };
 
@@ -5076,7 +5113,7 @@ export default function AdminDashboard({ onTabChange }) {
                                 body: formData
                               });
                               const data = await res.json();
-                              if (res.ok) setCatForm({ ...catForm, image: data.image });
+                              if (res.ok) setCatForm(prev => ({ ...prev, image: data.image || data.url || '' }));
                             } catch {}
                           }}
                         />
@@ -5116,7 +5153,7 @@ export default function AdminDashboard({ onTabChange }) {
                                 body: formData
                               });
                               const data = await res.json();
-                              if (res.ok) setCatForm({ ...catForm, banner: data.image });
+                              if (res.ok) setCatForm(prev => ({ ...prev, banner: data.image || data.url || '' }));
                             } catch {}
                           }}
                         />
@@ -7989,6 +8026,66 @@ export default function AdminDashboard({ onTabChange }) {
                     </div>
                   </div>
 
+                  {/* Rupantor Pay configuration */}
+                  <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white transition-all duration-300 hover:shadow-md grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+                    <div className="md:col-span-3 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                        <h4 className="font-bold text-gray-900 text-xs">Rupantor Pay PG</h4>
+                      </div>
+                      <p className="text-[10px] text-gray-500 leading-tight">Accept payments via Rupantor Pay API.</p>
+                      <div className="pt-2 flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          id="rupantor-enable"
+                          checked={settings.rupantorPayEnabled}
+                          onChange={(e) => setSettings({ ...settings, rupantorPayEnabled: e.target.checked })}
+                          className="accent-purple-600 rounded-sm cursor-pointer"
+                        />
+                        <label htmlFor="rupantor-enable" className="text-[10px] font-bold text-gray-400 cursor-pointer">Active</label>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gateway Mode</label>
+                        <select
+                          disabled={!settings.rupantorPayEnabled}
+                          value={settings.rupantorPayMode}
+                          onChange={(e) => setSettings({ ...settings, rupantorPayMode: e.target.value })}
+                          className="w-full mt-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 disabled:opacity-50"
+                        >
+                          <option value="Sandbox">Sandbox (Test Environment)</option>
+                          <option value="Live">Live (Real Payments)</option>
+                        </select>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Store ID</label>
+                          <input
+                            type="text"
+                            disabled={!settings.rupantorPayEnabled}
+                            value={settings.rupantorPayStoreId}
+                            onChange={(e) => setSettings({ ...settings, rupantorPayStoreId: e.target.value })}
+                            placeholder="Store ID"
+                            className="w-full mt-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 disabled:opacity-50"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Signature Key</label>
+                          <input
+                            type="text"
+                            disabled={!settings.rupantorPayEnabled}
+                            value={settings.rupantorPaySignatureKey}
+                            onChange={(e) => setSettings({ ...settings, rupantorPaySignatureKey: e.target.value })}
+                            placeholder="Signature Key"
+                            className="w-full mt-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 disabled:opacity-50"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* SSLCommerz configuration */}
                   <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                     <div className="md:col-span-3 space-y-1">
@@ -8073,19 +8170,49 @@ export default function AdminDashboard({ onTabChange }) {
                       <h4 className="font-bold text-gray-900 text-xs">Facebook Pixel</h4>
                     </div>
                     <p className="text-[10px] text-gray-500">Track conversions, optimize ads, and build targeted audiences.</p>
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Pixel ID</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 123456789012345"
-                        value={settings.facebookPixelId}
-                        onChange={(e) => setSettings({ ...settings, facebookPixelId: e.target.value })}
-                        className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner placeholder-gray-400"
-                      />
+                    <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl mt-2 mb-3">
+                      <h5 className="text-[10px] font-bold text-blue-800 mb-1">Setup Guide:</h5>
+                      <ol className="text-[10px] text-blue-700 list-decimal pl-4 space-y-1">
+                        <li>Go to Meta Events Manager and select your Pixel.</li>
+                        <li>Copy the 15-digit Pixel ID from the settings tab.</li>
+                        <li>For Conversions API, scroll down and click "Generate access token".</li>
+                        <li>Paste both below and click "Save & Test Connection".</li>
+                      </ol>
                     </div>
-                    {settings.facebookPixelId && (
-                      <p className="text-[10px] text-emerald-400 font-semibold">Pixel will be loaded on storefront.</p>
-                    )}
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Pixel ID</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 123456789012345"
+                          value={settings.facebookPixelId}
+                          onChange={(e) => setSettings({ ...settings, facebookPixelId: e.target.value })}
+                          className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner placeholder-gray-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Access Token (Conversions API)</label>
+                        <input
+                          type="text"
+                          placeholder="EAAB..."
+                          value={settings.facebookAccessToken}
+                          onChange={(e) => setSettings({ ...settings, facebookAccessToken: e.target.value })}
+                          className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner placeholder-gray-400"
+                        />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={handleTestFacebookPixel}
+                          disabled={fbConnectionStatus.loading}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all duration-200 disabled:opacity-50"
+                        >
+                          {fbConnectionStatus.loading ? 'Saving & Testing...' : 'Save & Test Connection'}
+                        </button>
+                        {fbConnectionStatus.success && <span className="text-emerald-500 text-xs font-semibold flex items-center gap-1"><Check className="w-3 h-3" /> Connected</span>}
+                        {fbConnectionStatus.error && <span className="text-red-500 text-xs font-semibold flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {fbConnectionStatus.error}</span>}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md space-y-3">
@@ -8094,6 +8221,15 @@ export default function AdminDashboard({ onTabChange }) {
                       <h4 className="font-bold text-gray-900 text-xs">Google Analytics (GA4)</h4>
                     </div>
                     <p className="text-[10px] text-gray-500">Track site traffic, user behavior, and e-commerce events.</p>
+                    <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl mt-2 mb-3">
+                      <h5 className="text-[10px] font-bold text-amber-800 mb-1">Setup Guide:</h5>
+                      <ol className="text-[10px] text-amber-700 list-decimal pl-4 space-y-1">
+                        <li>Go to Google Analytics &gt; Admin &gt; Data Streams.</li>
+                        <li>Select your web stream.</li>
+                        <li>Copy the Measurement ID (it starts with "G-").</li>
+                        <li>Paste it below to start tracking.</li>
+                      </ol>
+                    </div>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Measurement ID</label>
                       <input

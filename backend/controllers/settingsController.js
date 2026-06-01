@@ -18,11 +18,16 @@ export const getSettings = async (req, res) => {
         nagad_mode: 'Sandbox',
         nagad_enabled: true,
         nagad_merchant_id: 'NAGAD12345',
+        rupantor_pay_mode: 'Sandbox',
+        rupantor_pay_enabled: true,
+        rupantor_pay_store_id: '',
+        rupantor_pay_signature_key: '',
         sslcommerz_mode: 'Sandbox',
         sslcommerz_enabled: true,
         sslcommerz_store_id: 'shopio_ssl_mock',
         cod_enabled: true,
         facebook_pixel_id: '',
+        facebook_access_token: '',
         ga4_measurement_id: '',
         site_title: 'Shopio - MERN E-Commerce',
         favicon_url: '',
@@ -55,11 +60,16 @@ export const getSettings = async (req, res) => {
       nagadMode: settings.nagad_mode,
       nagadEnabled: settings.nagad_enabled,
       nagadMerchantId: settings.nagad_merchant_id,
+      rupantorPayMode: settings.rupantor_pay_mode,
+      rupantorPayEnabled: settings.rupantor_pay_enabled,
+      rupantorPayStoreId: settings.rupantor_pay_store_id,
+      rupantorPaySignatureKey: settings.rupantor_pay_signature_key,
       sslcommerzMode: settings.sslcommerz_mode,
       sslcommerzEnabled: settings.sslcommerz_enabled,
       sslcommerzStoreId: settings.sslcommerz_store_id,
       codEnabled: settings.cod_enabled,
       facebookPixelId: settings.facebook_pixel_id,
+      facebookAccessToken: settings.facebook_access_token,
       ga4MeasurementId: settings.ga4_measurement_id,
       siteTitle: settings.site_title,
       faviconUrl: settings.favicon_url,
@@ -103,11 +113,16 @@ export const updateSettings = async (req, res) => {
       nagad_mode: req.body.nagadMode,
       nagad_enabled: req.body.nagadEnabled,
       nagad_merchant_id: req.body.nagadMerchantId,
+      rupantor_pay_mode: req.body.rupantorPayMode,
+      rupantor_pay_enabled: req.body.rupantorPayEnabled,
+      rupantor_pay_store_id: req.body.rupantorPayStoreId,
+      rupantor_pay_signature_key: req.body.rupantorPaySignatureKey,
       sslcommerz_mode: req.body.sslcommerzMode,
       sslcommerz_enabled: req.body.sslcommerzEnabled,
       sslcommerz_store_id: req.body.sslcommerzStoreId,
       cod_enabled: req.body.codEnabled,
       facebook_pixel_id: req.body.facebookPixelId,
+      facebook_access_token: req.body.facebookAccessToken,
       ga4_measurement_id: req.body.ga4MeasurementId,
       site_title: req.body.siteTitle,
       favicon_url: req.body.faviconUrl,
@@ -145,5 +160,46 @@ export const updateSettings = async (req, res) => {
     res.json({ message: 'Settings updated successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const testFacebookPixel = async (req, res) => {
+  try {
+    const pixelId = req.body.pixelId?.trim();
+    const accessToken = req.body.accessToken?.trim();
+
+    if (!pixelId || !accessToken) {
+      return res.status(400).json({ success: false, message: 'Pixel ID and Access Token are required.' });
+    }
+    
+    // Test connection by sending a minimal test event to the Conversions API
+    const response = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${accessToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        data: [{
+          event_name: 'TestEvent',
+          event_time: Math.floor(Date.now() / 1000),
+          action_source: 'system',
+          user_data: {
+            client_user_agent: 'TestAgent/1.0'
+          }
+        }]
+      })
+    });
+    const data = await response.json();
+
+    if (data.error) {
+      let errorMsg = data.error.message || 'Invalid Facebook Pixel configuration.';
+      if (errorMsg.includes('does not exist')) {
+        errorMsg += ' (Make sure the Pixel ID is correct and the Token has permissions).';
+      }
+      // Return success: true so the frontend saves the settings, but show the error as a warning
+      return res.json({ success: true, message: 'Settings saved! Note: Facebook API test failed with: ' + errorMsg });
+    }
+
+    res.json({ success: true, message: 'Connected successfully to Facebook Pixel.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

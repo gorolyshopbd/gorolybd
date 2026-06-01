@@ -23,6 +23,38 @@ const addOrderItems = async (req, res) => {
   }
 
   try {
+    // 0. Verify all products exist and filter out invalid ones
+    const productIds = orderItems.map(item => item.product).filter(Boolean);
+    const uniqueProductIds = [...new Set(productIds)];
+    
+    let validOrderItems = [];
+    
+    if (uniqueProductIds.length > 0) {
+      const { data: existingProducts, error: checkError } = await db.database
+        .from('products')
+        .select('id')
+        .in('id', uniqueProductIds);
+        
+      if (checkError) throw checkError;
+      
+      const validProductIds = existingProducts ? existingProducts.map(p => p.id) : [];
+      validOrderItems = orderItems.filter(item => item.product && validProductIds.includes(item.product));
+      
+      if (validOrderItems.length === 0) {
+        return res.status(400).json({ message: 'One or more products in your cart no longer exist. Please clear your cart and try again.' });
+      }
+    } else {
+      return res.status(400).json({ message: 'Invalid product items in cart. Please clear your cart and try again.' });
+    }
+
+    // Recalculate totals based on valid items
+    const recalculatedItemsPrice = validOrderItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
+    // Use the recalculated items price if items were removed, otherwise use provided values
+    const finalItemsPrice = validOrderItems.length < orderItems.length ? recalculatedItemsPrice : itemsPrice;
+    const finalTotalPrice = validOrderItems.length < orderItems.length 
+      ? (recalculatedItemsPrice + (shippingPrice || 0) - (discountPrice || 0))
+      : totalPrice;
+
     // 1. Create the order
     const { data: order, error: orderError } = await db.database
       .from('orders')
@@ -34,10 +66,10 @@ const addOrderItems = async (req, res) => {
         shipping_postal_code: shippingAddress?.postalCode || '',
         shipping_phone: shippingAddress?.phone || '',
         payment_method: paymentMethod || 'Cash on Delivery',
-        items_price: itemsPrice || 0,
+        items_price: finalItemsPrice || 0,
         shipping_price: shippingPrice || 0,
         discount_price: discountPrice || 0,
-        total_price: totalPrice || 0,
+        total_price: finalTotalPrice || 0,
         advance_payment: advancePayment || false,
         advance_amount: advanceAmount || 0,
         shipping_method_id: shippingMethod?._id || '',
@@ -54,7 +86,7 @@ const addOrderItems = async (req, res) => {
     if (orderError) throw orderError;
 
     // 2. Insert Order Items
-    const formattedItems = orderItems.map((item) => ({
+    const formattedItems = validOrderItems.map((item) => ({
       order_id: order.id,
       product_id: item.product,
       name: item.name,
@@ -66,8 +98,8 @@ const addOrderItems = async (req, res) => {
     const { error: itemsError } = await db.database.from('order_items').insert(formattedItems);
     if (itemsError) throw itemsError;
 
-    // 3. Deduct Stock (Ideally should be done via an RPC or stored procedure to avoid race conditions, but simple update for now)
-    for (const item of orderItems) {
+    // 3. Update stock for each product
+    for (const item of validOrderItems) {
       if (item.product) {
         const { data: product } = await db.database.from('products').select('count_in_stock').eq('id', item.product).single();
         if (product) {

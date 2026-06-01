@@ -251,9 +251,9 @@ export default function BecomeSellerPage({ onBackToHome }) {
   const [selectedPackage, setSelectedPackage] = useState(null);
 
   // Payment step states
-  const [paymentMethod, setPaymentMethod] = useState('');
-  const [transactionId, setTransactionId] = useState('');
-  const [paySettings, setPaySettings] = useState({ bkashEnabled: true, bkashMerchantNumber: '01700000000', nagadEnabled: true, nagadMerchantId: 'NAGAD12345' });
+  const [paymentMethod, setPaymentMethod] = useState('RupantorPay');
+  const [transactionId, setTransactionId] = useState('pending');
+  const [paySettings, setPaySettings] = useState({ bkashEnabled: false, bkashMerchantNumber: '01700000000', nagadEnabled: false, nagadMerchantId: 'NAGAD12345', rupantorPayEnabled: true });
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -277,10 +277,11 @@ export default function BecomeSellerPage({ onBackToHome }) {
             setPhoneVerified(true);
           }
           setPaySettings({
-            bkashEnabled: true, // Always enable for seller package
+            bkashEnabled: false, // Always disable for seller package
             bkashMerchantNumber: d.bkashMerchantNumber || '01700000000',
-            nagadEnabled: true, // Always enable for seller package
+            nagadEnabled: false, // Always disable for seller package
             nagadMerchantId: d.nagadMerchantId || 'NAGAD12345',
+            rupantorPayEnabled: true,
           });
         }
       })
@@ -405,6 +406,30 @@ export default function BecomeSellerPage({ onBackToHome }) {
         localStorage.setItem('shop_admin_user', JSON.stringify(data));
       }
       
+      if (paymentMethod === 'RupantorPay' && data.subscriptionId) {
+        // Initiate RupantorPay checkout
+        const initRes = await fetch(`${API_URL}/rupantorpay/initiate-seller`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${data.token}`
+          },
+          body: JSON.stringify({
+            subscriptionId: data.subscriptionId,
+            amount: selectedPackage.price,
+            successUrl: `${window.location.origin}/admin`,
+            cancelUrl: `${window.location.origin}/admin`
+          })
+        });
+        const initData = await initRes.json();
+        if (initRes.ok && initData.url) {
+          window.location.href = initData.url;
+          return;
+        } else {
+          alert('Failed to initiate RupantorPay. You can pay later from your dashboard.');
+        }
+      }
+
       window.location.href = '/admin';
     } catch (error) {
       setLoading(false);
@@ -1052,7 +1077,31 @@ export default function BecomeSellerPage({ onBackToHome }) {
                       <span className="font-extrabold text-sm text-slate-700">Nagad</span>
                     </button>
                   )}
-                  {!paySettings.bkashEnabled && !paySettings.nagadEnabled && (
+                  {paySettings.rupantorPayEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPaymentMethod('RupantorPay');
+                        setTransactionId('pending'); // Auto-set for RupantorPay
+                      }}
+                      className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
+                        paymentMethod === 'RupantorPay'
+                          ? 'border-[#00A8E8] bg-[#00A8E8]/5 shadow-md'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      {paymentMethod === 'RupantorPay' && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-[#00A8E8] rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                      <Globe size={28} className="text-[#00A8E8]" />
+                      <span className="font-extrabold text-sm text-slate-700">RupantorPay</span>
+                    </button>
+                  )}
+                  {!paySettings.bkashEnabled && !paySettings.nagadEnabled && !paySettings.rupantorPayEnabled && (
                     <div className="col-span-2 text-center py-4 text-slate-400 text-xs font-semibold">
                       {lang === 'bn' ? 'কোনো পেমেন্ট মেথড উপলব্ধ নেই' : 'No payment methods available'}
                     </div>
@@ -1061,7 +1110,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
               </div>
 
               {/* Merchant Info & Transaction ID */}
-              {paymentMethod && (
+              {paymentMethod && paymentMethod !== 'RupantorPay' && (
                 <div className="space-y-4 animate-fade-in">
                   {/* Merchant Details */}
                   <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
@@ -1101,6 +1150,25 @@ export default function BecomeSellerPage({ onBackToHome }) {
                     <p className="text-[10px] text-slate-400 mt-1 font-medium">
                       {lang === 'bn' ? 'পেমেন্ট সম্পন্ন করার পর উপরের TrxID টি লিখুন' : 'Enter the TrxID after sending the payment'}
                     </p>
+                  </div>
+                </div>
+              )}
+              {paymentMethod === 'RupantorPay' && (
+                <div className="space-y-4 animate-fade-in mt-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                    <div className="flex items-start gap-3">
+                      <Globe size={18} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
+                          {lang === 'bn' ? 'নিরাপদ পেমেন্ট গেটওয়ে' : 'Secure Payment Gateway'}
+                        </p>
+                        <p className="text-xs font-semibold text-blue-800">
+                          {lang === 'bn' 
+                            ? 'আপনি রেজিস্ট্রেশন সম্পন্ন করার পর আপনাকে রূপান্তরপে পেমেন্ট গেটওয়েতে রিডাইরেক্ট করা হবে।'
+                            : 'You will be redirected to the RupantorPay secure checkout page after you complete registration.'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
