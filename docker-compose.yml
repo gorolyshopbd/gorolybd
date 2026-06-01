@@ -23,6 +23,8 @@ services:
       - ./backend/.env.production
     environment:
       - NODE_ENV=production
+      - BACKEND_URL=https://gorolyshop.com
+      - FRONTEND_URL=https://gorolyshop.com
     volumes:
       - backend_uploads:/app/uploads
 
