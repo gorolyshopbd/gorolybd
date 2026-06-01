@@ -20,6 +20,9 @@ import {
   updateUserByAdmin,
   adminResetPassword,
   deleteUser,
+  banUser,
+  unbanUser,
+  setExtraDeliveryTime,
   importSellers,
 } from '../controllers/userController.js';
 import { db } from '../config/db.js';
@@ -48,6 +51,10 @@ router.post('/admin-login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    if (user.is_banned) {
+      return res.status(403).json({ success: false, message: 'Your account has been banned. Contact support.' });
     }
 
     if (!user.is_admin && user.role === 'customer') {
@@ -106,6 +113,9 @@ router.route('/:id/verification').put(protect, admin, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+router.route('/:id/ban').put(protect, admin, banUser);
+router.route('/:id/unban').put(protect, admin, unbanUser);
+router.route('/:id/extra-delivery').put(protect, admin, setExtraDeliveryTime);
 router.route('/:id').delete(protect, admin, deleteUser);
 
 export default router;

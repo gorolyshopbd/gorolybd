@@ -51,6 +51,9 @@ const authUser = async (req, res) => {
     console.log('Login attempt:', email, user, error);
     
     if (user && await bcrypt.compare(password, user.password_hash)) {
+      if (user.is_banned) {
+        return res.status(403).json({ message: 'Your account has been banned. Contact support.' });
+      }
       if (req.body.accountType) {
         if (req.body.accountType === 'seller' && user.role === 'customer' && !user.is_admin) {
           return res.status(401).json({ message: 'Access denied. You are not a seller.' });
@@ -688,6 +691,57 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// @desc    Ban a user (seller)
+// @route   PUT /api/users/:id/ban
+// @access  Private/Admin
+const banUser = async (req, res) => {
+  try {
+    const { data: user } = await db.database.from('users').select('id, is_banned').eq('id', req.params.id).single();
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.is_banned) return res.status(400).json({ message: 'User is already banned' });
+
+    await db.database.from('users').update({ is_banned: true, banned_at: new Date().toISOString() }).eq('id', req.params.id);
+    res.json({ message: 'User banned successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Unban a user
+// @route   PUT /api/users/:id/unban
+// @access  Private/Admin
+const unbanUser = async (req, res) => {
+  try {
+    const { data: user } = await db.database.from('users').select('id, is_banned').eq('id', req.params.id).single();
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user.is_banned) return res.status(400).json({ message: 'User is not banned' });
+
+    await db.database.from('users').update({ is_banned: false, banned_at: null }).eq('id', req.params.id);
+    res.json({ message: 'User unbanned successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Set extra delivery days for a seller
+// @route   PUT /api/users/:id/extra-delivery
+// @access  Private/Admin
+const setExtraDeliveryTime = async (req, res) => {
+  const { extra_delivery_days } = req.body;
+  if (extra_delivery_days === undefined || extra_delivery_days < 0) {
+    return res.status(400).json({ message: 'Valid extra_delivery_days is required (0 or more)' });
+  }
+  try {
+    const { data: user } = await db.database.from('users').select('id').eq('id', req.params.id).single();
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    await db.database.from('users').update({ extra_delivery_days }).eq('id', req.params.id);
+    res.json({ message: 'Extra delivery time updated', extra_delivery_days });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Permission check middleware
 const requirePermission = (...perms) => {
   return (req, res, next) => {
@@ -804,6 +858,9 @@ export {
   updateUserByAdmin,
   adminResetPassword,
   deleteUser,
+  banUser,
+  unbanUser,
+  setExtraDeliveryTime,
   importSellers,
   requirePermission,
   ALL_PERMISSIONS,

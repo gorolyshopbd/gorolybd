@@ -58,7 +58,7 @@ const formatDateMDY = (dateString) => {
 
 
 export default function AdminDashboard({ onTabChange }) {
-  const { API_URL, changeUserEmail, fetchUsers, createUserByAdmin, importSellersByAdmin, updateUserByAdmin, adminResetUserPassword, deleteUserByAdmin, currencySymbol, currencyCode, payouts, fetchPayouts, requestPayout, updatePayoutStatus, sellerSettings, fetchSellerSettings, updateSellerSettings, sellerPackages, fetchSellerPackages, createSellerPackage, updateSellerPackage, deleteSellerPackage, onlineSubscriptions, offlineSubscriptions, fetchOnlineSubscriptions, fetchOfflineSubscriptions, rewardSettings, userPoints, pointLogs, fetchRewardSettings, updateRewardSettings, fetchUserPoints, fetchPointLogs, adjustUserPoints, insforge } = useContext(ShopContext);
+  const { API_URL, changeUserEmail, fetchUsers, createUserByAdmin, importSellersByAdmin, updateUserByAdmin, adminResetUserPassword, deleteUserByAdmin, banUserByAdmin, unbanUserByAdmin, setExtraDeliveryTimeByAdmin, currencySymbol, currencyCode, payouts, fetchPayouts, requestPayout, updatePayoutStatus, sellerSettings, fetchSellerSettings, updateSellerSettings, sellerPackages, fetchSellerPackages, createSellerPackage, updateSellerPackage, deleteSellerPackage, onlineSubscriptions, offlineSubscriptions, fetchOnlineSubscriptions, fetchOfflineSubscriptions, rewardSettings, userPoints, pointLogs, fetchRewardSettings, updateRewardSettings, fetchUserPoints, fetchPointLogs, adjustUserPoints, insforge } = useContext(ShopContext);
   const { lang, t, setLang } = useLanguage();
   const [user, setUser] = useState(null);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
@@ -5401,6 +5401,8 @@ export default function AdminDashboard({ onTabChange }) {
                       <th className="py-3 px-4 border-b border-slate-100">Author</th>
                       <th className="py-3 px-4 border-b border-slate-100">Info</th>
                       <th className="py-3 px-4 border-b border-slate-100 text-center">Shop Publish</th>
+                      <th className="py-3 px-4 border-b border-slate-100 text-center">Status</th>
+                      <th className="py-3 px-4 border-b border-slate-100 text-center">Extra Days</th>
                       <th className="py-3 px-4 border-b border-slate-100 text-center">Options</th>
                     </tr>
                   </thead>
@@ -5468,8 +5470,32 @@ export default function AdminDashboard({ onTabChange }) {
                             <label className="toggle-label block overflow-hidden h-5 rounded-full bg-amber-400 cursor-pointer"></label>
                           </div>
                         </td>
+                        <td className="py-4 px-4 text-center">
+                          {seller.is_banned ? (
+                            <span className="inline-block px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[9px] font-bold">Banned</span>
+                          ) : (
+                            <span className="inline-block px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[9px] font-bold">Active</span>
+                          )}
+                        </td>
+                        <td className="py-4 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <input
+                              type="number"
+                              min="0"
+                              defaultValue={seller.extra_delivery_days || 0}
+                              onBlur={async (e) => {
+                                const val = parseInt(e.target.value) || 0;
+                                if (val !== (seller.extra_delivery_days || 0)) {
+                                  const res = await setExtraDeliveryTimeByAdmin(seller._id, val);
+                                  if (res.success) fetchAllUsers();
+                                }
+                              }}
+                              className="w-14 text-center border border-slate-200 rounded px-1 py-0.5 text-[10px] focus:outline-hidden"
+                            />
+                          </div>
+                        </td>
                         <td className="py-4 px-4">
-                          <div className="flex items-center justify-center gap-2 flex-wrap">
+                          <div className="flex items-center justify-center gap-1.5 flex-wrap">
                             {seller.verification_status === 'Pending' && (
                               <>
                                 <button
@@ -5496,6 +5522,34 @@ export default function AdminDashboard({ onTabChange }) {
                                 >Reject</button>
                               </>
                             )}
+                            {seller.is_banned ? (
+                              <button
+                                onClick={async () => {
+                                  const res = await unbanUserByAdmin(seller._id);
+                                  if (res.success) fetchAllUsers();
+                                }}
+                                className="px-2 py-1 bg-green-100 text-green-700 rounded-lg text-[9px] font-bold hover:bg-green-200 transition"
+                              >Unban</button>
+                            ) : (
+                              <button
+                                onClick={async () => {
+                                  if (window.confirm('Are you sure you want to ban this seller?')) {
+                                    const res = await banUserByAdmin(seller._id);
+                                    if (res.success) fetchAllUsers();
+                                  }
+                                }}
+                                className="px-2 py-1 bg-red-100 text-red-700 rounded-lg text-[9px] font-bold hover:bg-red-200 transition"
+                              >Ban</button>
+                            )}
+                            <button
+                              onClick={async () => {
+                                if (window.confirm('Are you sure you want to delete this seller? This action cannot be undone.')) {
+                                  const res = await deleteUserByAdmin(seller._id);
+                                  if (res.success) fetchAllUsers();
+                                }
+                              }}
+                              className="px-2 py-1 bg-red-100 text-rose-700 rounded-lg text-[9px] font-bold hover:bg-red-200 transition"
+                            >Delete</button>
                             <button className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition">
                               <Edit2 size={12} />
                             </button>
@@ -5505,7 +5559,7 @@ export default function AdminDashboard({ onTabChange }) {
                     ))}
                     {allUsers.filter(u => u.role === 'seller').length === 0 && (
                       <tr>
-                        <td colSpan="6" className="py-8 text-center text-gray-400 text-sm">No sellers found.</td>
+                        <td colSpan="8" className="py-8 text-center text-gray-400 text-sm">No sellers found.</td>
                       </tr>
                     )}
                   </tbody>

@@ -76,8 +76,8 @@ const addOrderItems = async (req, res) => {
         shipping_method_name: shippingMethod?.name || '',
         shipping_method_price: shippingMethod?.price || 0,
         shipping_method_days: shippingMethod?.estimatedDays || '',
-        is_paid: paymentMethod !== 'Cash on Delivery',
-        paid_at: paymentMethod !== 'Cash on Delivery' ? new Date().toISOString() : null,
+        is_paid: false,
+        paid_at: null,
         status: 'Pending',
       })
       .select()

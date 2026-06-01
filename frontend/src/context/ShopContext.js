@@ -1007,6 +1007,52 @@ export const ShopProvider = ({ children }) => {
     }
   };
 
+  const banUserByAdmin = async (id) => {
+    if (!user) return { success: false, error: 'Not authenticated' };
+    try {
+      const res = await fetch(`${API_URL}/users/${id}/ban`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to ban user');
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const unbanUserByAdmin = async (id) => {
+    if (!user) return { success: false, error: 'Not authenticated' };
+    try {
+      const res = await fetch(`${API_URL}/users/${id}/unban`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to unban user');
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const setExtraDeliveryTimeByAdmin = async (id, extra_delivery_days) => {
+    if (!user) return { success: false, error: 'Not authenticated' };
+    try {
+      const res = await fetch(`${API_URL}/users/${id}/extra-delivery`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+        body: JSON.stringify({ extra_delivery_days }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to set extra delivery time');
+      return { success: true, extra_delivery_days: data.extra_delivery_days };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
   const deleteUserByAdmin = async (id) => {
     if (!user) return { success: false, error: 'Not authenticated' };
     try {
@@ -1062,6 +1108,9 @@ export const ShopProvider = ({ children }) => {
         updateUserByAdmin,
         adminResetUserPassword,
         deleteUserByAdmin,
+        banUserByAdmin,
+        unbanUserByAdmin,
+        setExtraDeliveryTimeByAdmin,
         API_URL,
         currencySymbol,
         currencyCode,
