@@ -20,7 +20,8 @@ const initiatePayment = async (req, res) => {
   try {
     // Build redirect URLs — fallback to a sensible default if env not set
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const webhookUrl = `${process.env.API_BASE_URL || 'http://localhost:5000'}/api/rupantorpay/webhook`;
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const webhookUrl = `${backendUrl}/api/rupantorpay/webhook`;
 
     const payload = new URLSearchParams({
       api_key: RUPANTORPAY_API_KEY,
@@ -86,7 +87,8 @@ const initiateSellerPayment = async (req, res) => {
 
   try {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const webhookUrl = `${process.env.API_BASE_URL || 'http://localhost:5000'}/api/rupantorpay/webhook`;
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const webhookUrl = `${backendUrl}/api/rupantorpay/webhook`;
 
     const payload = new URLSearchParams({
       api_key: RUPANTORPAY_API_KEY,
