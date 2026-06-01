@@ -9,7 +9,8 @@ router.post('/initiate', protect, initiatePayment);
 router.post('/initiate-seller', protect, initiateSellerPayment);
 
 // Verify a completed payment by transaction ID
-router.post('/verify', protect, verifyPayment);
+// Note: no 'protect' — called from success page after redirect (user may not be logged in)
+router.post('/verify', verifyPayment);
 
 // Webhook endpoint (no auth — called by RupantorPay)
 router.post('/webhook', webhookHandler);
