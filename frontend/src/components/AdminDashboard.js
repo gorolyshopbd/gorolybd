@@ -7894,7 +7894,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">API Token</label>
                     <input
-                      type="password"
+                      type="text"
                       value={settings.sasSmsApiKey || ''}
                       onChange={(e) => setSettings({ ...settings, sasSmsApiKey: e.target.value })}
                       placeholder="API Token (e.g. 7639814fe75b2cbd)"
@@ -7904,7 +7904,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Secret Key</label>
                     <input
-                      type="password"
+                      type="text"
                       value={settings.sasSmsSecretKey || ''}
                       onChange={(e) => setSettings({ ...settings, sasSmsSecretKey: e.target.value })}
                       placeholder="Secret Key (e.g. 13382300000000)"
