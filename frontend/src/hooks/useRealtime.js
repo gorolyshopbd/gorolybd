@@ -32,17 +32,22 @@ export function useRealtime(channelName, eventHandlers = {}) {
     sharedListeners++;
 
     const init = async () => {
-      if (!client.realtime.isConnected) {
-        await client.realtime.connect();
-      }
-      if (!mounted) return;
-      setIsConnected(client.realtime.isConnected);
-
-      if (channelName) {
-        const res = await client.realtime.subscribe(channelName);
-        if (res && res.ok) {
-          channelRef.current = channelName;
+      try {
+        if (!client.realtime.isConnected) {
+          await client.realtime.connect();
         }
+        if (!mounted) return;
+        setIsConnected(client.realtime.isConnected);
+
+        if (channelName) {
+          const res = await client.realtime.subscribe(channelName);
+          if (res && res.ok) {
+            channelRef.current = channelName;
+          }
+        }
+      } catch (error) {
+        if (mounted) setIsConnected(false);
+        console.warn('Realtime connection unavailable:', error?.message || error);
       }
     };
 
@@ -61,10 +66,18 @@ export function useRealtime(channelName, eventHandlers = {}) {
       client.realtime.off('disconnect', onDisconnect);
 
       if (channelRef.current) {
-        client.realtime.unsubscribe(channelRef.current);
+        try {
+          client.realtime.unsubscribe(channelRef.current);
+        } catch (error) {
+          console.warn('Realtime unsubscribe skipped:', error?.message || error);
+        }
       }
       if (sharedListeners <= 0 && sharedClient) {
-        client.realtime.disconnect();
+        try {
+          client.realtime.disconnect();
+        } catch (error) {
+          console.warn('Realtime disconnect skipped:', error?.message || error);
+        }
         sharedClient = null;
       }
     };
@@ -89,7 +102,11 @@ export function useRealtime(channelName, eventHandlers = {}) {
   const publish = useCallback(async (event, payload) => {
     if (!channelName) return;
     const client = getClient();
-    await client.realtime.publish(channelName, event, payload);
+    try {
+      await client.realtime.publish(channelName, event, payload);
+    } catch (error) {
+      console.warn('Realtime publish unavailable:', error?.message || error);
+    }
   }, [channelName]);
 
   return { isConnected, publish };

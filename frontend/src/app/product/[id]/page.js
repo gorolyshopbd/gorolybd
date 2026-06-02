@@ -2,14 +2,15 @@
 
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
+import { ShopContext, getImageUrl, formatPrice, calculateFinalPrice, formatDiscountLabel } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Head from 'next/head';
 import Header from '@/components/Header';
 import CartDrawer from '@/components/CartDrawer';
+import FloatingCartButton from '@/components/FloatingCartButton';
 import AuthModal from '@/components/AuthModal';
 import Footer from '@/components/Footer';
-import { Star, Heart, ShoppingBag, Truck, RotateCcw, ShieldCheck, Plus, Minus, Phone, ArrowLeft, GitCompare } from 'lucide-react';
+import { Star, Heart, ShoppingBag, Truck, RotateCcw, RefreshCw, CreditCard, ShieldCheck, Plus, Minus, Phone, ArrowLeft, GitCompare, Tag } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -137,7 +138,15 @@ export default function ProductDetailPage() {
       ])).filter((img) => img && typeof img === 'string' && img.trim() !== '')
     : [];
 
-  const finalPrice = product ? product.price * (1 - (product.discountPercent || 0) / 100) : 0;
+  const finalPrice = product ? calculateFinalPrice(product) : 0;
+  const deliveryDays = Number(product?.shippingDays || product?.shipping_days || 2);
+  const paymentText = product?.cashOnDelivery === false ? 'Online Payment' : 'COD Available';
+  const productInfoRows = [
+    { label: 'Return', value: '3 Days', icon: RotateCcw },
+    { label: 'Exchange', value: '3 Days', icon: RefreshCw },
+    { label: 'Delivery Time', value: `${deliveryDays || 2} Days`, icon: Truck },
+    { label: 'Payment', value: paymentText, icon: CreditCard },
+  ];
 
   const whatsappNumber = (product && product.seller_phone) || '8801700000000';
   const whatsappMessage = product
@@ -160,7 +169,7 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="storefront-shell flex flex-col min-h-screen bg-slate-50">
       <Head>
         <title>{product?.metaTitle || product?.name || 'Product - Goroly Shop'}</title>
         <meta name="description" content={product?.metaDescription || (product?.description ? product.description.slice(0,160) : '')} />
@@ -212,7 +221,7 @@ export default function ProductDetailPage() {
                   >
                     {product.discountPercent > 0 && (
                       <span className="absolute top-3 left-3 bg-red-500 text-white font-extrabold text-xs px-2.5 py-1 rounded-md z-10">
-                        -{product.discountPercent}%
+                        {formatDiscountLabel(product, currencySymbol)}
                       </span>
                     )}
                     <div className={`w-full h-full flex items-center justify-center ${isZoomed ? '' : ''}`}>
@@ -272,7 +281,7 @@ export default function ProductDetailPage() {
                         <>
                           <span className="text-sm text-slate-400 line-through">{formatPrice(product.price, currencySymbol)}</span>
                           <span className="text-xs font-extrabold text-red-500 bg-red-50 px-2 py-0.5 rounded-md">
-                            {t('saveDiscount', { percent: product.discountPercent })}
+                            Save {formatDiscountLabel(product, currencySymbol).replace('-', '')}
                           </span>
                         </>
                       )}
@@ -281,10 +290,28 @@ export default function ProductDetailPage() {
                     <p className="text-[14px] text-slate-500 leading-relaxed">{product.description}</p>
 
                     {product.brand && (
-                      <div className="text-xs text-slate-400">
-                        <span className="font-bold text-slate-600">{t('brandLabel')}</span> {product.brand}
+                      <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-slate-700 shadow-sm">
+                        <span className="grid h-5 w-5 place-items-center rounded-full bg-[#FF6600]/10 text-[#FF6600]">
+                          <Tag size={12} />
+                        </span>
+                        <span className="text-slate-400">{t('brandLabel')}</span>
+                        <span>{product.brand}</span>
                       </div>
                     )}
+
+                    <div className="rounded-2xl border border-rose-100 bg-rose-50/70 p-3 text-sm text-slate-800 shadow-sm">
+                      <div className="grid gap-1.5">
+                        {productInfoRows.map(({ label, value, icon: Icon }) => (
+                          <div key={label} className="flex items-center gap-2 leading-tight">
+                            <Icon size={15} className="shrink-0 text-slate-700" />
+                            <span>
+                              <span className="font-black text-slate-950">{label}</span>
+                              <span className="font-semibold"> : {value}</span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Add to Cart Actions */}
@@ -590,7 +617,7 @@ export default function ProductDetailPage() {
                 <h2 className="text-xl font-extrabold text-slate-800 mb-6">{t('relatedProducts')}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {relatedProducts.map((rp) => {
-                    const rpFinal = rp.price * (1 - (rp.discountPercent || 0) / 100);
+                    const rpFinal = calculateFinalPrice(rp);
                     return (
                       <div
                         key={rp._id}
@@ -600,7 +627,7 @@ export default function ProductDetailPage() {
                         <div className="relative pt-[100%] overflow-hidden">
                           {rp.discountPercent > 0 && (
                             <span className="absolute top-3 left-3 bg-red-500 text-white font-extrabold text-xs px-2.5 py-1 rounded-md z-10">
-                              -{rp.discountPercent}%
+                              {formatDiscountLabel(rp, currencySymbol)}
                             </span>
                           )}
                           <img
@@ -639,6 +666,7 @@ export default function ProductDetailPage() {
 
       <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} onAuthTrigger={() => setAuthOpen(true)} />
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
+      <FloatingCartButton onClick={() => setCartOpen(true)} hidden={cartOpen} />
       <Footer onTabChange={(tab) => router.push('/')} />
     </div>
   );

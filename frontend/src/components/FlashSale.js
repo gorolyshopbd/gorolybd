@@ -1,145 +1,218 @@
 'use client';
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
-import { useLanguage } from '@/context/LanguageContext';
-import { Star, Heart, ShoppingCart, Eye, Zap } from 'lucide-react';
+import { ShopContext, getImageUrl, formatPrice, calculateFinalPrice, formatDiscountLabel } from '@/context/ShopContext';
+import { ArrowRight, ShoppingCart, Truck, Zap } from 'lucide-react';
 
-export default function FlashSale({ products, onProductClick, onAddToWishlist }) {
+function SaleCard({ product }) {
   const router = useRouter();
   const { addToCart, currencySymbol } = useContext(ShopContext);
-  const { lang, t } = useLanguage();
-  const [timeLeft, setTimeLeft] = useState({
-    days: 2, hours: 14, minutes: 36, seconds: 48,
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        if (prev.days > 0) return { ...prev, days: prev.days - 1, hours: 23, minutes: 59, seconds: 59 };
-        clearInterval(timer);
-        return prev;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatNumber = (num) => String(num).padStart(2, '0');
-  const flashSaleProducts = products.filter((p) => p.isFlashSale);
-  if (flashSaleProducts.length === 0) return null;
+  const finalPrice = calculateFinalPrice(product);
+  const sold = Number(product.soldCount || product.salesCount || product.numReviews || 1);
+  const stock = Math.max(Number(product.countInStock || 0), 0);
+  const total = Math.max(sold + stock, sold || 1);
+  const progress = Math.min(Math.max((sold / total) * 100, 8), 100);
 
   return (
-    <section className="py-16 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-600 via-red-600 to-pink-700" />
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white/15 backdrop-blur-sm rounded-xl">
-              <Zap size={22} className="text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{lang === 'bn' ? 'ফ্ল্যাশ সেল' : 'Flash Sale'}</h2>
-              <p className="text-orange-100 text-xs sm:text-sm opacity-90">{lang === 'bn' ? 'তাড়াতাড়ি করুন! এই অফারটি সীমিত সময়ের জন্য।' : "Hurry up! These deals won't last long."}</p>
-            </div>
-          </div>
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-[0_12px_28px_rgba(2,6,23,0.28)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(2,6,23,0.38)]">
+      <button
+        type="button"
+        onClick={() => router.push(`/product/${product._id}`)}
+        className="relative block aspect-[1.06/1] w-full overflow-hidden bg-white"
+      >
+        <img
+          src={getImageUrl(product.image)}
+          alt={product.name}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+        />
+        <span className="absolute bottom-0 left-0 inline-flex h-6 items-center gap-1 rounded-tr-md bg-[#00B894] px-2 text-[10px] font-black uppercase text-white shadow-sm">
+          <Truck size={12} />
+          Free Delivery
+        </span>
+      </button>
 
-          <div className="flex items-center gap-1.5">
-            {[
-              { val: timeLeft.days, label: lang === 'bn' ? 'দিন' : 'Days' },
-              { val: timeLeft.hours, label: lang === 'bn' ? 'ঘণ্টা' : 'Hours' },
-              { val: timeLeft.minutes, label: lang === 'bn' ? 'মিনিট' : 'Mins' },
-              { val: timeLeft.seconds, label: lang === 'bn' ? 'সেকেন্ড' : 'Secs' },
-            ].map((t, idx) => (
-              <div key={idx} className="flex items-center">
-                <div className="bg-white/15 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 text-center min-w-[48px]">
-                  <div className="font-extrabold text-white text-sm sm:text-lg tracking-wider">{formatNumber(t.val)}</div>
-                  <div className="text-[8px] font-semibold text-orange-200 uppercase tracking-wider">{t.label}</div>
-                </div>
-                {idx < 3 && <span className="mx-0.5 font-bold text-white/40 text-lg">:</span>}
-              </div>
-            ))}
+      <div className="flex flex-1 flex-col bg-[linear-gradient(180deg,#ffffff_0%,#e9fff9_100%)] px-2.5 pb-9 pt-2">
+        <button
+          type="button"
+          onClick={() => router.push(`/product/${product._id}`)}
+          className="line-clamp-2 min-h-[34px] text-left text-[11px] font-semibold leading-snug text-slate-900 transition hover:text-[#00B894]"
+        >
+          {product.name}
+        </button>
+
+        <div className="mt-2">
+          <div className="mb-1 flex items-center gap-2 text-[11px] font-black text-slate-950">
+            {stock > 0 ? `${stock} items left` : `${sold} items sold`}
+            <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 shadow-inner">
+              <span className="block h-full rounded-full bg-[linear-gradient(90deg,#064e3b,#00B894,#5eead4)]" style={{ width: `${progress}%` }} />
+            </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {flashSaleProducts.map((product) => {
-            const finalPrice = product.price * (1 - (product.discountPercent || 0) / 100);
-            return (
-              <div
-                key={product._id}
-                className="group bg-white rounded-2xl overflow-hidden shadow-lg shadow-black/10 hover:shadow-2xl hover:shadow-black/20 transition-all duration-500 hover:-translate-y-1 flex flex-col"
-              >
-                <div className="relative pt-[80%] bg-slate-100 overflow-hidden">
-                  <span className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg z-10 shadow-lg shadow-red-500/30">
-                    -{product.discountPercent}%
-                  </span>
-                  <button
-                    onClick={() => onAddToWishlist(product)}
-                    className="absolute top-3 right-3 p-2 bg-white/80 hover:bg-white text-slate-400 hover:text-red-500 rounded-full shadow-md backdrop-blur-sm transition z-10 scale-0 group-hover:scale-100"
-                  >
-                    <Heart size={15} />
-                  </button>
-                  <img
-                    src={getImageUrl(product.image)}
-                    alt={product.name}
-                    onClick={() => router.push(`/product/${product._id}`)}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out cursor-pointer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  <button
-                    onClick={() => onProductClick(product)}
-                    className="absolute bottom-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-md hover:bg-white transition z-10 text-slate-500 hover:text-[#FF6600] translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 duration-300"
-                    title={lang === 'bn' ? 'দ্রুত দেখুন' : 'Quick View'}
-                  >
-                    <Eye size={15} />
-                  </button>
-                </div>
+        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+          <div className="min-w-0">
+            <div className="text-sm font-black text-[#008f75]">{formatPrice(finalPrice, currencySymbol)}</div>
+            {Number(product.discountPercent || 0) > 0 && (
+              <div className="text-[10px] font-semibold text-slate-400 line-through">{formatPrice(product.price, currencySymbol)}</div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => addToCart(product, 1)}
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#00B894] text-white shadow-md shadow-emerald-500/25 transition hover:-translate-y-0.5 hover:bg-[#008f75] active:translate-y-0 active:scale-95"
+            title="Add to cart"
+          >
+            <ShoppingCart size={14} />
+          </button>
+        </div>
+      </div>
 
-                <div className="p-3 flex-1 flex flex-col justify-between gap-2">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 tracking-[0.1em]">{product.category}</span>
-                      <span className="w-1 h-1 rounded-full bg-slate-300" />
-                      <span className="text-[9px] font-semibold text-slate-400">{product.brand}</span>
-                    </div>
-                    <h3
-                      onClick={() => router.push(`/product/${product._id}`)}
-                      className="font-bold text-slate-800 text-sm leading-snug hover:text-[#FF6600] cursor-pointer transition line-clamp-2"
-                    >
-                      {product.name}
-                    </h3>
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex text-amber-400">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} size={11} fill={i < Math.floor(product.rating || 5) ? 'currentColor' : 'none'} />
-                        ))}
-                      </div>
-                      <span className="text-slate-400 text-[10px] font-medium">({product.numReviews || 35})</span>
-                    </div>
-                  </div>
+      {Number(product.discountPercent || 0) > 0 && (
+        <div className="absolute bottom-0 right-0 flex h-7 min-w-16 items-center justify-end bg-[#00B894] pl-6 pr-2 text-[10px] font-black text-white">
+          <span className="absolute left-0 top-0 h-0 w-0 border-b-[28px] border-l-[16px] border-b-[#5eead4] border-l-transparent" />
+          <Zap size={13} className="absolute left-3 top-1.5 fill-white text-white" />
+          {formatDiscountLabel(product, currencySymbol).replace('-', '')}
+        </div>
+      )}
+    </article>
+  );
+}
 
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-sm font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</span>
-                      <span className="text-[11px] text-slate-400 line-through font-medium">{formatPrice(product.price, currencySymbol)}</span>
-                    </div>
-                    <button
-                      onClick={() => addToCart(product, 1)}
-                      className="px-3.5 py-2 bg-[#FF6600] hover:bg-[#e05a00] text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-md shadow-[#FF6600]/20 hover:shadow-lg hover:shadow-[#FF6600]/30 flex items-center gap-1.5 border-0 cursor-pointer"
-                    >
-                      <ShoppingCart size={12} />
-                      {t('add')}
-                    </button>
-                  </div>
-                </div>
+export default function FlashSale({ products = [] }) {
+  const flashSaleProducts = useMemo(() => products.filter((p) => p.isFlashSale).slice(0, 10), [products]);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const scrollerRef = useRef(null);
+
+  useEffect(() => {
+    const getTarget = () => {
+      const dated = flashSaleProducts
+        .map((product) => product.flashSaleEnd || product.flash_sale_end)
+        .filter(Boolean)
+        .map((date) => new Date(date).getTime())
+        .filter((time) => !Number.isNaN(time) && time > Date.now())
+        .sort((a, b) => a - b);
+      return dated[0] || Date.now() + 48 * 60 * 60 * 1000;
+    };
+
+    const target = getTarget();
+    const tick = () => {
+      const diff = Math.max(0, target - Date.now());
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      });
+    };
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [flashSaleProducts]);
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller || flashSaleProducts.length < 3) return undefined;
+
+    const interval = window.setInterval(() => {
+      if (window.innerWidth >= 1024 || scroller.scrollWidth <= scroller.clientWidth) return;
+
+      const nextLeft = scroller.scrollLeft + scroller.clientWidth;
+      scroller.scrollTo({
+        left: nextLeft >= scroller.scrollWidth - scroller.clientWidth - 8 ? 0 : nextLeft,
+        behavior: 'smooth',
+      });
+    }, 4500);
+
+    return () => window.clearInterval(interval);
+  }, [flashSaleProducts.length]);
+
+  if (flashSaleProducts.length === 0) return null;
+
+  const formatNumber = (num) => String(num).padStart(2, '0');
+  const scrollToProducts = () => {
+    const target = Array.from(document.querySelectorAll('section')).find((section) => section.textContent?.includes('Product Picks'));
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  return (
+    <section className="bg-white py-8 sm:py-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <style>{`
+          @keyframes flashGradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+          }
+          @keyframes flashFloat {
+            0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+            50% { transform: translate3d(14px, -10px, 0) scale(1.06); }
+          }
+          @keyframes flashSweep {
+            0% { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+            18% { opacity: 0.75; }
+            45%, 100% { transform: translateX(180%) skewX(-18deg); opacity: 0; }
+          }
+          .flash-sale-dynamic-bg {
+            background-size: 180% 180%;
+            animation: flashGradientShift 9s ease-in-out infinite;
+          }
+          .flash-sale-float {
+            animation: flashFloat 7s ease-in-out infinite;
+          }
+          .flash-sale-sweep {
+            animation: flashSweep 5.5s ease-in-out infinite;
+          }
+        `}</style>
+        <div className="flash-sale-dynamic-bg relative overflow-hidden rounded-3xl border border-white/25 bg-[radial-gradient(circle_at_15%_16%,rgba(94,234,212,0.55),transparent_30%),radial-gradient(circle_at_88%_12%,rgba(0,184,148,0.55),transparent_32%),linear-gradient(145deg,#052e2b_0%,#047857_34%,#00B894_68%,#7df7df_100%)] p-3 shadow-[0_26px_70px_rgba(0,184,148,0.24)] sm:p-4">
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.12),transparent_32%,rgba(255,255,255,0.20))]" />
+          <div className="flash-sale-float pointer-events-none absolute -left-16 -top-20 h-56 w-56 rounded-full bg-[#00B894]/35 blur-3xl" />
+          <div className="flash-sale-float pointer-events-none absolute -right-20 bottom-6 h-64 w-64 rounded-full bg-[#7df7df]/40 blur-3xl [animation-delay:1.4s]" />
+          <div className="flash-sale-sweep pointer-events-none absolute inset-y-0 left-0 w-28 bg-white/20 blur-sm" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0,rgba(17,24,39,0.18)_100%)]" />
+          <div className="relative mb-4 grid grid-cols-1 items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
+            <div className="flex items-center justify-center sm:justify-start">
+              <div className="inline-flex max-w-full items-center gap-2 rounded-2xl border border-white/30 bg-slate-950/70 px-3.5 py-2.5 text-2xl font-black uppercase tracking-tight text-white shadow-lg shadow-slate-950/20 backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-slate-950/80 drop-shadow-[0_2px_0_rgba(0,0,0,0.45)] sm:text-3xl">
+                Flash
+                <Zap size={26} className="fill-yellow-300 text-yellow-300 drop-shadow" />
+                Sale
               </div>
-            );
-          })}
+            </div>
+
+            <div className="flex items-center justify-center gap-1.5 rounded-full border border-white/30 bg-slate-950/35 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_12px_30px_rgba(17,24,39,0.18)] backdrop-blur">
+              {[timeLeft.hours, timeLeft.minutes, timeLeft.seconds].map((value, index) => (
+                <React.Fragment key={index}>
+                  <span className="grid h-8 min-w-11 place-items-center rounded-xl bg-slate-950 px-2 text-base font-black tabular-nums text-white shadow-sm ring-1 ring-white/10 transition duration-300 hover:-translate-y-0.5 hover:bg-[#047857]">
+                    {formatNumber(value)}
+                  </span>
+                  {index < 2 && <span className="text-lg font-black text-white">:</span>}
+                </React.Fragment>
+              ))}
+            </div>
+
+            <div className="flex justify-center sm:justify-end">
+              <button
+                type="button"
+                onClick={scrollToProducts}
+                className="inline-flex h-10 items-center gap-2 rounded-full border-2 border-white/75 bg-white px-4 text-sm font-black text-slate-900 shadow-lg shadow-slate-950/15 transition duration-300 hover:-translate-y-0.5 hover:bg-emerald-50 hover:text-[#00B894] hover:shadow-xl active:translate-y-0 active:scale-95 sm:text-base"
+              >
+                Shop More
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-[#00B894] text-white">
+                  <ArrowRight size={14} />
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div
+            ref={scrollerRef}
+            className="relative grid snap-x snap-mandatory auto-cols-[calc((100%-0.75rem)/2)] grid-flow-col gap-3 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[calc((100%-3rem)/5)] lg:auto-cols-auto lg:grid-flow-row lg:grid-cols-5 lg:overflow-visible"
+          >
+            {flashSaleProducts.slice(0, 5).map((product) => (
+              <div key={product._id} className="min-w-0 snap-start">
+                <SaleCard product={product} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

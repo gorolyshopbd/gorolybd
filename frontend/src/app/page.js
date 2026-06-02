@@ -1,18 +1,19 @@
 'use client';
 
 import React, { useState, useEffect, useContext } from 'react';
-import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
+import { ShopContext, getImageUrl, formatPrice, calculateFinalPrice, formatDiscountLabel } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import FeatureStrip from '@/components/FeatureStrip';
 import CategorySection from '@/components/CategorySection';
-import BrandSection from '@/components/BrandSection';
 import FlashSale from '@/components/FlashSale';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import CartDrawer from '@/components/CartDrawer';
+import FloatingCartButton from '@/components/FloatingCartButton';
 import AuthModal from '@/components/AuthModal';
 import ProductDetailModal from '@/components/ProductDetailModal';
+import OfferPopup from '@/components/OfferPopup';
 import Footer from '@/components/Footer';
 import AdminDashboard from '@/components/AdminDashboard';
 import UserDashboard from '@/components/UserDashboard';
@@ -36,6 +37,7 @@ export default function Storefront() {
   const { lang, t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState('home'); // home, shop, categories, wishlist, admin, dashboard
+  const frontendPageReadyRef = React.useRef(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   
@@ -66,11 +68,24 @@ export default function Storefront() {
 
   // Load products, branding, brands and categories on mount
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const savedPage = params.get('page') || localStorage.getItem('goroly_frontend_active_page');
+    if (savedPage) setActiveTab(savedPage);
+    frontendPageReadyRef.current = true;
+
     fetchProducts();
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/public`)
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d) setBranding(d); })
-      .catch(() => {});
+    const fetchBranding = () => {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/public`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => { if (d) setBranding(d); })
+        .catch(() => {});
+    };
+    const handleSettingsUpdated = (event) => {
+      if (event.detail) setBranding((prev) => ({ ...prev, ...event.detail }));
+    };
+
+    fetchBranding();
+    window.addEventListener('goroly-settings-updated', handleSettingsUpdated);
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/brands`)
       .then((r) => r.ok ? r.json() : [])
       .then((d) => setShopBrands(d || []))
@@ -79,8 +94,23 @@ export default function Storefront() {
       .then((r) => r.ok ? r.json() : [])
       .then((d) => setShopCategories(d || []))
       .catch(() => {});
+    return () => {
+      window.removeEventListener('goroly-settings-updated', handleSettingsUpdated);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!frontendPageReadyRef.current) return;
+    localStorage.setItem('goroly_frontend_active_page', activeTab);
+    const url = new URL(window.location.href);
+    if (activeTab === 'home') {
+      url.searchParams.delete('page');
+    } else {
+      url.searchParams.set('page', activeTab);
+    }
+    window.history.replaceState({}, '', url.toString());
+  }, [activeTab]);
 
   // Update document title and favicon from branding settings
   useEffect(() => {
@@ -92,7 +122,7 @@ export default function Storefront() {
         link.rel = 'icon';
         document.head.appendChild(link);
       }
-      link.href = branding.faviconUrl;
+      link.href = getImageUrl(branding.faviconUrl);
     }
   }, [branding.siteTitle, branding.faviconUrl]);
 
@@ -134,7 +164,7 @@ export default function Storefront() {
                           (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCategory = selectedCategory ? p.category.toLowerCase() === selectedCategory.toLowerCase() : true;
     const matchesBrand = selectedBrand ? (p.brand && p.brand.toLowerCase() === selectedBrand.toLowerCase()) : true;
-    const finalPrice = p.price * (1 - (p.discountPercent || 0) / 100);
+    const finalPrice = calculateFinalPrice(p);
     const matchesPrice = finalPrice >= priceRange[0] && finalPrice <= priceRange[1];
     const matchesRating = minRating > 0 ? (p.rating || 5) >= minRating : true;
     return matchesSearch && matchesCategory && matchesBrand && matchesPrice && matchesRating;
@@ -144,8 +174,8 @@ export default function Storefront() {
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (sortOrder === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
     if (sortOrder === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
-    if (sortOrder === 'price_asc') return (a.price * (1-(a.discountPercent||0)/100)) - (b.price * (1-(b.discountPercent||0)/100));
-    if (sortOrder === 'price_desc') return (b.price * (1-(b.discountPercent||0)/100)) - (a.price * (1-(a.discountPercent||0)/100));
+    if (sortOrder === 'price_asc') return calculateFinalPrice(a) - calculateFinalPrice(b);
+    if (sortOrder === 'price_desc') return calculateFinalPrice(b) - calculateFinalPrice(a);
     return 0;
   });
 
@@ -182,7 +212,7 @@ export default function Storefront() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white justify-between">
+    <div className="storefront-shell flex flex-col min-h-screen bg-white justify-between">
       {/* Header */}
       {activeTab !== 'videos' &&
         activeTab !== 'page-become-a-seller' &&
@@ -214,7 +244,6 @@ export default function Storefront() {
             <FeatureStrip />
             <div className="flex flex-col gap-4 mt-4">
             <CategorySection onCategoryClick={handleCategoryClick} />
-            <BrandSection onBrandClick={(brand) => { setSelectedCategory(''); setSearchQuery(brand); setActiveTab('shop'); }} />
             <FlashSale 
               products={activeProducts} 
               onProductClick={setSelectedProduct} 
@@ -421,27 +450,27 @@ export default function Storefront() {
                 })()}
 
                 {/* Sort bar + count + view toggle */}
-                <div className="flex items-center justify-between mb-4 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-xs">
-                  <div>
+                <div className="flex flex-col gap-3 mb-4 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
                     <span className="font-extrabold text-slate-800 text-sm">{t('allProducts')}</span>
-                    <span className="ml-2 text-xs font-semibold text-[#FF6600]">{t('showing')} {sortedProducts.length} {t('results')}</span>
+                    <span className="block text-xs font-semibold text-[#FF6600] sm:ml-2 sm:inline">{t('showing')} {sortedProducts.length} {t('results')}</span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
                     <select
                       value={sortOrder}
                       onChange={(e) => setSortOrder(e.target.value)}
-                      className="text-xs font-bold border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#FF6600] bg-white"
+                      className="h-10 flex-1 text-xs font-bold border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#FF6600] bg-white sm:flex-none"
                     >
                       <option value="newest">{t('newest')}</option>
                       <option value="oldest">{t('oldest')}</option>
                       <option value="price_asc">{t('priceLowHigh')}</option>
                       <option value="price_desc">{t('priceHighLow')}</option>
                     </select>
-                    <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
-                      <button onClick={() => setViewMode('grid')} className={`p-2 transition ${viewMode === 'grid' ? 'bg-[#FF6600] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>
+                    <div className="flex h-10 shrink-0 items-center border border-slate-200 rounded-lg overflow-hidden">
+                      <button onClick={() => setViewMode('grid')} className={`grid h-10 w-10 place-items-center transition ${viewMode === 'grid' ? 'bg-[#FF6600] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>
                         <LayoutGrid size={15} />
                       </button>
-                      <button onClick={() => setViewMode('list')} className={`p-2 transition ${viewMode === 'list' ? 'bg-[#FF6600] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>
+                      <button onClick={() => setViewMode('list')} className={`grid h-10 w-10 place-items-center transition ${viewMode === 'list' ? 'bg-[#FF6600] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>
                         <List size={15} />
                       </button>
                     </div>
@@ -459,13 +488,13 @@ export default function Storefront() {
                     {viewMode === 'grid' ? (
                       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
                         {visibleProducts.map((product) => {
-                          const finalPrice = product.price * (1 - (product.discountPercent || 0) / 100);
+                          const finalPrice = calculateFinalPrice(product);
                           const isWish = wishlist.some((x) => x._id === product._id);
                           return (
                             <div key={product._id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden group shadow-sm hover:shadow-xl hover:border-slate-200 transition duration-300 flex flex-col">
                               <div className="relative pt-[80%] bg-slate-50 overflow-hidden">
                                 {product.discountPercent > 0 && (
-                                  <span className="absolute top-2 left-2 bg-red-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md z-10">-{product.discountPercent}%</span>
+                                  <span className="absolute top-2 left-2 bg-red-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md z-10">{formatDiscountLabel(product, currencySymbol)}</span>
                                 )}
                                 <button onClick={() => handleAddToWishlist(product)} className={`absolute top-2 right-2 p-1.5 rounded-full shadow-xs transition z-10 ${isWish ? 'bg-red-50 text-red-500' : 'bg-white/80 text-slate-400 hover:text-red-500'}`}>
                                   <Heart size={14} fill={isWish ? 'currentColor' : 'none'} />
@@ -484,12 +513,12 @@ export default function Storefront() {
                                     <span className="text-slate-400 text-[10px]">({product.numReviews || 12})</span>
                                   </div>
                                 </div>
-                                <div className="flex items-center justify-between pt-2 border-t border-slate-50">
-                                  <div className="flex items-baseline gap-1">
+                                <div className="flex flex-col gap-2 pt-2 border-t border-slate-50 sm:flex-row sm:items-center sm:justify-between">
+                                  <div className="flex flex-wrap items-baseline gap-1">
                                     <span className="text-sm font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</span>
                                     {product.discountPercent > 0 && <span className="text-xs text-slate-400 line-through">{formatPrice(product.price, currencySymbol)}</span>}
                                   </div>
-                                  <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="px-2.5 py-1.5 bg-[#FF6600] hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition">{t('add')}</button>
+                                  <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="h-9 w-full px-2.5 bg-[#FF6600] hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition sm:w-auto">{t('add')}</button>
                                 </div>
                               </div>
                             </div>
@@ -500,13 +529,13 @@ export default function Storefront() {
                       /* List view */
                       <div className="flex flex-col gap-3 w-full">
                         {visibleProducts.map((product) => {
-                          const finalPrice = product.price * (1 - (product.discountPercent || 0) / 100);
+                          const finalPrice = calculateFinalPrice(product);
                           const isWish = wishlist.some((x) => x._id === product._id);
                           return (
-                            <div key={product._id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden group shadow-sm hover:shadow-md transition duration-300 flex items-center gap-4 p-3">
-                              <div className="relative w-24 h-24 flex-shrink-0 bg-slate-50 rounded-xl overflow-hidden">
+                            <div key={product._id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden group shadow-sm hover:shadow-md transition duration-300 flex flex-col gap-4 p-3 sm:flex-row sm:items-center">
+                              <div className="relative h-36 w-full flex-shrink-0 bg-slate-50 rounded-xl overflow-hidden sm:h-24 sm:w-24">
                                 {product.discountPercent > 0 && (
-                                  <span className="absolute top-1 left-1 bg-red-500 text-white font-extrabold text-[9px] px-1.5 py-0.5 rounded z-10">-{product.discountPercent}%</span>
+                                  <span className="absolute top-1 left-1 bg-red-500 text-white font-extrabold text-[9px] px-1.5 py-0.5 rounded z-10">{formatDiscountLabel(product, currencySymbol)}</span>
                                 )}
                                 <img src={getImageUrl(product.image)} alt={product.name} onClick={() => router.push(`/product/${product._id}`)} className="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition duration-500" />
                               </div>
@@ -520,13 +549,13 @@ export default function Storefront() {
                                 </div>
                                 <button onClick={() => setSelectedProduct(product)} className="mt-1.5 text-xs font-bold text-[#FF6600] border border-[#FF6600] px-3 py-1 rounded-lg hover:bg-[#FF6600] hover:text-white transition">{t('quickView')}</button>
                               </div>
-                              <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                                <div className="text-right">
+                              <div className="flex w-full flex-row items-center justify-between gap-2 flex-shrink-0 sm:w-auto sm:flex-col sm:items-end">
+                                <div className="text-left sm:text-right">
                                   <div className="text-lg font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</div>
                                   {product.discountPercent > 0 && <div className="text-xs text-slate-400 line-through">{formatPrice(product.price, currencySymbol)}</div>}
                                 </div>
-                                <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="px-4 py-2 bg-[#FF6600] hover:bg-orange-600 text-white text-xs font-extrabold rounded-xl transition shadow-md shadow-orange-500/20">{t('addToCart')}</button>
-                                <button onClick={() => handleAddToWishlist(product)} className={`text-xs font-semibold flex items-center gap-1 ${isWish ? 'text-red-500' : 'text-slate-400 hover:text-red-500'} transition`}>
+                                <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="h-10 px-4 bg-[#FF6600] hover:bg-orange-600 text-white text-xs font-extrabold rounded-xl transition shadow-md shadow-orange-500/20">{t('addToCart')}</button>
+                                <button onClick={() => handleAddToWishlist(product)} className={`hidden text-xs font-semibold items-center gap-1 sm:flex ${isWish ? 'text-red-500' : 'text-slate-400 hover:text-red-500'} transition`}>
                                   <Heart size={12} fill={isWish ? 'currentColor' : 'none'} /> {t('wishlist')}
                                 </button>
                               </div>
@@ -568,7 +597,7 @@ export default function Storefront() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {wishlist.map((product) => {
-                  const finalPrice = product.price * (1 - (product.discountPercent || 0) / 100);
+                  const finalPrice = calculateFinalPrice(product);
                   return (
                     <div
                       key={product._id}
@@ -692,6 +721,12 @@ export default function Storefront() {
         onAddToWishlist={handleAddToWishlist}
         onBuyNow={handleBuyNow}
       />
+      {activeTab !== 'videos' && activeTab !== 'admin' && (
+        <FloatingCartButton onClick={() => setCartOpen(true)} hidden={cartOpen} />
+      )}
+      {activeTab === 'home' && (
+        <OfferPopup products={activeProducts} onShopClick={() => setActiveTab('shop')} />
+      )}
 
       {/* Chat Support */}
       {activeTab !== 'videos' && <ChatWidget />}

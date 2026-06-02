@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminDashboard from '@/components/AdminDashboard';
+import AdminLoginForm from '@/components/AdminLoginForm';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -11,17 +12,17 @@ export default function AdminPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('shop_admin_token');
-    if (!token) {
-      router.push('/secure-login');
-      // Keep checking true so we don't flash content before redirect
-    } else {
+    if (token) {
       setAuthorized(true);
-      setChecking(false);
     }
-  }, [router]);
+    setChecking(false);
+  }, []);
 
   if (checking) return null;
-  if (!authorized) return null;
+
+  if (!authorized) {
+    return <AdminLoginForm onSuccess={() => { setAuthorized(true); }} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">

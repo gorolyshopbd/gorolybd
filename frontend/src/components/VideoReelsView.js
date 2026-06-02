@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
+import { ShopContext, getImageUrl, formatPrice, calculateFinalPrice } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Heart, MessageCircle, Share2, Volume2, VolumeX, ShoppingCart, Send, X, AlertCircle, ArrowLeft } from 'lucide-react';
 
@@ -297,7 +297,7 @@ export default function VideoReelsView({ onBackToHome, onBuyNow }) {
       >
         {videos.map((vid) => {
           const prod = vid.product;
-          const finalPrice = prod ? prod.price * (1 - (prod.discountPercent || 0) / 100) : 0;
+          const finalPrice = prod ? calculateFinalPrice(prod) : 0;
           return (
             <div 
               key={vid._id} 

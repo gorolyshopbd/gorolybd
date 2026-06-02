@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useContext, useState, useEffect } from 'react';
-import { ShopContext, formatPrice, getImageUrl } from '@/context/ShopContext';
+import { ShopContext, formatPrice, getImageUrl, calculateFinalPrice, formatDiscountLabel } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { X, Trash2, ShoppingBag, Star, Plus, Scale } from 'lucide-react';
 
@@ -44,7 +44,7 @@ export default function CompareModal({ isOpen, onClose }) {
 
   const productsWithPrices = compareList.map(p => {
     const price = Number(p.price) || 0;
-    const finalPrice = price * (1 - (Number(p.discountPercent) || 0) / 100);
+    const finalPrice = calculateFinalPrice(p);
     const savings = price - finalPrice;
     return { ...p, finalPrice, savings };
   });
@@ -116,7 +116,7 @@ export default function CompareModal({ isOpen, onClose }) {
                 <option value="">{lang === 'bn' ? '-- পণ্য নির্বাচন করুন --' : '-- Choose a product --'}</option>
                 {availableToSelect.map(p => (
                   <option key={p._id} value={p._id}>
-                    {p.name} ({formatPrice(p.price * (1 - (p.discountPercent || 0) / 100), currencySymbol)})
+                    {p.name} ({formatPrice(calculateFinalPrice(p), currencySymbol)})
                   </option>
                 ))}
               </select>
@@ -159,7 +159,7 @@ export default function CompareModal({ isOpen, onClose }) {
                     <option value="">{lang === 'bn' ? 'একটি পণ্য নির্বাচন করুন...' : 'Choose a product to compare...'}</option>
                     {availableToSelect.map(p => (
                       <option key={p._id} value={p._id}>
-                        {p.name} ({formatPrice(p.price * (1 - (p.discountPercent || 0) / 100), currencySymbol)})
+                        {p.name} ({formatPrice(calculateFinalPrice(p), currencySymbol)})
                       </option>
                     ))}
                   </select>
@@ -233,7 +233,7 @@ export default function CompareModal({ isOpen, onClose }) {
                       {p.discountPercent > 0 && (
                         <div className="flex justify-between items-center text-red-500 font-extrabold">
                           <span>{lang === 'bn' ? 'ছাড় শতাংশ:' : 'Discount:'}</span>
-                          <span>-{p.discountPercent}%</span>
+                          <span>{formatDiscountLabel(p, currencySymbol)}</span>
                         </div>
                       )}
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useContext, useState, useEffect } from 'react';
-import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
+import { ShopContext, getImageUrl, formatPrice, calculateFinalPrice, formatDiscountLabel } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { X, Trash2, ShoppingBag, Plus, Minus, Tag, CreditCard, Ship, CheckCircle, Smartphone, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -106,8 +106,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
   if (!isOpen) return null;
 
   const itemsPrice = cartItems.reduce((acc, item) => {
-    const price = Number(item.price) || 0;
-    const finalPrice = price * (1 - (Number(item.discountPercent) || 0) / 100);
+    const finalPrice = calculateFinalPrice(item);
     return acc + finalPrice * Number(item.qty) || 0;
   }, 0);
 
@@ -332,7 +331,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                       
                       <div className="space-y-3">
                         {cartItems.map((item) => {
-                          const finalPrice = item.price * (1 - (item.discountPercent || 0) / 100);
+                          const finalPrice = calculateFinalPrice(item);
                           return (
                             <div key={item.product} className="flex gap-4 p-4 rounded-2xl border border-slate-200/60 bg-white hover:shadow-md transition duration-300 group">
                               <img 
@@ -354,7 +353,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                                     {item.discountPercent > 0 && (
                                       <>
                                         <span className="text-xs text-slate-400 line-through">{formatPrice(item.price, currencySymbol)}</span>
-                                        <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">-{item.discountPercent}%</span>
+                                        <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">{formatDiscountLabel(item, currencySymbol)}</span>
                                       </>
                                     )}
                                   </div>

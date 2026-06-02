@@ -29,50 +29,67 @@ export default function CategorySection({ onCategoryClick }) {
   }, []);
 
   const displayCats = cats;
+  const scrollingCats = displayCats.length > 0 ? [...displayCats, ...displayCats] : [];
 
   if (displayCats.length === 0) return null;
 
   return (
-    <section className="py-12 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Shop By Categories</h2>
-            <p className="text-slate-500 text-xs sm:text-sm">Browse our extensive collections curated just for you</p>
-          </div>
+    <section className="bg-white py-4 sm:py-5">
+      <style>{`
+        @keyframes categoryMarquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        .category-marquee-track {
+          display: flex;
+          width: max-content;
+          animation: categoryMarquee 36s linear infinite;
+          will-change: transform;
+        }
+        .category-marquee-shell:hover .category-marquee-track {
+          animation-play-state: paused;
+        }
+      `}</style>
+
+      <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
+        <div className="mb-3 flex items-center justify-between border-b border-slate-100 bg-white py-2">
+          <h2 className="text-lg font-bold tracking-tight text-slate-950 sm:text-xl">Categories</h2>
           <button
             onClick={() => onCategoryClick('')}
-            className="text-sm font-bold text-blue-600 hover:text-blue-700 transition"
+            className="inline-flex h-9 w-fit items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-[#FF6600]/30 hover:bg-[#FF6600] hover:text-white hover:shadow-lg hover:shadow-orange-500/20"
           >
-            View All &rarr;
+            View All
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 sm:gap-6">
-          {displayCats.map((cat, idx) => {
+        <div className="category-marquee-shell overflow-hidden bg-white py-3">
+          <div className="category-marquee-track gap-6 pr-6 sm:gap-9 sm:pr-9 lg:gap-12 lg:pr-12">
+          {scrollingCats.map((cat, idx) => {
             const Icon = iconMap[cat.name] || LayoutGrid;
             const fallbackBg = bgMap[cat.name] || 'from-slate-500 to-slate-600';
             return (
               <button
-                key={cat._id || idx}
+                key={`${cat._id || cat.name}-${idx}`}
                 onClick={() => onCategoryClick(cat.name)}
-                className="group flex flex-col rounded-2xl overflow-hidden border border-slate-100 bg-white hover:shadow-lg hover:shadow-slate-100 hover:border-slate-200 transition duration-300"
+                className="group flex w-24 shrink-0 flex-col items-center gap-2 bg-transparent text-center transition duration-300 hover:-translate-y-1 sm:w-28"
               >
-                <div className="relative w-full aspect-[4/3] overflow-hidden bg-slate-100">
+                <div className="relative grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-white to-slate-100 p-1.5 shadow-[0_15px_28px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-slate-100 transition duration-300 group-hover:shadow-[0_20px_35px_rgba(255,102,0,0.22),inset_0_1px_0_rgba(255,255,255,0.95)] group-hover:ring-[#FF6600]/30 sm:h-24 sm:w-24">
+                  <span className="absolute inset-x-3 bottom-1 h-3 rounded-full bg-slate-900/15 blur-md transition group-hover:bg-[#FF6600]/25" />
+                  <div className="relative h-full w-full overflow-hidden rounded-full bg-white">
                   {cat.image ? (
-                    <img src={getImageUrl(cat.image)} alt={cat.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                    <img src={getImageUrl(cat.image)} alt={cat.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
                   ) : (
-                    <div className={`w-full h-full bg-gradient-to-br ${fallbackBg} flex items-center justify-center`}>
-                      <Icon size={40} className="text-white/80" />
+                    <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${fallbackBg}`}>
+                      <Icon size={34} className="text-white/85" />
                     </div>
                   )}
+                  </div>
                 </div>
-                <div className="py-3 px-3 text-center">
-                  <h3 className="font-bold text-slate-800 text-sm">{cat.name}</h3>
-                </div>
+                <h3 className="line-clamp-2 min-h-[36px] text-[13px] font-semibold leading-snug text-slate-800 transition group-hover:text-[#FF6600] sm:text-sm">{cat.name}</h3>
               </button>
             );
           })}
+          </div>
         </div>
       </div>
     </section>

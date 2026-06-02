@@ -2,9 +2,9 @@
 
 import React, { useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShopContext, formatPrice } from '@/context/ShopContext';
+import { ShopContext, formatPrice, calculateFinalPrice } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { X, Star, Heart, ShoppingBag, Truck, RotateCcw, ShieldCheck, Plus, Minus, Phone, ExternalLink, GitCompare } from 'lucide-react';
+import { X, Star, Heart, ShoppingBag, Truck, RotateCcw, RefreshCw, CreditCard, ShieldCheck, Plus, Minus, Phone, ExternalLink, GitCompare } from 'lucide-react';
 
 export default function ProductDetailModal({ product, isOpen, onClose, onAddToWishlist, onBuyNow }) {
   const router = useRouter();
@@ -14,7 +14,15 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
 
   if (!isOpen || !product) return null;
 
-  const finalPrice = product.price * (1 - (product.discountPercent || 0) / 100);
+  const finalPrice = calculateFinalPrice(product);
+  const deliveryDays = Number(product?.shippingDays || product?.shipping_days || 2);
+  const paymentText = product?.cashOnDelivery === false ? 'Online Payment' : 'COD Available';
+  const productInfoRows = [
+    { label: 'Return', value: '3 Days', icon: RotateCcw },
+    { label: 'Exchange', value: '3 Days', icon: RefreshCw },
+    { label: 'Delivery Time', value: `${deliveryDays || 2} Days`, icon: Truck },
+    { label: 'Payment', value: paymentText, icon: CreditCard },
+  ];
 
   const handleAddToCart = () => {
     addToCart(product, qty);
@@ -105,6 +113,20 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToWi
               <ExternalLink size={12} />
               {t('viewFullDetails')}
             </button>
+
+            <div className="rounded-2xl border border-rose-100 bg-rose-50/70 p-3 text-sm text-slate-800 shadow-sm">
+              <div className="grid gap-1.5">
+                {productInfoRows.map(({ label, value, icon: Icon }) => (
+                  <div key={label} className="flex items-center gap-2 leading-tight">
+                    <Icon size={15} className="shrink-0 text-slate-700" />
+                    <span>
+                      <span className="font-black text-slate-950">{label}</span>
+                      <span className="font-semibold"> : {value}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Add to Cart Actions */}

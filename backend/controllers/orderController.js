@@ -1,4 +1,100 @@
 import { db } from '../config/db.js';
+import { createSteadfastParcel } from '../services/steadfastService.js';
+import { runOrderAutomation } from '../services/orderAutomationService.js';
+
+const isSteadfastProvider = (provider = '') => provider.toLowerCase().replace(/[^a-z]/g, '') === 'steadfast';
+
+const getSellerProductIds = async (sellerId) => {
+  const { data: myProducts, error } = await db.database
+    .from('products')
+    .select('id')
+    .eq('user_id', sellerId);
+  if (error) throw error;
+  return myProducts ? myProducts.map((p) => p.id) : [];
+};
+
+const getSellerOrderIds = async (sellerId) => {
+  const myProductIds = await getSellerProductIds(sellerId);
+  if (myProductIds.length === 0) return [];
+
+  const { data: myOrderItems, error } = await db.database
+    .from('order_items')
+    .select('order_id')
+    .in('product_id', myProductIds);
+  if (error) throw error;
+
+  return myOrderItems ? [...new Set(myOrderItems.map((item) => item.order_id))] : [];
+};
+
+const canSellerManageOrder = async (sellerId, orderId) => {
+  const sellerOrderIds = await getSellerOrderIds(sellerId);
+  return sellerOrderIds.includes(orderId);
+};
+
+const getOrderSellers = async (items = []) => {
+  const productIds = [...new Set(items.map((item) => item.product_id).filter(Boolean))];
+  if (productIds.length === 0) return [];
+
+  const { data: products } = await db.database
+    .from('products')
+    .select('id, user_id')
+    .in('id', productIds);
+  const sellerIds = [...new Set((products || []).map((product) => product.user_id).filter(Boolean))];
+  if (sellerIds.length === 0) return [];
+
+  const { data: sellers } = await db.database
+    .from('users')
+    .select('id, steadfast_api_key, steadfast_secret_key, steadfast_enabled, order_automation_enabled, twilio_account_sid, twilio_auth_token, twilio_from_number, elevenlabs_api_key, elevenlabs_voice_id, openai_api_key, openai_model')
+    .in('id', sellerIds);
+
+  return sellers || [];
+};
+
+const bookSteadfastParcelForOrder = async (orderId) => {
+  const { data: order, error: orderError } = await db.database
+    .from('orders')
+    .select('*')
+    .eq('id', orderId)
+    .single();
+  if (orderError || !order) {
+    throw new Error('Order not found for SteadFast booking');
+  }
+
+  const { data: items, error: itemsError } = await db.database
+    .from('order_items')
+    .select('*')
+    .eq('order_id', orderId);
+  if (itemsError) throw itemsError;
+
+  const sellers = await getOrderSellers(items || []);
+  let sellerCredentials = {};
+  const configuredSeller = sellers.find((seller) => (
+    seller.steadfast_enabled &&
+    seller.steadfast_api_key &&
+    seller.steadfast_secret_key
+  ));
+  if (configuredSeller) {
+    sellerCredentials = {
+      apiKey: configuredSeller.steadfast_api_key,
+      secretKey: configuredSeller.steadfast_secret_key,
+    };
+  }
+
+  const result = await createSteadfastParcel({ order, items: items || [], credentials: sellerCredentials });
+  if (result.skipped) return result;
+
+  await db.database
+    .from('orders')
+    .update({
+      courier_provider: 'SteadFast',
+      courier_tracking_code: result.trackingCode || '',
+      courier_status: result.status || 'Booked',
+      status: 'Shipped',
+    })
+    .eq('id', orderId);
+
+  return result;
+};
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -60,7 +156,7 @@ const addOrderItems = async (req, res) => {
       .from('orders')
       .insert({
         user_id: req.user._id,
-        shipping_name: req.user.name || '',
+        shipping_name: shippingAddress?.name || req.user.name || '',
         shipping_address: shippingAddress?.address || '',
         shipping_city: shippingAddress?.city || '',
         shipping_postal_code: shippingAddress?.postalCode || '',
@@ -98,7 +194,36 @@ const addOrderItems = async (req, res) => {
     const { error: itemsError } = await db.database.from('order_items').insert(formattedItems);
     if (itemsError) throw itemsError;
 
-    // 3. Update stock for each product
+    // 3. AI/SMS/call confirmation automation. SteadFast booking happens after phone confirmation.
+    try {
+      const sellers = await getOrderSellers(formattedItems);
+      const automationSeller = sellers.find((seller) => seller.order_automation_enabled) || sellers[0] || null;
+      const automation = await runOrderAutomation({
+        order,
+        items: formattedItems,
+        seller: automationSeller,
+      });
+      if (!automation?.skipped) {
+        await db.database
+          .from('orders')
+          .update({
+            courier_status: automation.errors?.length
+              ? `Automation partial: ${automation.errors.join('; ')}`.slice(0, 250)
+              : 'Waiting for customer phone confirmation',
+          })
+          .eq('id', order.id);
+      }
+    } catch (automationError) {
+      console.error('Order automation failed:', automationError.message);
+      await db.database
+        .from('orders')
+        .update({
+          courier_status: `Automation failed: ${automationError.message}`.slice(0, 250),
+        })
+        .eq('id', order.id);
+    }
+
+    // 4. Update stock for each product
     for (const item of validOrderItems) {
       if (item.product) {
         const { data: product } = await db.database.from('products').select('count_in_stock').eq('id', item.product).single();
@@ -131,6 +256,15 @@ const getOrderById = async (req, res) => {
 
     if (error || !order) {
       return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (req.user.role === 'seller') {
+      const allowed = await canSellerManageOrder(req.user._id, order.id);
+      if (!allowed) {
+        return res.status(403).json({ message: 'Not authorized to view this order' });
+      }
+    } else if (!req.user.isAdmin && order.user_id !== req.user._id) {
+      return res.status(403).json({ message: 'Not authorized to view this order' });
     }
 
     const { data: items } = await db.database.from('order_items').select('*').eq('order_id', order.id);
@@ -171,12 +305,27 @@ const updateOrderStatus = async (req, res) => {
   const { status, courierProvider } = req.body;
   
   try {
+    if (req.user.role === 'seller') {
+      const allowed = await canSellerManageOrder(req.user._id, req.params.id);
+      if (!allowed) {
+        return res.status(403).json({ message: 'Not authorized to manage this order' });
+      }
+    }
+
     let updateData = { status };
     if (courierProvider) {
-      const trackingCode = `${courierProvider.toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`;
       updateData.courier_provider = courierProvider;
-      updateData.courier_tracking_code = trackingCode;
-      updateData.courier_status = 'Booked';
+      if (isSteadfastProvider(courierProvider)) {
+        const result = await bookSteadfastParcelForOrder(req.params.id);
+        updateData.status = result.skipped ? status : 'Shipped';
+        updateData.courier_provider = 'SteadFast';
+        updateData.courier_tracking_code = result.trackingCode || '';
+        updateData.courier_status = result.skipped ? result.message : (result.status || 'Booked');
+      } else {
+        const trackingCode = `${courierProvider.toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`;
+        updateData.courier_tracking_code = trackingCode;
+        updateData.courier_status = 'Booked';
+      }
     }
 
     const { data: order, error } = await db.database
@@ -216,6 +365,109 @@ const updateOrderToPaid = async (req, res) => {
     if (error || !order) return res.status(404).json({ message: 'Order not found' });
     
     res.json({ ...order, _id: order.id });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Twilio voice confirmation webhook
+// @route   POST /api/orders/:id/voice-confirmation
+// @access  Public/Twilio
+const handleVoiceConfirmation = async (req, res) => {
+  const digit = req.body?.Digits;
+
+  res.set('Content-Type', 'text/xml');
+
+  try {
+    const { data: order, error } = await db.database
+      .from('orders')
+      .select('id')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error || !order) {
+      return res.send('<Response><Say voice="alice">Sorry, we could not find this order.</Say></Response>');
+    }
+
+    if (digit === '1') {
+      try {
+        const booking = await bookSteadfastParcelForOrder(req.params.id);
+        if (booking.skipped) {
+          await db.database
+            .from('orders')
+            .update({ courier_status: booking.message })
+            .eq('id', req.params.id);
+          return res.send('<Response><Say voice="alice">Thank you. Your order is confirmed. Our team will process courier booking shortly.</Say></Response>');
+        }
+
+        return res.send('<Response><Say voice="alice">Thank you. Your order is confirmed and has been sent to SteadFast courier.</Say></Response>');
+      } catch (bookingError) {
+        await db.database
+          .from('orders')
+          .update({
+            courier_provider: 'SteadFast',
+            courier_status: `Confirmed but SteadFast failed: ${bookingError.message}`.slice(0, 250),
+          })
+          .eq('id', req.params.id);
+        return res.send('<Response><Say voice="alice">Thank you. Your order is confirmed. Our team will process courier booking manually.</Say></Response>');
+      }
+    }
+
+    if (digit === '2') {
+      await db.database
+        .from('orders')
+        .update({
+          status: 'Cancelled',
+          courier_status: 'Customer cancelled from confirmation call',
+        })
+        .eq('id', req.params.id);
+      return res.send('<Response><Say voice="alice">Your order has been cancelled. Thank you.</Say></Response>');
+    }
+
+    await db.database
+      .from('orders')
+      .update({ courier_status: 'Customer did not confirm from call' })
+      .eq('id', req.params.id);
+    return res.send('<Response><Say voice="alice">We did not receive a valid confirmation. Our support team may contact you again.</Say></Response>');
+  } catch (webhookError) {
+    return res.send('<Response><Say voice="alice">Sorry, something went wrong while confirming this order.</Say></Response>');
+  }
+};
+
+// @desc    Delete an order
+// @route   DELETE /api/orders/:id
+// @access  Private/Admin
+const deleteOrder = async (req, res) => {
+  try {
+    if (req.user.role === 'seller') {
+      return res.status(403).json({ message: 'Sellers cannot delete orders' });
+    }
+
+    const { data: order, error: findError } = await db.database
+      .from('orders')
+      .select('id')
+      .eq('id', req.params.id)
+      .single();
+
+    if (findError || !order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    const { error: itemsError } = await db.database
+      .from('order_items')
+      .delete()
+      .eq('order_id', req.params.id);
+
+    if (itemsError) throw itemsError;
+
+    const { error } = await db.database
+      .from('orders')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (error) throw error;
+
+    res.json({ message: 'Order deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -266,12 +518,12 @@ const getMyOrders = async (req, res) => {
 const getOrders = async (req, res) => {
   try {
     let orderIds = null;
+    let myProductIds = [];
     if (req.user.role === 'seller') {
-      const { data: myProducts } = await db.database.from('products').select('id').eq('user_id', req.user._id);
-      const myProductIds = myProducts ? myProducts.map(p => p.id) : [];
+      myProductIds = await getSellerProductIds(req.user._id);
       if (myProductIds.length > 0) {
         const { data: myOrderItems } = await db.database.from('order_items').select('order_id').in('product_id', myProductIds);
-        orderIds = myOrderItems ? myOrderItems.map(item => item.order_id) : [];
+        orderIds = myOrderItems ? [...new Set(myOrderItems.map(item => item.order_id))] : [];
       } else {
         orderIds = [];
       }
@@ -287,15 +539,39 @@ const getOrders = async (req, res) => {
 
     const { data: orders, error } = await query;
     if (error) throw error;
+
+    let itemsByOrder = {};
+    if (req.user.role === 'seller' && orders.length > 0) {
+      const { data: sellerItems, error: sellerItemsError } = await db.database
+        .from('order_items')
+        .select('*')
+        .in('order_id', orders.map((o) => o.id))
+        .in('product_id', myProductIds);
+      if (sellerItemsError) throw sellerItemsError;
+
+      itemsByOrder = (sellerItems || []).reduce((acc, item) => {
+        if (!acc[item.order_id]) acc[item.order_id] = [];
+        acc[item.order_id].push(item);
+        return acc;
+      }, {});
+    }
     
     const formattedOrders = orders.map(o => ({
       ...o,
       _id: o.id,
       user: o.users ? { _id: o.users.id, name: o.users.name } : null,
       createdAt: o.created_at,
-      totalPrice: o.total_price,
+      totalPrice: req.user.role === 'seller'
+        ? (itemsByOrder[o.id] || []).reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 1), 0)
+        : o.total_price,
+      orderItems: req.user.role === 'seller' ? (itemsByOrder[o.id] || []) : undefined,
       isPaid: o.is_paid,
       status: o.status,
+      courierInfo: {
+        provider: o.courier_provider,
+        trackingCode: o.courier_tracking_code,
+        status: o.courier_status
+      }
     }));
     
     res.json(formattedOrders);
@@ -316,8 +592,7 @@ const getAdminSummary = async (req, res) => {
     let myProductIds = [];
     if (req.user.role === 'seller') {
       productsQuery = productsQuery.eq('user_id', req.user._id);
-      const { data: myProducts } = await db.database.from('products').select('id').eq('user_id', req.user._id);
-      myProductIds = myProducts ? myProducts.map(p => p.id) : [];
+      myProductIds = await getSellerProductIds(req.user._id);
       if (myProductIds.length > 0) {
         const { data: myOrderItems } = await db.database.from('order_items').select('order_id').in('product_id', myProductIds);
         orderIds = myOrderItems ? [...new Set(myOrderItems.map(item => item.order_id))] : [];
@@ -358,17 +633,22 @@ const getAdminSummary = async (req, res) => {
 
     const totalOrders = orders.length;
     const pendingOrders = orders.filter((o) => o.status === 'Pending').length;
-    const totalRevenue = orders
+    let totalRevenue = orders
       .filter((o) => o.status !== 'Cancelled')
       .reduce((acc, order) => acc + Number(order.total_price || 0), 0);
       
-    const formattedOrders = orders.map(o => ({
+    let formattedOrders = orders.map(o => ({
       ...o,
       _id: o.id,
       createdAt: o.created_at,
       totalPrice: o.total_price,
       isPaid: o.is_paid,
       status: o.status,
+      courierInfo: {
+        provider: o.courier_provider,
+        trackingCode: o.courier_tracking_code,
+        status: o.courier_status
+      },
     }));
 
     // Fetch order items & products for advanced analytics
@@ -388,6 +668,18 @@ const getAdminSummary = async (req, res) => {
     let filteredOrderItems = (orderItems || []).filter(item => targetOrderIds.has(item.order_id));
     if (req.user.role === 'seller') {
       filteredOrderItems = filteredOrderItems.filter(item => myProductIds.includes(item.product_id));
+      const sellerTotalsByOrder = filteredOrderItems.reduce((acc, item) => {
+        acc[item.order_id] = (acc[item.order_id] || 0) + Number(item.price || 0) * Number(item.qty || 1);
+        return acc;
+      }, {});
+      totalRevenue = orders
+        .filter((o) => o.status !== 'Cancelled')
+        .reduce((sum, order) => sum + Number(sellerTotalsByOrder[order.id] || 0), 0);
+      formattedOrders = formattedOrders.map((order) => ({
+        ...order,
+        totalPrice: sellerTotalsByOrder[order.id] || 0,
+        orderItems: filteredOrderItems.filter((item) => item.order_id === order.id),
+      }));
     }
 
     // 1. Revenue Overview (Daily aggregates for past 7 days)
@@ -493,6 +785,8 @@ export {
   getOrderById,
   updateOrderStatus,
   updateOrderToPaid,
+  handleVoiceConfirmation,
+  deleteOrder,
   getMyOrders,
   getOrders,
   getAdminSummary,

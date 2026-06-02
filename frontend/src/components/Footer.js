@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Mail, Phone, Download } from 'lucide-react';
+import { getImageUrl } from '@/context/ShopContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -12,15 +13,27 @@ export default function Footer({ onTabChange, onCartClick }) {
   const [subscribeStatus, setSubscribeStatus] = useState('');
 
   useEffect(() => {
-    fetch(`${API_URL}/settings/public`)
-      .then((r) => r.ok ? r.json() : null)
-      .then(setSettings)
-      .catch(() => {});
+    const fetchSettings = () => {
+      fetch(`${API_URL}/settings/public`)
+        .then((r) => r.ok ? r.json() : null)
+        .then(setSettings)
+        .catch(() => {});
+    };
+    const handleSettingsUpdated = (event) => {
+      if (event.detail) setSettings((prev) => ({ ...(prev || {}), ...event.detail }));
+    };
+
+    fetchSettings();
+    window.addEventListener('goroly-settings-updated', handleSettingsUpdated);
     
     fetch(`${API_URL}/pages/public/all`)
       .then((r) => r.ok ? r.json() : [])
       .then((d) => setPages(d || []))
       .catch(() => {});
+
+    return () => {
+      window.removeEventListener('goroly-settings-updated', handleSettingsUpdated);
+    };
   }, []);
 
   const handleSubscribe = async () => {
@@ -131,8 +144,8 @@ export default function Footer({ onTabChange, onCartClick }) {
               <div className="inline-flex">
                 <div className="bg-white rounded-xl px-4 py-2.5 shadow-[0_4px_20px_rgba(255,255,255,0.15)] border border-white/20 hover:shadow-[0_6px_28px_rgba(255,102,0,0.18)] transition-shadow duration-300">
                   <img
-                    src="/logo.png"
-                    alt="Goroly Shop"
+                    src={getImageUrl(s.footerLogo || s.headerLogo) || '/logo.png'}
+                    alt={s.siteTitle || 'Goroly Shop'}
                     className="h-14 w-auto object-contain"
                     onError={(e) => {
                       e.target.style.display = 'none';

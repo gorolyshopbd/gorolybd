@@ -44,6 +44,7 @@ const getProducts = async (req, res) => {
       _id: p.id,
       countInStock: p.count_in_stock,
       discountPercent: p.discount_percent,
+      discountType: p.discount_type || 'percent',
       isFlashSale: p.is_flash_sale,
       flashSaleEnd: p.flash_sale_end,
       digitalFileUrl: p.digital_file_url,
@@ -55,6 +56,8 @@ const getProducts = async (req, res) => {
       minOrderQty: p.min_order_qty,
       barcode: p.barcode,
       slug: p.slug,
+      shippingDays: p.shipping_days,
+      cashOnDelivery: p.cash_on_delivery,
       isPublished: p.is_published,
       isCatalog: p.is_catalog,
       isTodaysDeal: p.is_todays_deal,
@@ -91,6 +94,7 @@ const getProductById = async (req, res) => {
       _id: product.id,
       countInStock: product.count_in_stock,
       discountPercent: product.discount_percent,
+      discountType: product.discount_type || 'percent',
       isFlashSale: product.is_flash_sale,
       flashSaleEnd: product.flash_sale_end,
       digitalFileUrl: product.digital_file_url,
@@ -103,6 +107,8 @@ const getProductById = async (req, res) => {
       minOrderQty: product.min_order_qty,
       barcode: product.barcode,
       slug: product.slug,
+      shippingDays: product.shipping_days,
+      cashOnDelivery: product.cash_on_delivery,
       isPublished: product.is_published,
       isCatalog: product.is_catalog,
       isTodaysDeal: product.is_todays_deal,
@@ -150,6 +156,7 @@ const createProduct = async (req, res) => {
       count_in_stock: 0,
       description: 'Sample Description',
       discount_percent: 0,
+      discount_type: 'percent',
       is_flash_sale: false,
       is_digital: false,
       digital_file_url: '',
@@ -161,6 +168,8 @@ const createProduct = async (req, res) => {
       min_order_qty: 1,
       barcode: '',
       slug: '',
+      shipping_days: 2,
+      cash_on_delivery: true,
       is_published: true,
       is_catalog: true,
       is_todays_deal: false,
@@ -180,9 +189,9 @@ const createProduct = async (req, res) => {
 // @access  Private/Admin
 const updateProduct = async (req, res) => {
   const {
-    name, price, description, image, images, brand, category, countInStock, discountPercent,
+    name, price, description, image, images, brand, category, countInStock, discountPercent, discountType,
     isFlashSale, isDigital, digitalFileUrl, metaTitle, metaDescription, tags, youtubeUrl, flashSaleStart, flashSaleEnd,
-    unit, minOrderQty, barcode, slug,
+    unit, minOrderQty, barcode, slug, shippingDays, cashOnDelivery,
     isPublished, isCatalog, isTodaysDeal, isFeatured
   } = req.body;
 
@@ -204,6 +213,7 @@ const updateProduct = async (req, res) => {
     if (category !== undefined) updateData.category = category;
     if (countInStock !== undefined) updateData.count_in_stock = countInStock;
     if (discountPercent !== undefined) updateData.discount_percent = discountPercent;
+    if (discountType !== undefined) updateData.discount_type = discountType === 'flat' ? 'flat' : 'percent';
     if (isFlashSale !== undefined) updateData.is_flash_sale = isFlashSale;
     if (isDigital !== undefined) updateData.is_digital = isDigital;
     if (digitalFileUrl !== undefined) updateData.digital_file_url = digitalFileUrl;
@@ -217,6 +227,8 @@ const updateProduct = async (req, res) => {
     if (minOrderQty !== undefined) updateData.min_order_qty = minOrderQty;
     if (barcode !== undefined) updateData.barcode = barcode;
     if (slug !== undefined) updateData.slug = slug;
+    if (shippingDays !== undefined) updateData.shipping_days = Number(shippingDays || 0);
+    if (cashOnDelivery !== undefined) updateData.cash_on_delivery = cashOnDelivery;
     if (isPublished !== undefined) updateData.is_published = isPublished;
     if (isCatalog !== undefined) updateData.is_catalog = isCatalog;
     if (isTodaysDeal !== undefined) updateData.is_todays_deal = isTodaysDeal;
@@ -319,6 +331,9 @@ const getRelatedProducts = async (req, res) => {
       _id: p.id,
       countInStock: p.count_in_stock,
       discountPercent: p.discount_percent,
+      discountType: p.discount_type || 'percent',
+      shippingDays: p.shipping_days,
+      cashOnDelivery: p.cash_on_delivery,
       image: p.image_url
     }));
 

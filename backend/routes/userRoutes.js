@@ -6,6 +6,8 @@ import {
   authUser,
   getUserProfile,
   updateUserProfile,
+  updateSteadfastIntegration,
+  updateOrderAutomationIntegration,
   sendOTP,
   verifyOTPCode,
   changePassword,
@@ -89,6 +91,8 @@ router.post('/oauth', oauthLogin);
 router.route('/profile')
   .get(protect, getUserProfile)
   .put(protect, updateUserProfile);
+router.route('/profile/steadfast').put(protect, updateSteadfastIntegration);
+router.route('/profile/order-automation').put(protect, updateOrderAutomationIntegration);
 router.route('/profile/password').put(protect, changePassword);
 router.route('/profile/email').put(protect, changeEmail);
 

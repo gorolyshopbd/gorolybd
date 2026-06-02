@@ -1,119 +1,242 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
-import { useLanguage } from '@/context/LanguageContext';
-import { Star, Heart, ShoppingBag, Eye, Sparkles } from 'lucide-react';
+import { ShopContext, getImageUrl, formatPrice, calculateFinalPrice, formatDiscountLabel } from '@/context/ShopContext';
+import {
+  ArrowRight,
+  Eye,
+  Grid2X2,
+  Heart,
+  ShoppingBag,
+  Sparkles,
+  Star,
+  TrendingUp,
+  Clock3,
+} from 'lucide-react';
 
-export default function FeaturedProducts({ products, onProductClick, onAddToWishlist }) {
+function ProductCard({ product, onProductClick, onAddToWishlist }) {
   const router = useRouter();
   const { addToCart, currencySymbol } = useContext(ShopContext);
-  const { t } = useLanguage();
-
-  const featured = products.filter((p) => !p.isFlashSale);
-  const displayProducts = featured.length > 0 ? featured : products;
+  const finalPrice = calculateFinalPrice(product);
+  const rating = Math.max(0, Math.min(5, Math.floor(product.rating || 5)));
+  const hasDiscount = Number(product.discountPercent || 0) > 0;
 
   return (
-    <section className="py-16 bg-white relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-[#FF6600] to-orange-400 rounded-xl shadow-lg shadow-[#FF6600]/20">
-              <Sparkles size={20} className="text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{t('featuredProducts')}</h2>
-              <p className="text-slate-500 text-xs sm:text-sm">{t('handpicked')}</p>
-            </div>
-          </div>
-          <button
-            onClick={() => router.push('/shop')}
-            className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-bold text-[#FF6600] bg-orange-50 hover:bg-orange-100 rounded-xl transition"
-          >
-            {t('viewAll')}
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
-          </button>
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition duration-300 ease-out hover:-translate-y-1.5 hover:border-orange-200 hover:shadow-[0_24px_60px_rgba(15,23,42,0.10)]">
+      <button
+        type="button"
+        onClick={() => router.push(`/product/${product._id}`)}
+        className="relative block aspect-[5/4] w-full overflow-hidden bg-slate-100 text-left sm:aspect-[6/5]"
+      >
+        {hasDiscount && (
+          <span className="absolute left-3 top-3 z-10 rounded-full bg-red-500 px-2.5 py-1 text-[10px] font-black text-white shadow-lg shadow-red-500/20">
+            {formatDiscountLabel(product, currencySymbol)}
+          </span>
+        )}
+        {product.isFeatured && (
+          <span className="absolute bottom-3 left-3 z-10 rounded-full bg-white/92 px-3 py-1 text-[10px] font-black text-slate-900 shadow-sm backdrop-blur">
+            Featured
+          </span>
+        )}
+        <img
+          src={getImageUrl(product.image)}
+          alt={product.name}
+          className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/18 via-transparent to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
+      </button>
+
+      <div className="absolute right-3 top-3 z-20 flex flex-col gap-2 opacity-100 sm:translate-x-2 sm:opacity-0 sm:transition sm:duration-300 sm:group-hover:translate-x-0 sm:group-hover:opacity-100">
+        <button
+          type="button"
+          onClick={() => onAddToWishlist(product)}
+          className="grid h-9 w-9 place-items-center rounded-full bg-white/95 text-slate-500 shadow-sm ring-1 ring-slate-200/80 backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:scale-105 hover:text-red-500 hover:ring-red-100 active:translate-y-0 active:scale-95"
+          title="Wishlist"
+        >
+          <Heart size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => onProductClick(product)}
+          className="grid h-9 w-9 place-items-center rounded-full bg-white/95 text-slate-600 shadow-sm ring-1 ring-slate-200/80 backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:scale-105 hover:text-[#FF6600] hover:ring-orange-100 active:translate-y-0 active:scale-95"
+          title="Quick view"
+        >
+          <Eye size={16} />
+        </button>
+      </div>
+
+      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
+        <div className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-400">
+          <span className="max-w-[120px] truncate">{product.category || 'Product'}</span>
+          {product.brand && <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" />}
+          {product.brand && <span className="truncate normal-case text-slate-500">{product.brand}</span>}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {displayProducts.map((product) => {
-            const finalPrice = product.price * (1 - (product.discountPercent || 0) / 100);
-            return (
-              <div
-                key={product._id}
-                className="group bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-500 hover:-translate-y-1 flex flex-col"
-              >
-                <div className="relative pt-[80%] bg-slate-50 overflow-hidden">
-                  {product.discountPercent > 0 && (
-                    <span className="absolute top-3 left-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg z-10 shadow-lg shadow-emerald-500/30">
-                      -{product.discountPercent}%
-                    </span>
-                  )}
-                  <button
-                    onClick={() => onAddToWishlist(product)}
-                    className="absolute top-3 right-3 p-2 bg-white/80 hover:bg-white text-slate-400 hover:text-red-500 rounded-full shadow-md backdrop-blur-sm transition z-10 scale-0 group-hover:scale-100"
-                  >
-                    <Heart size={15} />
-                  </button>
-                  <img
-                    src={getImageUrl(product.image)}
-                    alt={product.name}
-                    onClick={() => router.push(`/product/${product._id}`)}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out cursor-pointer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  <button
-                    onClick={() => onProductClick(product)}
-                    className="absolute bottom-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-md hover:bg-white transition z-10 text-slate-500 hover:text-[#FF6600] translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 duration-300"
-                    title="Quick View"
-                  >
-                    <Eye size={15} />
-                  </button>
-                </div>
+        <button
+          type="button"
+          onClick={() => router.push(`/product/${product._id}`)}
+          className="line-clamp-2 min-h-[44px] text-left text-[15px] font-black leading-snug text-slate-950 transition hover:text-[#FF6600] sm:text-base"
+        >
+          {product.name}
+        </button>
 
-                <div className="p-3 flex-1 flex flex-col justify-between gap-2">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 tracking-[0.1em]">{product.category}</span>
-                      <span className="w-1 h-1 rounded-full bg-slate-300" />
-                      <span className="text-[9px] font-semibold text-slate-400">{product.brand}</span>
-                    </div>
-                    <h3
-                      onClick={() => router.push(`/product/${product._id}`)}
-                      className="font-bold text-slate-800 text-sm leading-snug hover:text-[#FF6600] cursor-pointer transition line-clamp-2"
-                    >
-                      {product.name}
-                    </h3>
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex text-amber-400">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} size={11} fill={i < Math.floor(product.rating || 5) ? 'currentColor' : 'none'} />
-                        ))}
-                      </div>
-                      <span className="text-slate-400 text-[10px] font-medium">({product.numReviews || 12})</span>
-                    </div>
-                  </div>
+        <div className="mt-2 flex items-center gap-1.5">
+          <div className="flex text-amber-400">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star key={i} size={12} fill={i < rating ? 'currentColor' : 'none'} />
+            ))}
+          </div>
+          <span className="text-[11px] font-semibold text-slate-400">({product.numReviews || 0})</span>
+        </div>
 
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-sm font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</span>
-                      {product.discountPercent > 0 && (
-                        <span className="text-[11px] text-slate-400 line-through font-medium">{formatPrice(product.price, currencySymbol)}</span>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => addToCart(product, 1)}
-                      className="px-3.5 py-2 bg-[#FF6600] hover:bg-[#e05a00] text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-md shadow-[#FF6600]/15 hover:shadow-lg hover:shadow-[#FF6600]/25 flex items-center gap-1.5 border-0 cursor-pointer"
-                    >
-                      <ShoppingBag size={12} />
-                      {t('add')}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+          <div className="min-w-0">
+            <div className="text-base font-black text-slate-950 sm:text-lg">{formatPrice(finalPrice, currencySymbol)}</div>
+            {hasDiscount && (
+              <div className="text-xs font-semibold text-slate-400 line-through">{formatPrice(product.price, currencySymbol)}</div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => addToCart(product, 1)}
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-slate-950 px-3.5 text-xs font-black text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#FF6600] hover:shadow-lg hover:shadow-orange-500/20 active:translate-y-0 active:scale-95 sm:px-4"
+          >
+            <ShoppingBag size={14} />
+            <span className="hidden sm:inline">Add</span>
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+export default function FeaturedProducts({ products = [], onProductClick, onAddToWishlist }) {
+  const [activeTab, setActiveTab] = useState('new');
+  const scrollerRef = useRef(null);
+
+  const sections = useMemo(() => {
+    const visible = products.filter((product) => product && product.isPublished !== false);
+    const nonFlash = visible.filter((product) => !product.isFlashSale);
+    const catalog = nonFlash.length ? nonFlash : visible;
+
+    const newArrivals = [...catalog]
+      .sort((a, b) => new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0))
+      .slice(0, 10);
+
+    const popular = [...catalog]
+      .sort((a, b) => {
+        const aScore = Number(a.soldCount || a.salesCount || 0) * 4 + Number(a.numReviews || 0) * 2 + Number(a.rating || 0);
+        const bScore = Number(b.soldCount || b.salesCount || 0) * 4 + Number(b.numReviews || 0) * 2 + Number(b.rating || 0);
+        return bScore - aScore;
+      })
+      .slice(0, 10);
+
+    return {
+      new: { label: 'New Arrival', icon: Clock3, products: newArrivals.length ? newArrivals : catalog.slice(0, 10) },
+      popular: { label: 'Popular', icon: TrendingUp, products: popular.length ? popular : catalog.slice(0, 10) },
+      all: { label: 'All Products', icon: Grid2X2, products: catalog.slice(0, 15) },
+    };
+  }, [products]);
+
+  const current = sections[activeTab];
+  const CurrentIcon = current.icon;
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller || current.products.length < 3) return undefined;
+
+    const interval = window.setInterval(() => {
+      if (window.innerWidth >= 1024 || scroller.scrollWidth <= scroller.clientWidth) return;
+
+      const nextLeft = scroller.scrollLeft + scroller.clientWidth;
+      scroller.scrollTo({
+        left: nextLeft >= scroller.scrollWidth - scroller.clientWidth - 8 ? 0 : nextLeft,
+        behavior: 'smooth',
+      });
+    }, 4500);
+
+    return () => window.clearInterval(interval);
+  }, [activeTab, current.products.length]);
+
+  if (!products.length) return null;
+
+  return (
+    <section className="bg-[#f8fafc] py-10 sm:py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-xl">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3 py-1.5 text-[11px] font-black uppercase text-[#FF6600] shadow-sm">
+              <Sparkles size={14} />
+              Product Picks
+            </div>
+            <h2 className="text-2xl font-black tracking-tight text-slate-950 sm:text-4xl">Fresh products, picked for easy shopping</h2>
+            <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
+              Browse new arrivals, popular items, and the full collection without leaving the section.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-1 shadow-sm sm:rounded-full">
+            <div className="grid grid-cols-1 gap-1 min-[420px]:grid-cols-3 sm:flex sm:flex-wrap">
+              {Object.entries(sections).map(([key, section]) => {
+                const Icon = section.icon;
+                const isActive = activeTab === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setActiveTab(key)}
+                    className={`inline-flex h-10 items-center justify-center gap-2 rounded-full px-3 text-xs font-black transition duration-200 active:scale-95 sm:px-4 ${
+                      isActive
+                        ? 'bg-slate-950 text-white shadow-md'
+                        : 'text-slate-500 hover:bg-slate-100 hover:text-slate-950'
+                    }`}
+                  >
+                    <Icon size={14} />
+                    {section.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-orange-50 text-[#FF6600]">
+              <CurrentIcon size={17} />
+            </div>
+            <div className="min-w-0">
+              <h3 className="truncate text-base font-black text-slate-950">{current.label}</h3>
+              <p className="text-xs font-semibold text-slate-400">{current.products.length} products showing</p>
+            </div>
+          </div>
+          {activeTab !== 'all' && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('all')}
+              className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 text-xs font-black text-slate-600 transition duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:bg-orange-50 hover:text-[#FF6600] hover:shadow-sm active:translate-y-0 active:scale-95 sm:px-4"
+            >
+              <span className="sm:hidden">All</span>
+              <span className="hidden sm:inline">Show all</span>
+              <ArrowRight size={14} />
+            </button>
+          )}
+        </div>
+
+        <div
+          ref={scrollerRef}
+          className="grid snap-x snap-mandatory auto-cols-[calc((100%-0.875rem)/2)] grid-flow-col gap-3.5 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[calc((100%-2rem)/3)] sm:gap-4 lg:auto-cols-auto lg:grid-flow-row lg:grid-cols-3 lg:overflow-visible lg:pb-0"
+        >
+          {current.products.map((product) => (
+            <div key={product._id} className="min-w-0 snap-start">
+              <ProductCard
+                product={product}
+                onProductClick={onProductClick}
+                onAddToWishlist={onAddToWishlist}
+              />
+            </div>
+          ))}
         </div>
       </div>
     </section>

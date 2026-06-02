@@ -12,6 +12,7 @@ export default function UserDashboard() {
   const { user, logout, API_URL, changeUserPassword, currencySymbol } = useContext(ShopContext);
   const { lang, t } = useLanguage();
   const [activeSubTab, setActiveSubTab] = useState('profile'); // profile, orders, settings
+  const dashboardTabReadyRef = React.useRef(false);
   const [ordersList, setOrdersList] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
@@ -27,6 +28,21 @@ export default function UserDashboard() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [pwdSuccess, setPwdSuccess] = useState('');
   const [pwdError, setPwdError] = useState('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const savedTab = params.get('account') || localStorage.getItem('goroly_customer_dashboard_tab');
+    if (savedTab) setActiveSubTab(savedTab);
+    dashboardTabReadyRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!dashboardTabReadyRef.current) return;
+    localStorage.setItem('goroly_customer_dashboard_tab', activeSubTab);
+    const url = new URL(window.location.href);
+    url.searchParams.set('account', activeSubTab);
+    window.history.replaceState({}, '', url.toString());
+  }, [activeSubTab]);
 
   useEffect(() => {
     if (user) {

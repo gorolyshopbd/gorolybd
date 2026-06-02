@@ -4,6 +4,8 @@ import {
   getOrderById,
   updateOrderStatus,
   updateOrderToPaid,
+  handleVoiceConfirmation,
+  deleteOrder,
   getMyOrders,
   getOrders,
   getAdminSummary,
@@ -15,7 +17,8 @@ const router = express.Router();
 router.route('/').post(protect, addOrderItems).get(protect, adminOrSeller, getOrders);
 router.route('/myorders').get(protect, getMyOrders);
 router.route('/summary').get(protect, adminOrSeller, getAdminSummary);
-router.route('/:id').get(protect, getOrderById);
+router.route('/:id/voice-confirmation').post(handleVoiceConfirmation);
+router.route('/:id').get(protect, getOrderById).delete(protect, adminOrSeller, deleteOrder);
 router.route('/:id/status').put(protect, adminOrSeller, updateOrderStatus);
 router.route('/:id/pay').put(protect, updateOrderToPaid);
 

@@ -8,10 +8,10 @@ import {
   Keyboard, Sparkles, Info, Copy, CopyCheck
 } from 'lucide-react';
 
-const DEMO_EMAIL = 'admin@gorolyshop.com';
+const DEMO_EMAIL = 'admin@shopio.com';
 const DEMO_PASS = 'admin123';
 
-export default function AdminLoginPage() {
+export default function AdminLoginForm({ onSuccess }) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,15 +26,13 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     setMounted(true);
-    const token = localStorage.getItem('shop_admin_token');
-    if (token) router.push('/admin');
     const saved = localStorage.getItem('shop_admin_remember');
     if (saved) {
       const { email: savedEmail } = JSON.parse(saved);
       if (savedEmail) { setEmail(savedEmail); setRemember(true); }
     }
     setTimeout(() => emailRef.current?.focus(), 400);
-  }, [router]);
+  }, []);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -54,7 +52,8 @@ export default function AdminLoginPage() {
         localStorage.setItem('shop_user', JSON.stringify(userObj));
         if (remember) localStorage.setItem('shop_admin_remember', JSON.stringify({ email }));
         else localStorage.removeItem('shop_admin_remember');
-        window.location.href = '/admin';
+        if (onSuccess) onSuccess();
+        else window.location.href = '/admin';
       } else {
         setError(data.message || 'Invalid credentials');
       }
@@ -62,7 +61,7 @@ export default function AdminLoginPage() {
       setError('Cannot connect to server. Make sure backend is running.');
     }
     setLoading(false);
-  }, [email, password, remember]);
+  }, [email, password, remember, onSuccess]);
 
   const handleKeyDown = useCallback((e) => {
     if (e.getModifierState && e.getModifierState('CapsLock')) setCapsLock(true);
@@ -71,8 +70,6 @@ export default function AdminLoginPage() {
   const handleKeyUp = useCallback((e) => {
     if (e.getModifierState && !e.getModifierState('CapsLock')) setCapsLock(false);
   }, []);
-
-
 
   if (!mounted) return null;
 
@@ -84,22 +81,19 @@ export default function AdminLoginPage() {
         <div className="absolute -bottom-[15%] -right-[10%] w-[55%] h-[55%] bg-gradient-to-br from-violet-300/25 via-indigo-300/15 to-transparent rounded-full blur-[130px] animate-[floatSlow_8s_ease-in-out_infinite_2s]" />
         <div className="absolute top-[20%] right-[25%] w-[25%] h-[25%] bg-cyan-300/10 rounded-full blur-[100px] animate-[floatSlow_10s_ease-in-out_infinite_4s]" />
         <div className="absolute bottom-[30%] left-[20%] w-[20%] h-[20%] bg-orange-300/10 rounded-full blur-[90px] animate-[floatSlow_10s_ease-in-out_infinite_1s]" />
-        {/* Subtle grid overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:32px_32px] opacity-30" />
       </div>
 
       {/* Login Card */}
       <div className="relative z-10 w-full max-w-[420px] px-5 animate-fade-in">
-        <div
-          className={[
-            'w-full p-8 sm:p-10',
-            'bg-white/75 backdrop-blur-2xl',
-            'border border-white/60',
-            'rounded-[2.25rem]',
-            'shadow-[0_25px_70px_-20px_rgba(0,0,0,0.12)]',
-            'transition-all duration-500',
-          ].join(' ')}
-        >
+        <div className={[
+          'w-full p-8 sm:p-10',
+          'bg-white/75 backdrop-blur-2xl',
+          'border border-white/60',
+          'rounded-[2.25rem]',
+          'shadow-[0_25px_70px_-20px_rgba(0,0,0,0.12)]',
+          'transition-all duration-500',
+        ].join(' ')}>
           {/* Logo Area */}
           <div className="flex flex-col items-center mb-8">
             <div className={[
@@ -182,7 +176,6 @@ export default function AdminLoginPage() {
                   {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
-              {/* Caps Lock warning */}
               {capsLock && (
                 <div className="flex items-center gap-1.5 pl-1 pt-0.5 text-[0.6rem] font-bold text-amber-600 animate-fade-in">
                   <TriangleAlert size={12} />
@@ -213,7 +206,7 @@ export default function AdminLoginPage() {
               </span>
             </div>
 
-            {/* Error / Success Message */}
+            {/* Error Message */}
             {error && (
               <div className="flex items-start gap-2.5 p-3.5 bg-orange-50/90 border border-orange-200/70 rounded-xl text-orange-600 text-xs font-semibold shadow-sm animate-fade-in">
                 <AlertCircle size={15} className="mt-0.5 flex-shrink-0 text-orange-400" />
@@ -249,7 +242,6 @@ export default function AdminLoginPage() {
                   <span>Secure Login</span>
                 </>
               )}
-              {/* Shimmer on hover */}
               <span className="absolute inset-0 bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.08)_50%,transparent_100%)] bg-[length:200%_100%] hover:animate-[shimmer_1.5s_ease-in-out]" />
             </button>
           </form>
@@ -310,7 +302,6 @@ export default function AdminLoginPage() {
         </div>
       </div>
 
-      {/* Keyframe animations */}
       <style jsx global>{`
         @keyframes floatSlow {
           0%, 100% { transform: translate(0, 0) scale(1); }

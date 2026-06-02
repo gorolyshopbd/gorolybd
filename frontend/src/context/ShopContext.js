@@ -28,6 +28,28 @@ export const formatPrice = (amount, symbol = '$') => {
   return isNaN(num) ? `${symbol}0.00` : `${symbol}${num.toFixed(2)}`;
 };
 
+export const getDiscountType = (product) => {
+  const type = product?.discountType || product?.discount_type;
+  return type === 'flat' ? 'flat' : 'percent';
+};
+
+export const calculateFinalPrice = (product) => {
+  const price = Number(product?.price || 0);
+  const discount = Math.max(Number(product?.discountPercent || product?.discount_percent || 0), 0);
+
+  if (getDiscountType(product) === 'flat') {
+    return Math.max(price - discount, 0);
+  }
+
+  return Math.max(price * (1 - Math.min(discount, 100) / 100), 0);
+};
+
+export const formatDiscountLabel = (product, symbol = '$') => {
+  const discount = Math.max(Number(product?.discountPercent || product?.discount_percent || 0), 0);
+  if (!discount) return '';
+  return getDiscountType(product) === 'flat' ? `-${formatPrice(discount, symbol)}` : `-${discount}%`;
+};
+
 export const getImageUrl = (path) => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
@@ -69,9 +91,14 @@ export const ShopProvider = ({ children }) => {
   useEffect(() => {
     let mounted = true;
     const init = async () => {
-      await insforge.realtime.connect();
-      const res = await insforge.realtime.subscribe('dashboard');
-      if (res && res.ok && mounted) setRtLive(true);
+      try {
+        await insforge.realtime.connect();
+        const res = await insforge.realtime.subscribe('dashboard');
+        if (res && res.ok && mounted) setRtLive(true);
+      } catch (error) {
+        if (mounted) setRtLive(false);
+        console.warn('Realtime dashboard connection unavailable:', error?.message || error);
+      }
     };
     init();
 
@@ -83,8 +110,12 @@ export const ShopProvider = ({ children }) => {
 
     return () => {
       mounted = false;
-      insforge.realtime.unsubscribe('dashboard');
-      insforge.realtime.disconnect();
+      try {
+        insforge.realtime.unsubscribe('dashboard');
+        insforge.realtime.disconnect();
+      } catch (error) {
+        console.warn('Realtime dashboard cleanup skipped:', error?.message || error);
+      }
     };
   }, []);
 
@@ -637,6 +668,9 @@ export const ShopProvider = ({ children }) => {
       const updatedUser = { ...user, email: newEmail };
       setUser(updatedUser);
       localStorage.setItem('shop_user', JSON.stringify(updatedUser));
+      if (localStorage.getItem('shop_admin_user')) {
+        localStorage.setItem('shop_admin_user', JSON.stringify(updatedUser));
+      }
       return { success: true };
     } catch (error) {
       setLoading(false);
@@ -744,6 +778,7 @@ export const ShopProvider = ({ children }) => {
             image: product.image,
             price: product.price,
             discountPercent: product.discountPercent || 0,
+            discountType: getDiscountType(product),
             countInStock: product.countInStock,
             qty,
           },
@@ -858,7 +893,7 @@ export const ShopProvider = ({ children }) => {
     if (!user) return { success: false, error: 'User is not logged in' };
     
     const itemsPrice = cartItems.reduce((acc, item) => {
-      const price = item.price * (1 - (item.discountPercent || 0) / 100);
+      const price = calculateFinalPrice(item);
       return acc + price * item.qty;
     }, 0);
 

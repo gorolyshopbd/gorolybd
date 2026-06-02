@@ -12,14 +12,10 @@ const uploadToInsForge = async (file, folder = 'products') => {
 
   if (error) throw error;
 
-  const storageKey = data.key || data.path || key;
+  const storageKey = data.key || key;
 
-  // Get the public URL — storage.upload() only returns path/id, not a URL
-  const { data: publicUrlData } = db.storage
-    .from('product')
-    .getPublicUrl(storageKey);
-
-  const publicUrl = publicUrlData?.publicUrl || publicUrlData?.url || '';
+  // getPublicUrl() returns a string — use it for consistent URLs
+  const publicUrl = data.url || db.storage.from('product').getPublicUrl(storageKey) || '';
 
   const { error: imgError } = await db.database.from('images').insert({
     filename: storageKey,

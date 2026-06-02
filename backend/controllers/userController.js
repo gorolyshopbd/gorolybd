@@ -31,11 +31,28 @@ function getRolePermissions(role) {
 }
 
 function sanitizeUser(user) {
-  const { password_hash, ...rest } = user;
+  const {
+    password_hash,
+    steadfast_secret_key,
+    steadfast_api_key,
+    twilio_auth_token,
+    elevenlabs_api_key,
+    openai_api_key,
+    ...rest
+  } = user;
   return { 
     ...rest, 
     _id: rest.id,
     isAdmin: rest.is_admin,
+    hasSteadfastIntegration: Boolean(rest.steadfast_enabled && steadfast_api_key && steadfast_secret_key),
+    hasOrderAutomationIntegration: Boolean(
+      rest.order_automation_enabled &&
+      rest.twilio_account_sid &&
+      twilio_auth_token &&
+      rest.twilio_from_number
+    ),
+    hasElevenLabsIntegration: Boolean(elevenlabs_api_key && rest.elevenlabs_voice_id),
+    hasOpenAIIntegration: Boolean(openai_api_key),
     permissions: rest.permissions || getRolePermissions(rest.role) 
   };
 }
@@ -217,6 +234,125 @@ const updateUserProfile = async (req, res) => {
     if (error) throw error;
 
     res.json(sanitizeUser(updated));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update seller SteadFast integration
+// @route   PUT /api/users/profile/steadfast
+// @access  Private/Seller
+const updateSteadfastIntegration = async (req, res) => {
+  const { apiKey, secretKey, enabled } = req.body;
+
+  try {
+    const { data: user, error: userError } = await db.database
+      .from('users')
+      .select('*')
+      .eq('id', req.user._id)
+      .single();
+
+    if (userError || !user) return res.status(404).json({ message: 'User not found' });
+    if (user.role !== 'seller' && !user.is_admin) {
+      return res.status(403).json({ message: 'Only sellers can configure SteadFast integration' });
+    }
+
+    const updateData = {
+      steadfast_enabled: enabled !== undefined ? Boolean(enabled) : true,
+    };
+
+    if (apiKey !== undefined && String(apiKey).trim()) {
+      updateData.steadfast_api_key = String(apiKey).trim();
+    }
+    if (secretKey !== undefined && String(secretKey).trim()) {
+      updateData.steadfast_secret_key = String(secretKey).trim();
+    }
+
+    const nextApiKey = updateData.steadfast_api_key || user.steadfast_api_key;
+    const nextSecretKey = updateData.steadfast_secret_key || user.steadfast_secret_key;
+
+    if (updateData.steadfast_enabled && (!nextApiKey || !nextSecretKey)) {
+      return res.status(400).json({ message: 'API key and Secret key are required to enable SteadFast integration' });
+    }
+
+    const { data: updated, error } = await db.database
+      .from('users')
+      .update(updateData)
+      .eq('id', req.user._id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      ...sanitizeUser(updated),
+      message: 'SteadFast integration saved successfully',
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update seller AI/Twilio/ElevenLabs order automation
+// @route   PUT /api/users/profile/order-automation
+// @access  Private/Seller
+const updateOrderAutomationIntegration = async (req, res) => {
+  const {
+    enabled,
+    twilioAccountSid,
+    twilioAuthToken,
+    twilioFromNumber,
+    elevenlabsApiKey,
+    elevenlabsVoiceId,
+    openaiApiKey,
+    openaiModel,
+  } = req.body;
+
+  try {
+    const { data: user, error: userError } = await db.database
+      .from('users')
+      .select('*')
+      .eq('id', req.user._id)
+      .single();
+
+    if (userError || !user) return res.status(404).json({ message: 'User not found' });
+    if (user.role !== 'seller' && !user.is_admin) {
+      return res.status(403).json({ message: 'Only sellers can configure order automation' });
+    }
+
+    const updateData = {
+      order_automation_enabled: enabled !== undefined ? Boolean(enabled) : true,
+    };
+
+    if (twilioAccountSid !== undefined && String(twilioAccountSid).trim()) updateData.twilio_account_sid = String(twilioAccountSid).trim();
+    if (twilioAuthToken !== undefined && String(twilioAuthToken).trim()) updateData.twilio_auth_token = String(twilioAuthToken).trim();
+    if (twilioFromNumber !== undefined && String(twilioFromNumber).trim()) updateData.twilio_from_number = String(twilioFromNumber).trim();
+    if (elevenlabsApiKey !== undefined && String(elevenlabsApiKey).trim()) updateData.elevenlabs_api_key = String(elevenlabsApiKey).trim();
+    if (elevenlabsVoiceId !== undefined && String(elevenlabsVoiceId).trim()) updateData.elevenlabs_voice_id = String(elevenlabsVoiceId).trim();
+    if (openaiApiKey !== undefined && String(openaiApiKey).trim()) updateData.openai_api_key = String(openaiApiKey).trim();
+    if (openaiModel !== undefined && String(openaiModel).trim()) updateData.openai_model = String(openaiModel).trim();
+
+    const nextTwilioSid = updateData.twilio_account_sid || user.twilio_account_sid;
+    const nextTwilioToken = updateData.twilio_auth_token || user.twilio_auth_token;
+    const nextTwilioFrom = updateData.twilio_from_number || user.twilio_from_number;
+
+    if (updateData.order_automation_enabled && (!nextTwilioSid || !nextTwilioToken || !nextTwilioFrom)) {
+      return res.status(400).json({ message: 'Twilio Account SID, Auth Token, and From Number are required to enable calls/SMS' });
+    }
+
+    const { data: updated, error } = await db.database
+      .from('users')
+      .update(updateData)
+      .eq('id', req.user._id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      ...sanitizeUser(updated),
+      message: 'Order automation integration saved successfully',
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -844,6 +980,8 @@ export {
   registerUser,
   getUserProfile,
   updateUserProfile,
+  updateSteadfastIntegration,
+  updateOrderAutomationIntegration,
   sendOTP,
   verifyOTPCode,
   changePassword,

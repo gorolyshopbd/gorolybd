@@ -7,7 +7,7 @@ import Script from 'next/script';
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function TrackingScripts() {
-  const [tracking, setTracking] = useState({ pixelId: '', ga4Id: '', customCode: '' });
+  const [tracking, setTracking] = useState({ pixelId: '', ga4Id: '', gtmId: '', gtmEnabled: false, customCode: '' });
   const pathname = usePathname();
 
   useEffect(() => {
@@ -19,6 +19,8 @@ export default function TrackingScripts() {
           setTracking({
             pixelId: data.facebookPixelId || '',
             ga4Id: data.ga4MeasurementId || '',
+            gtmId: data.googleTagManagerId || '',
+            gtmEnabled: data.googleTagManagerEnabled || false,
             customCode: data.customHeaderCode || '',
           });
         }
@@ -58,6 +60,33 @@ export default function TrackingScripts() {
               style={{ display: 'none' }}
               src={`https://www.facebook.com/tr?id=${tracking.pixelId}&ev=PageView&noscript=1`}
               alt="facebook pixel"
+            />
+          </noscript>
+        </>
+      )}
+
+      {tracking.gtmEnabled && tracking.gtmId && (
+        <>
+          <Script
+            id="google-tag-manager"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                })(window,document,'script','dataLayer','${tracking.gtmId}');
+              `,
+            }}
+          />
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${tracking.gtmId}`}
+              height="0"
+              width="0"
+              style={{ display: 'none', visibility: 'hidden' }}
+              title="Google Tag Manager"
             />
           </noscript>
         </>
