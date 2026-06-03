@@ -8,7 +8,7 @@ import {
   CircleDot, Tag, Plus, Check, Truck, CreditCard, ChevronRight, X,
   Sliders, Ship, Globe, MessageCircle, MessageSquare, Eye, EyeOff, LayoutGrid, Server,
   BarChart3, PieChart, TrendingUp, Play, Image as ImageIcon, CheckCircle2, MoreVertical, Edit2, Search,
-  FolderOpen, Upload, Trash2, Edit, Shirt, Smartphone, Sparkles, Watch, Home, Calendar, Bell, Settings, Download, Wifi, WifiOff
+  FolderOpen, Upload, Trash2, Edit, Shirt, Smartphone, Sparkles, Watch, Home, Calendar, Bell, Settings, Download, Wifi, WifiOff, Zap
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart as RPie, Pie, Cell, LineChart, Line, CartesianGrid, AreaChart, Area } from 'recharts';
 import { useRealtime } from '@/hooks/useRealtime';
@@ -56,6 +56,10 @@ const formatDateMDY = (dateString) => {
   return `${month} ${day}, ${year}`;
 };
 
+const stripHtml = (html) => {
+  if (!html) return '';
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+};
 
 export default function AdminDashboard({ onTabChange }) {
   const { API_URL, changeUserEmail, fetchUsers, createUserByAdmin, importSellersByAdmin, updateUserByAdmin, adminResetUserPassword, deleteUserByAdmin, banUserByAdmin, unbanUserByAdmin, setExtraDeliveryTimeByAdmin, currencySymbol, currencyCode, payouts, fetchPayouts, requestPayout, updatePayoutStatus, sellerSettings, fetchSellerSettings, updateSellerSettings, sellerPackages, fetchSellerPackages, createSellerPackage, updateSellerPackage, deleteSellerPackage, onlineSubscriptions, offlineSubscriptions, fetchOnlineSubscriptions, fetchOfflineSubscriptions, rewardSettings, userPoints, pointLogs, fetchRewardSettings, updateRewardSettings, fetchUserPoints, fetchPointLogs, adjustUserPoints, insforge } = useContext(ShopContext);
@@ -91,7 +95,7 @@ export default function AdminDashboard({ onTabChange }) {
   const [productsList, setProductsList] = useState([]);
   const [rtConnected, setRtConnected] = useState(false);
 
-  useRealtime('dashboard', {
+  const { publish: publishRealtime } = useRealtime('dashboard', {
     'order_updated': useCallback((payload) => {
       setMetrics(prev => ({
         ...prev,
@@ -214,8 +218,11 @@ export default function AdminDashboard({ onTabChange }) {
     flashSaleEnd: '',
     isDigital: false,
     digitalFileUrl: '',
+    shortDescription: '',
     metaTitle: '',
     metaDescription: '',
+    metaKeywords: '',
+    metaImage: '',
     tags: '',
     youtubeUrl: '',
     unit: 'pc',
@@ -232,13 +239,18 @@ export default function AdminDashboard({ onTabChange }) {
   const [editImagePreview, setEditImagePreview] = useState('');
   const [editAdditionalImageFiles, setEditAdditionalImageFiles] = useState([]);
 
+  const seoImagePreview = newProduct.metaImage || imagePreview || newProduct.image || '';
+  const autoMetaTitle = newProduct.metaTitle || newProduct.name || '';
+  const autoMetaDescription = newProduct.metaDescription || newProduct.shortDescription || stripHtml(newProduct.description || '').slice(0, 160);
+  const autoMetaKeywords = newProduct.metaKeywords || newProduct.tags || '';
+
   // Edit product states
   const [editingProduct, setEditingProduct] = useState(null);
   const [editForm, setEditForm] = useState({
     name: '', price: '', category: '', brand: '', countInStock: '',
-    description: '', image: '', images: [], discountPercent: '0', discountType: 'percent',
+    description: '', shortDescription: '', image: '', images: [], discountPercent: '0', discountType: 'percent',
     isFlashSale: false, flashSaleStart: '', flashSaleEnd: '', isDigital: false, digitalFileUrl: '',
-    metaTitle: '', metaDescription: '', tags: '', youtubeUrl: '',
+    metaTitle: '', metaDescription: '', metaKeywords: '', metaImage: '', tags: '', youtubeUrl: '',
     unit: 'pc', minOrderQty: '1', barcode: '', slug: '',
     cashOnDelivery: true, shippingDays: '2',
   });
@@ -1084,8 +1096,10 @@ export default function AdminDashboard({ onTabChange }) {
           isFlashSale: newProduct.isFlashSale,
           flashSaleStart: newProduct.flashSaleStart || null,
           flashSaleEnd: newProduct.flashSaleEnd || null,
-          metaTitle: newProduct.metaTitle || '',
-          metaDescription: newProduct.metaDescription || '',
+          metaTitle: newProduct.metaTitle || newProduct.name || '',
+          metaDescription: newProduct.metaDescription || newProduct.shortDescription || stripHtml(newProduct.description || '').slice(0, 160),
+          metaKeywords: newProduct.metaKeywords || newProduct.tags || '',
+          metaImage: newProduct.metaImage || mainImageUrl,
           tags: newProduct.tags ? newProduct.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
           youtubeUrl: newProduct.youtubeUrl || '',
           unit: newProduct.unit || 'pc',
@@ -1118,8 +1132,11 @@ export default function AdminDashboard({ onTabChange }) {
           flashSaleEnd: '',
           isDigital: false,
           digitalFileUrl: '',
+          shortDescription: '',
           metaTitle: '',
           metaDescription: '',
+          metaKeywords: '',
+          metaImage: '',
           tags: '',
           youtubeUrl: '',
           unit: 'pc',
@@ -1189,8 +1206,10 @@ export default function AdminDashboard({ onTabChange }) {
           isFlashSale: editForm.isFlashSale,
           flashSaleStart: editForm.flashSaleStart || null,
           flashSaleEnd: editForm.flashSaleEnd || null,
-          metaTitle: editForm.metaTitle || '',
-          metaDescription: editForm.metaDescription || '',
+          metaTitle: editForm.metaTitle || editForm.name || '',
+          metaDescription: editForm.metaDescription || editForm.shortDescription || stripHtml(editForm.description || '').slice(0, 160),
+          metaKeywords: editForm.metaKeywords || editForm.tags || '',
+          metaImage: editForm.metaImage || imageUrl,
           tags: editForm.tags ? editForm.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
           youtubeUrl: editForm.youtubeUrl || '',
           unit: editForm.unit || 'pc',
@@ -1627,12 +1646,19 @@ export default function AdminDashboard({ onTabChange }) {
   const handleCreateCategory = async (e) => {
     e.preventDefault();
     try {
+      const existingName = categoryList.find(cat => cat.name.toLowerCase() === catForm.name.trim().toLowerCase());
+      if (existingName) {
+        alert('Category name already exists. Please choose a different name.');
+        return;
+      }
+
       const res = await fetch(`${API_URL}/categories`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
         body: JSON.stringify({
           name: catForm.name,
           image: catForm.image,
+          banner: catForm.banner,
           order: catForm.order
         }),
       });
@@ -1644,6 +1670,7 @@ export default function AdminDashboard({ onTabChange }) {
           featured: false, status: true
         });
         fetchCategories();
+        publishRealtime('category_updated', { action: 'create' });
       } else {
         alert(data.message || 'Failed to create category');
       }
@@ -1655,12 +1682,19 @@ export default function AdminDashboard({ onTabChange }) {
   const handleUpdateCategory = async (e) => {
     e.preventDefault();
     try {
+      const existingName = categoryList.find(cat => cat.name.toLowerCase() === catForm.name.trim().toLowerCase() && cat._id !== editingCat._id);
+      if (existingName) {
+        alert('Category name already exists. Please choose a different name.');
+        return;
+      }
+
       const res = await fetch(`${API_URL}/categories/${editingCat._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
         body: JSON.stringify({
           name: catForm.name,
           image: catForm.image,
+          banner: catForm.banner,
           order: catForm.order
         }),
       });
@@ -1673,6 +1707,7 @@ export default function AdminDashboard({ onTabChange }) {
           featured: false, status: true
         });
         fetchCategories();
+        publishRealtime('category_updated', { action: 'update' });
       } else {
         alert(data.message || 'Failed to update category');
       }
@@ -1687,6 +1722,7 @@ export default function AdminDashboard({ onTabChange }) {
       const res = await fetch(`${API_URL}/categories/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${user.token}` } });
       if (res.ok) {
         fetchCategories();
+        publishRealtime('category_updated', { action: 'delete' });
       } else {
         const data = await res.json().catch(() => ({}));
         alert(data.message || 'Failed to delete category');
@@ -2035,6 +2071,8 @@ export default function AdminDashboard({ onTabChange }) {
                         flashSaleEnd: prod.flashSaleEnd || '',
                         metaTitle: prod.metaTitle || '',
                         metaDescription: prod.metaDescription || '',
+                        metaKeywords: prod.metaKeywords || '',
+                        metaImage: prod.metaImage || prod.image || '',
                         tags: Array.isArray(prod.tags) ? prod.tags.join(', ') : (prod.tags || ''),
                         youtubeUrl: prod.youtubeUrl || '',
                         unit: prod.unit || 'pc',
@@ -4931,6 +4969,51 @@ export default function AdminDashboard({ onTabChange }) {
                                     placeholder="Brief description for search engines..."
                                     className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 text-sm"
                                   />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Meta Keywords</label>
+                                  <input
+                                    type="text"
+                                    value={newProduct.metaKeywords || ''}
+                                    onChange={(e) => setNewProduct({ ...newProduct, metaKeywords: e.target.value })}
+                                    placeholder="comma separated keywords"
+                                    className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Meta Image URL</label>
+                                  <input
+                                    type="text"
+                                    value={newProduct.metaImage || ''}
+                                    onChange={(e) => setNewProduct({ ...newProduct, metaImage: e.target.value })}
+                                    placeholder="Leave empty to use main product image"
+                                    className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 text-sm"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                              <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">SEO Preview</div>
+                              <div className="flex flex-col gap-4">
+                                <div className="flex items-center gap-3">
+                                  <img
+                                    src={seoImagePreview}
+                                    alt="SEO preview"
+                                    className="h-16 w-16 rounded-2xl object-cover border border-slate-200 bg-white"
+                                  />
+                                  <div className="min-w-0">
+                                    <div className="text-sm font-semibold text-slate-900 truncate">{autoMetaTitle || 'Your product title will appear here'}</div>
+                                    <p className="text-[11px] text-slate-500 truncate">{autoMetaDescription || 'A short meta description provides a good search preview.'}</p>
+                                    {autoMetaKeywords ? (
+                                      <p className="text-[10px] text-slate-400 truncate">Keywords: {autoMetaKeywords}</p>
+                                    ) : null}
+                                  </div>
+                                </div>
+                                <div className="rounded-2xl border border-slate-200 bg-white p-3 text-[11px] text-slate-700">
+                                  <div className="font-semibold text-slate-900 mb-1 truncate">{autoMetaTitle || 'Product Title'}</div>
+                                  <div className="text-[10px] text-slate-500 break-words">{`https://your-store.com/product/${newProduct.slug || 'product-slug'}`}</div>
+                                  <div className="mt-3 text-[11px] text-slate-600 leading-5">{autoMetaDescription || 'Meta description will show here when you add product details.'}</div>
                                 </div>
                               </div>
                             </div>
@@ -8688,6 +8771,42 @@ export default function AdminDashboard({ onTabChange }) {
                         Daily Deals
                       </span>
                     </div>
+                    <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <Zap size={18} className="text-emerald-600" />
+                        <div>
+                          <h4 className="font-black text-slate-900 text-sm">Flash Sale Styling</h4>
+                          <p className="text-[10px] text-slate-500">Control the flash sale gradient colors from the admin panel.</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {[
+                          { key: 'flashSaleGradientStart', label: 'Gradient Start', fallback: '#052e2b' },
+                          { key: 'flashSaleGradientMid', label: 'Gradient Mid', fallback: '#047857' },
+                          { key: 'flashSaleGradientEnd', label: 'Gradient End', fallback: '#00B894' },
+                          { key: 'flashSaleRadialColor', label: 'Radial Glow', fallback: '#5eead4' },
+                          { key: 'flashSaleAccentColor', label: 'Accent Glow', fallback: '#00B894' },
+                        ].map((item) => (
+                          <div key={item.key}>
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{item.label}</label>
+                            <div className="mt-1.5 flex gap-2">
+                              <input
+                                type="color"
+                                value={/^#[0-9A-Fa-f]{6}$/.test(settings[item.key] || '') ? settings[item.key] : item.fallback}
+                                onChange={(e) => setSettings({ ...settings, [item.key]: e.target.value })}
+                                className="h-10 w-12 rounded-xl border border-slate-200 bg-white p-1 cursor-pointer"
+                              />
+                              <input
+                                type="text"
+                                value={settings[item.key] || item.fallback}
+                                onChange={(e) => setSettings({ ...settings, [item.key]: e.target.value })}
+                                className="min-w-0 flex-1 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 shadow-inner text-xs font-semibold"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -10151,6 +10270,26 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="Brief description for search engines..."
                       className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 text-sm"
                     ></textarea>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Meta Keywords</label>
+                    <input
+                      type="text"
+                      value={editForm.metaKeywords}
+                      onChange={(e) => setEditForm({ ...editForm, metaKeywords: e.target.value })}
+                      placeholder="comma separated keywords"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Meta Image URL</label>
+                    <input
+                      type="text"
+                      value={editForm.metaImage}
+                      onChange={(e) => setEditForm({ ...editForm, metaImage: e.target.value })}
+                      placeholder="Leave empty to use main product image"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 text-sm"
+                    />
                   </div>
                 </div>
               )}

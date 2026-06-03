@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { ShopContext, getImageUrl, formatPrice, calculateFinalPrice, formatDiscountLabel } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useRealtime } from '@/hooks/useRealtime';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import FeatureStrip from '@/components/FeatureStrip';
 import CategorySection from '@/components/CategorySection';
+import CategoryBannerCarousel from '@/components/CategoryBannerCarousel';
 import FlashSale from '@/components/FlashSale';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import CartDrawer from '@/components/CartDrawer';
@@ -66,6 +68,29 @@ export default function Storefront() {
   // Branding from settings
   const [branding, setBranding] = useState({});
 
+  const normalizeCategoryName = (name) => String(name || '').trim().toLowerCase();
+
+  const dedupeCategoriesByName = (categories = []) => {
+    const seen = new Set();
+    return categories.filter((cat) => {
+      const nameKey = normalizeCategoryName(cat.name);
+      if (!nameKey || seen.has(nameKey)) return false;
+      seen.add(nameKey);
+      return true;
+    });
+  };
+
+  // Reusable category loader for the shop sidebar / category banner
+  const loadShopCategories = useCallback(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((d) => setShopCategories(Array.isArray(d) ? dedupeCategoriesByName(d) : []))
+      .catch(() => {});
+  }, []);
+
+  // Realtime: keep the shop filters/banner in sync with admin category changes
+  useRealtime('dashboard', { category_updated: loadShopCategories });
+
   // Load products, branding, brands and categories on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -90,10 +115,7 @@ export default function Storefront() {
       .then((r) => r.ok ? r.json() : [])
       .then((d) => setShopBrands(d || []))
       .catch(() => {});
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`)
-      .then((r) => r.ok ? r.json() : [])
-      .then((d) => setShopCategories(d || []))
-      .catch(() => {});
+    loadShopCategories();
     return () => {
       window.removeEventListener('goroly-settings-updated', handleSettingsUpdated);
     };
@@ -136,6 +158,9 @@ export default function Storefront() {
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
     setActiveTab('shop');
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleAddToWishlist = (product) => {
@@ -241,19 +266,21 @@ export default function Storefront() {
         {activeTab === 'home' && (
           <div className="flex flex-col gap-1">
             <Hero onShopClick={() => setActiveTab('shop')} />
+            <CategorySection onCategoryClick={handleCategoryClick} />
+            <CategoryBannerCarousel onCategoryClick={handleCategoryClick} />
             <FeatureStrip />
             <div className="flex flex-col gap-4 mt-4">
-            <CategorySection onCategoryClick={handleCategoryClick} />
-            <FlashSale 
-              products={activeProducts} 
-              onProductClick={setSelectedProduct} 
-              onAddToWishlist={handleAddToWishlist}
-            />
-            <FeaturedProducts 
-              products={activeProducts} 
-              onProductClick={setSelectedProduct} 
-              onAddToWishlist={handleAddToWishlist}
-            />
+              <FlashSale 
+                products={activeProducts} 
+                branding={branding}
+                onProductClick={setSelectedProduct} 
+                onAddToWishlist={handleAddToWishlist}
+              />
+              <FeaturedProducts 
+                products={activeProducts} 
+                onProductClick={setSelectedProduct} 
+                onAddToWishlist={handleAddToWishlist}
+              />
             </div>
           </div>
         )}
@@ -419,11 +446,13 @@ export default function Storefront() {
                 {/* Category Banner */}
                 {(() => {
                   const activeCat = shopCategories.find(c => c.name === selectedCategory);
+                  // Use banner if available, otherwise fall back to thumbnail image
+                  const displayImage = activeCat?.banner || activeCat?.image;
                   return (
-                    <div className="w-full rounded-2xl overflow-hidden mb-4 relative" style={{ height: '160px' }}>
-                      {activeCat?.image ? (
+                    <div className="w-full rounded-2xl overflow-hidden mb-4 relative" style={{ height: activeCat?.banner ? '240px' : '160px' }}>
+                      {displayImage ? (
                         <img
-                          src={getImageUrl(activeCat.image)}
+                          src={getImageUrl(displayImage)}
                           alt={activeCat.name}
                           className="w-full h-full object-cover"
                         />
@@ -437,7 +466,7 @@ export default function Storefront() {
                         </div>
                       )}
                       {/* Overlay with category name */}
-                      {activeCat?.image && (
+                      {displayImage && (
                         <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center px-6">
                           <div>
                             <div className="text-white/60 text-xs font-bold uppercase tracking-widest mb-1">{lang === 'bn' ? 'ক্যাটাগরি' : 'Category'}</div>

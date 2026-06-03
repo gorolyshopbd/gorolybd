@@ -89,6 +89,16 @@ export default function BannerSlider({ onShopClick }) {
                 </button>
               </div>
             </div>
+
+            {/* Right-side clickable area to open categories (e.g., person image area) */}
+            <button
+              aria-label="Open categories"
+              onClick={() => {
+                try { window.dispatchEvent(new CustomEvent('goroly-open-categories')); } catch (e) {}
+              }}
+              className="hidden lg:block absolute right-0 top-0 h-full w-1/3 cursor-pointer"
+              style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0), rgba(0,0,0,0))' }}
+            />
           </article>
         ))}
       </div>

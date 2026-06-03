@@ -50,6 +50,8 @@ const getProducts = async (req, res) => {
       digitalFileUrl: p.digital_file_url,
       metaTitle: p.meta_title,
       metaDescription: p.meta_description,
+      metaKeywords: p.meta_keywords,
+      metaImage: p.meta_image_url,
       youtubeUrl: p.youtube_url,
       image: p.image_url,
       unit: p.unit,
@@ -100,6 +102,8 @@ const getProductById = async (req, res) => {
       digitalFileUrl: product.digital_file_url,
       metaTitle: product.meta_title,
       metaDescription: product.meta_description,
+      metaKeywords: product.meta_keywords,
+      metaImage: product.meta_image_url,
       youtubeUrl: product.youtube_url,
       image: product.image_url,
       images: imagesArr,
@@ -190,7 +194,7 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   const {
     name, price, description, image, images, brand, category, countInStock, discountPercent, discountType,
-    isFlashSale, isDigital, digitalFileUrl, metaTitle, metaDescription, tags, youtubeUrl, flashSaleStart, flashSaleEnd,
+    isFlashSale, isDigital, digitalFileUrl, metaTitle, metaDescription, metaKeywords, metaImage, tags, youtubeUrl, flashSaleStart, flashSaleEnd,
     unit, minOrderQty, barcode, slug, shippingDays, cashOnDelivery,
     isPublished, isCatalog, isTodaysDeal, isFeatured
   } = req.body;
@@ -219,6 +223,8 @@ const updateProduct = async (req, res) => {
     if (digitalFileUrl !== undefined) updateData.digital_file_url = digitalFileUrl;
     if (metaTitle !== undefined) updateData.meta_title = metaTitle;
     if (metaDescription !== undefined) updateData.meta_description = metaDescription;
+    if (metaKeywords !== undefined) updateData.meta_keywords = metaKeywords;
+    if (metaImage !== undefined) updateData.meta_image_url = metaImage;
     if (tags !== undefined) updateData.tags = tags;
     if (youtubeUrl !== undefined) updateData.youtube_url = youtubeUrl;
     if (flashSaleStart !== undefined) updateData.flash_sale_start = flashSaleStart || null;

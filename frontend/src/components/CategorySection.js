@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Shirt, Laptop, Carrot, Sparkles, Watch, Dumbbell, BookOpen, LayoutGrid } from 'lucide-react';
 import { getImageUrl } from '@/context/ShopContext';
+import { useRealtime } from '@/hooks/useRealtime';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -18,18 +19,37 @@ const bgMap = {
   Books: 'from-violet-500 to-violet-600',
 };
 
+const normalizeCategoryName = (name) => String(name || '').trim().toLowerCase();
+
+const dedupeCategoriesByName = (categories = []) => {
+  const seen = new Set();
+  return categories.filter((cat) => {
+    const nameKey = normalizeCategoryName(cat.name);
+    if (!nameKey || seen.has(nameKey)) return false;
+    seen.add(nameKey);
+    return true;
+  });
+};
+
 export default function CategorySection({ onCategoryClick }) {
   const [cats, setCats] = useState([]);
 
-  useEffect(() => {
+  const loadCats = useCallback(() => {
     fetch(`${API_URL}/categories`)
       .then((r) => r.ok ? r.json() : [])
-      .then(setCats)
+      .then((d) => setCats(Array.isArray(d) ? dedupeCategoriesByName(d) : []))
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    loadCats();
+  }, [loadCats]);
+
+  // Realtime: refetch whenever an admin adds/edits/removes a category
+  useRealtime('dashboard', { category_updated: loadCats });
+
   const displayCats = cats;
-  const scrollingCats = displayCats.length > 0 ? [...displayCats, ...displayCats] : [];
+  const scrollingCats = displayCats.length > 1 ? [...displayCats, ...displayCats] : displayCats;
 
   if (displayCats.length === 0) return null;
 

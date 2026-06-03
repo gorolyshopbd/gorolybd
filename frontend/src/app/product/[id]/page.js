@@ -173,13 +173,14 @@ export default function ProductDetailPage() {
       <Head>
         <title>{product?.metaTitle || product?.name || 'Product - Goroly Shop'}</title>
         <meta name="description" content={product?.metaDescription || (product?.description ? product.description.slice(0,160) : '')} />
+        <meta name="keywords" content={product?.metaKeywords || (product?.tags ? (Array.isArray(product.tags) ? product.tags.join(', ') : product.tags) : '')} />
         <meta property="og:title" content={product?.metaTitle || product?.name || 'Product'} />
         <meta property="og:description" content={product?.metaDescription || (product?.description ? product.description.slice(0,160) : '')} />
-        <meta property="og:image" content={product?.image ? getImageUrl(product.image) : ''} />
+        <meta property="og:image" content={product?.metaImage ? getImageUrl(product.metaImage) : product?.image ? getImageUrl(product.image) : ''} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={product?.metaTitle || product?.name || 'Product - Goroly Shop'} />
         <meta name="twitter:description" content={product?.metaDescription || (product?.description ? product.description.slice(0,160) : '')} />
-        <meta name="twitter:image" content={product?.image ? getImageUrl(product.image) : ''} />
+        <meta name="twitter:image" content={product?.metaImage ? getImageUrl(product.metaImage) : product?.image ? getImageUrl(product.image) : ''} />
       </Head>
       <Header
         onCartClick={() => setCartOpen(true)}

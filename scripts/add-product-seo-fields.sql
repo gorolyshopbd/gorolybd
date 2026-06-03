@@ -1,0 +1,3 @@
+ALTER TABLE products
+  ADD COLUMN IF NOT EXISTS meta_keywords TEXT DEFAULT '',
+  ADD COLUMN IF NOT EXISTS meta_image_url TEXT DEFAULT '';

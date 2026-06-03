@@ -79,10 +79,30 @@ function SaleCard({ product }) {
   );
 }
 
-export default function FlashSale({ products = [] }) {
+export default function FlashSale({ products = [], branding = {} }) {
   const flashSaleProducts = useMemo(() => products.filter((p) => p.isFlashSale).slice(0, 10), [products]);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const scrollerRef = useRef(null);
+
+  const flashSaleGradientStart = branding.flashSaleGradientStart || '#052e2b';
+  const flashSaleGradientMid = branding.flashSaleGradientMid || '#047857';
+  const flashSaleGradientEnd = branding.flashSaleGradientEnd || '#00B894';
+  const flashSaleRadialColor = branding.flashSaleRadialColor || '#5eead4';
+  const flashSaleAccentColor = branding.flashSaleAccentColor || '#00B894';
+
+  const flashSaleBackgroundStyle = {
+    backgroundImage: `radial-gradient(circle at 15% 16%, ${flashSaleRadialColor}, transparent 30%), radial-gradient(circle at 88% 12%, ${flashSaleAccentColor}, transparent 32%), linear-gradient(145deg, ${flashSaleGradientStart} 0%, ${flashSaleGradientMid} 34%, ${flashSaleGradientEnd} 68%, #7df7df 100%)`,
+  };
+
+  const flashSaleRadialStyle = {
+    backgroundColor: flashSaleRadialColor,
+    opacity: 0.35,
+  };
+
+  const flashSaleAccentStyle = {
+    backgroundColor: flashSaleAccentColor,
+    opacity: 0.4,
+  };
 
   useEffect(() => {
     const getTarget = () => {
@@ -163,10 +183,10 @@ export default function FlashSale({ products = [] }) {
             animation: flashSweep 5.5s ease-in-out infinite;
           }
         `}</style>
-        <div className="flash-sale-dynamic-bg relative overflow-hidden rounded-3xl border border-white/25 bg-[radial-gradient(circle_at_15%_16%,rgba(94,234,212,0.55),transparent_30%),radial-gradient(circle_at_88%_12%,rgba(0,184,148,0.55),transparent_32%),linear-gradient(145deg,#052e2b_0%,#047857_34%,#00B894_68%,#7df7df_100%)] p-3 shadow-[0_26px_70px_rgba(0,184,148,0.24)] sm:p-4">
+        <div className="flash-sale-dynamic-bg relative overflow-hidden rounded-3xl border border-white/25 p-3 shadow-[0_26px_70px_rgba(0,184,148,0.24)] sm:p-4" style={flashSaleBackgroundStyle}>
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.12),transparent_32%,rgba(255,255,255,0.20))]" />
-          <div className="flash-sale-float pointer-events-none absolute -left-16 -top-20 h-56 w-56 rounded-full bg-[#00B894]/35 blur-3xl" />
-          <div className="flash-sale-float pointer-events-none absolute -right-20 bottom-6 h-64 w-64 rounded-full bg-[#7df7df]/40 blur-3xl [animation-delay:1.4s]" />
+          <div className="flash-sale-float pointer-events-none absolute -left-16 -top-20 h-56 w-56 rounded-full blur-3xl" style={flashSaleRadialStyle} />
+          <div className="flash-sale-float pointer-events-none absolute -right-20 bottom-6 h-64 w-64 rounded-full blur-3xl [animation-delay:1.4s]" style={flashSaleAccentStyle} />
           <div className="flash-sale-sweep pointer-events-none absolute inset-y-0 left-0 w-28 bg-white/20 blur-sm" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0,rgba(17,24,39,0.18)_100%)]" />
           <div className="relative mb-4 grid grid-cols-1 items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
