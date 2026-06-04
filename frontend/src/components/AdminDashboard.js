@@ -6762,6 +6762,79 @@ export default function AdminDashboard({ onTabChange }) {
                 </div>
               </div>
 
+              {/* Email / SMTP Configuration */}
+              <div className="bg-white/90 p-6 border border-slate-200 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 space-y-6 shadow-xl">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                    <MessageSquare size={16} className="text-orange-500" />
+                    Email / SMTP Configuration (Gmail)
+                  </h3>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={settings.smtpEnabled || false}
+                      onChange={(e) => setSettings({...settings, smtpEnabled: e.target.checked})}
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                  </label>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">SMTP Host</label>
+                    <input
+                      type="text"
+                      value={settings.smtpHost || ''}
+                      onChange={(e) => setSettings({ ...settings, smtpHost: e.target.value })}
+                      placeholder="smtp.gmail.com"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">SMTP Port</label>
+                    <input
+                      type="number"
+                      value={settings.smtpPort || ''}
+                      onChange={(e) => setSettings({ ...settings, smtpPort: Number(e.target.value) })}
+                      placeholder="587"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gmail Address / Username</label>
+                    <input
+                      type="email"
+                      value={settings.smtpUser || ''}
+                      onChange={(e) => setSettings({ ...settings, smtpUser: e.target.value })}
+                      placeholder="your-email@gmail.com"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gmail App Password</label>
+                    <input
+                      type="password"
+                      value={settings.smtpPass || ''}
+                      onChange={(e) => setSettings({ ...settings, smtpPass: e.target.value })}
+                      placeholder="16-character App Password"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Requires 2FA enabled. Use App Password, not your regular password.</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Sender Email (From)</label>
+                    <input
+                      type="email"
+                      value={settings.smtpFromEmail || ''}
+                      onChange={(e) => setSettings({ ...settings, smtpFromEmail: e.target.value })}
+                      placeholder="support@yourdomain.com (or same as Gmail Address)"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Table */}
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse whitespace-nowrap">
@@ -9245,10 +9318,11 @@ export default function AdminDashboard({ onTabChange }) {
                     {settings.noticeBarText || 'Notice preview'}
                   </div>
                 </div>
+
               </div>
 
               {/* OTP gateway Configuration */}
-              <div className="bg-white/90  p-6 border border-slate-200 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 space-y-4 shadow-xl">
+              <div className="bg-white/90 p-6 border border-slate-200 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 space-y-4 shadow-xl">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
                     <Sliders size={16} className="text-[#FF6600]" />
@@ -9259,38 +9333,37 @@ export default function AdminDashboard({ onTabChange }) {
                     <div>
                       <p className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Checkout OTP Verification</p>
                       <p className="text-[9px] text-slate-400 font-medium mt-0.5">
-                        {settings.checkoutOtpEnabled ? 'ON \u2014 Phone verification required at checkout' : 'OFF \u2014 Customers checkout without OTP'}
+                        {settings.checkoutOtpEnabled ? 'ON — Phone verification required at checkout' : 'OFF — Customers checkout without OTP'}
                       </p>
                     </div>
                     <button
                       type="button"
-                      id="checkout-otp-toggle"
                       onClick={() => setSettings({ ...settings, checkoutOtpEnabled: !settings.checkoutOtpEnabled })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none flex-shrink-0 ${
-                        settings.checkoutOtpEnabled ? 'bg-[#FF6600]' : 'bg-slate-300'
-                      }`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none flex-shrink-0 ${settings.checkoutOtpEnabled ? 'bg-[#FF6600]' : 'bg-slate-300'}`}
                     >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
-                          settings.checkoutOtpEnabled ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 ${settings.checkoutOtpEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mt-6">
                   <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">SMS Gateway</label>
-                    <div className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-gray-900 font-semibold cursor-not-allowed opacity-80">
-                      SAS Bulk SMS (sms.sasbulksms.com)
-                    </div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OTP Delivery Method</label>
+                    <select
+                      value={settings.otpGateway || 'Simulated'}
+                      onChange={(e) => setSettings({ ...settings, otpGateway: e.target.value })}
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                    >
+                      <option value="Simulated">Simulated (For Testing)</option>
+                      <option value="SMS">SMS (SAS Bulk SMS)</option>
+                      <option value="Email">Email (Gmail SMTP)</option>
+                    </select>
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OTP Code Length</label>
                     <select
                       value={settings.otpLength}
                       onChange={(e) => setSettings({ ...settings, otpLength: Number(e.target.value) })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
                     >
                       <option value={4}>4 Digits Code</option>
                       <option value={6}>6 Digits Code</option>
@@ -9305,7 +9378,7 @@ export default function AdminDashboard({ onTabChange }) {
                       max="60"
                       value={settings.otpExpiry}
                       onChange={(e) => setSettings({ ...settings, otpExpiry: Number(e.target.value) })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
                     />
                   </div>
                 </div>
@@ -9315,7 +9388,6 @@ export default function AdminDashboard({ onTabChange }) {
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gateway URL</label>
                     <input
-                      type="text"
                       value={settings.sasSmsGatewayUrl || ''}
                       onChange={(e) => setSettings({ ...settings, sasSmsGatewayUrl: e.target.value })}
                       placeholder="http://sms.sasbulksms.com"

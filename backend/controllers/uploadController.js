@@ -5,19 +5,22 @@ const uploadToInsForge = async (file, folder = 'products') => {
   const ext = path.extname(file.originalname);
   const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
 
-  const blob = new Blob([file.buffer], { type: file.mimetype });
   const { data, error } = await db.storage
     .from('product')
-    .upload(key, blob);
+    .upload(key, file.buffer, {
+      contentType: file.mimetype,
+      upsert: true
+    });
 
   if (error) throw error;
 
   const storageKey = data.key || key;
 
-  // Always use getPublicUrl() for a stable, permanent URL (data.url may have expiring ?v= params)
-  const publicUrl = db.storage.from('product').getPublicUrl(storageKey) || data.url || '';
+  // Always use getPublicUrl() for a stable, permanent URL
+  const { data: publicUrlData } = db.storage.from('product').getPublicUrl(storageKey);
+  const publicUrl = publicUrlData?.publicUrl || data?.url || '';
 
-  const { error: imgError } = await db.database.from('images').insert({
+  const { error: imgError } = await db.database.from('images').insert([{
     filename: storageKey,
     original_name: file.originalname,
     storage_path: storageKey,
@@ -25,7 +28,7 @@ const uploadToInsForge = async (file, folder = 'products') => {
     mime_type: file.mimetype,
     size_bytes: file.size,
     bucket: 'product',
-  }).single();
+  }]).single();
 
   if (imgError) console.error('Failed to save image record:', imgError);
 

@@ -196,8 +196,8 @@ const createProduct = async (req, res) => {
       youtube_url: '',
       unit: 'pc',
       min_order_qty: 1,
-      barcode: '',
-      slug: '',
+      barcode: 'sample-code-' + Date.now(),
+      slug: 'sample-' + Date.now(),
       shipping_days: 2,
       cash_on_delivery: true,
       is_published: true,
@@ -206,7 +206,7 @@ const createProduct = async (req, res) => {
       is_featured: false,
     };
 
-    let result = await db.database.from('products').insert(insertData).select().single();
+    let result = await db.database.from('products').insert([insertData]).select().single();
 
     // Auto-remove missing columns
     while (result.error && result.error.message && result.error.message.includes('Could not find the') && result.error.message.includes('column')) {
@@ -214,7 +214,7 @@ const createProduct = async (req, res) => {
       if (match && match[1]) {
         console.warn(`Column ${match[1]} not found, retrying insert without it`);
         delete insertData[match[1]];
-        result = await db.database.from('products').insert(insertData).select().single();
+        result = await db.database.from('products').insert([insertData]).select().single();
       } else {
         break;
       }
@@ -391,13 +391,13 @@ const createProductReview = async (req, res) => {
     }
 
     // Insert review
-    const { error: reviewError } = await db.database.from('reviews').insert({
+    const { error: reviewError } = await db.database.from('reviews').insert([{
       product_id: req.params.id,
       user_id: req.user._id,
       name: req.user.name,
       rating: Number(rating),
       comment
-    });
+    }]);
     if (reviewError) throw reviewError;
 
     // Recalculate rating

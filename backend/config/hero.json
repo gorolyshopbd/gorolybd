@@ -1,1 +1,11 @@
-{"hero_badge":"Summer Sale","hero_title":"50% OFF","hero_feature1_title":"Free","hero_feature1_subtitle":"Shipping Over $100","hero_feature2_title":"30 Days","hero_feature2_subtitle":"Return & Money Back"}
+{
+  "hero_badge": "Summer Sale",
+  "hero_title": "20% OFF",
+  "hero_feature1_title": "Free",
+  "hero_feature1_subtitle": "Shipping Over $100",
+  "hero_feature2_title": "30 Days",
+  "hero_feature2_subtitle": "Return & Money Back",
+  "hero_image": "https://z6zhffa4.ap-southeast.insforge.app/api/storage/buckets/product/objects/products%2F1780562911895-rf06ns.jpg",
+  "hero_feature1_image": "https://z6zhffa4.ap-southeast.insforge.app/api/storage/buckets/product/objects/products%2F1780563155151-f39qy6.png",
+  "hero_feature2_image": "https://z6zhffa4.ap-southeast.insforge.app/api/storage/buckets/product/objects/products%2F1780563239514-apllym.png"
+}

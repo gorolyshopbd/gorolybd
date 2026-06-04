@@ -1,5 +1,23 @@
 import { db } from '../config/db.js';
 
+export const getActiveOffers = async (req, res) => {
+  try {
+    const { data: offers, error } = await db.database.from('offers').select('*').eq('is_active', true).order('created_at', { ascending: false });
+    if (error) throw error;
+    
+    const formatted = offers.map(o => ({
+      ...o,
+      _id: o.id,
+      discountPercent: o.discount_percent,
+      isActive: o.is_active,
+      image: o.image_url
+    }));
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const getOffers = async (req, res) => {
   try {
     const { data: offers, error } = await db.database.from('offers').select('*').order('created_at', { ascending: false });

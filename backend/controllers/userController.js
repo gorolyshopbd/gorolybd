@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import twilio from 'twilio';
 import fs from 'fs';
 import csv from 'csv-parser';
+import { sendEmail } from '../utils/sendEmail.js';
 
 const resetTokens = new Map();
 
@@ -380,16 +381,27 @@ const sendOTP = async (req, res) => {
     if (settings) gateway = settings.otp_gateway || 'Simulated';
   } catch {}
 
-  if (type === 'phone' && gateway !== 'Simulated') {
+  if (gateway === 'Email') {
     try {
-      if (gateway === 'SAS_BULK_SMS' || gateway === 'Simulated' || !gateway) {
+      const emailSent = await sendEmail(target, 'Your OTP Code', `Your OTP code is ${otp}`);
+      if (emailSent) {
+        return res.json({ message: `OTP sent successfully to ${target} via Email` });
+      } else {
+        return res.status(500).json({ message: 'Failed to send OTP via Email. Check SMTP settings.' });
+      }
+    } catch (emailError) {
+      console.error('[Email OTP Send Failed]', emailError.message);
+      console.log('[Email OTP Send Failed] Falling back to simulated mode');
+    }
+  } else if (type === 'phone' && gateway !== 'Simulated') {
+    try {
+      if (gateway === 'SAS_BULK_SMS' || gateway === 'Simulated' || !gateway || gateway === 'SMS') {
         const { data: settings } = await db.database.from('settings').select('*').limit(1).single();
         if (settings?.sas_sms_api_key && settings?.sas_sms_sender_id) {
           let baseUrl = settings.sas_sms_gateway_url || 'http://sms.sasbulksms.com:3040';
           if (baseUrl === 'https://sms.sasbulksms.com/') baseUrl = 'http://sms.sasbulksms.com:3040';
           const url = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
           
-          // Normalize Bangladesh phone number: 01XXXXXXXXX → 8801XXXXXXXXX
           let toUser = target.replace(/\D/g, '');
           if (toUser.startsWith('01') && toUser.length === 11) {
             toUser = '88' + toUser;
@@ -406,10 +418,7 @@ const sendOTP = async (req, res) => {
           });
           
           const reqUrl = `${url}/sendtext?${params.toString()}`;
-          const resp = await fetch(reqUrl, {
-            method: 'GET'
-          });
-          
+          const resp = await fetch(reqUrl, { method: 'GET' });
           const result = await resp.text();
           console.log(`[OTP Sent via SAS Bulk SMS] to ${target}: ${result}`);
           
@@ -436,7 +445,6 @@ const sendOTP = async (req, res) => {
     } catch (smsError) {
       console.error('[OTP Send Failed]', smsError.message);
       console.log('[OTP Send Failed] Falling back to simulated mode');
-      // Fall through to simulated mode below
     }
   }
 

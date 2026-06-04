@@ -21,7 +21,7 @@ export default function Hero({ onShopClick }) {
     fetch(`${API_URL}/settings/hero`)
       .then(r => r.ok ? r.json() : null)
       .then(data => setHeroSettings(data))
-      .catch(console.error);
+      .catch(() => setHeroSettings(null));
   }, []);
 
   return (
@@ -30,7 +30,7 @@ export default function Hero({ onShopClick }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           
           {/* Dynamic Banner Slider */}
-          <div className="lg:col-span-8 rounded-3xl overflow-hidden lg:min-h-[420px]">
+          <div className="lg:col-span-8 rounded-3xl overflow-hidden lg:min-h-[435px]">
             <BannerSlider onShopClick={onShopClick} />
           </div>
 
@@ -80,7 +80,16 @@ export default function Hero({ onShopClick }) {
               /* Fallback static cards when no offers exist */
               <>
                 <div className="bg-slate-100 rounded-3xl p-5 sm:p-8 flex-1 flex flex-col justify-between relative overflow-hidden border border-slate-200/50">
-                  <div className="relative z-10 max-w-[55%] sm:max-w-[60%] space-y-2 sm:space-y-3">
+                  {heroSettings?.hero_image && (
+                    <div className="absolute right-3 bottom-3 sm:right-4 sm:bottom-4 w-20 sm:w-28 lg:w-36 h-20 sm:h-28 lg:h-36 pointer-events-none">
+                      <img
+                        src={heroSettings.hero_image.startsWith('http') ? heroSettings.hero_image : `${API_URL}${heroSettings.hero_image}`}
+                        alt="Promo"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  )}
+                  <div className={`relative z-10 space-y-2 sm:space-y-3 ${heroSettings?.hero_image ? 'max-w-[55%] sm:max-w-[60%]' : 'max-w-full'}`}>
                     <span className="text-[10px] sm:text-xs font-bold text-blue-600 uppercase tracking-wider">{heroSettings?.hero_badge || (lang === 'bn' ? 'গ্রীষ্মকালীন অফার' : 'Summer Sale')}</span>
                     <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 leading-tight">{heroSettings?.hero_title || (lang === 'bn' ? '৫০% ছাড়' : '50% OFF')}</h3>
                     <button
@@ -92,11 +101,17 @@ export default function Hero({ onShopClick }) {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <div className="bg-white p-3 sm:p-5 rounded-2xl border border-slate-100 text-center space-y-1 sm:space-y-2">
+                  <div className="bg-white p-3 sm:p-5 rounded-2xl border border-slate-100 text-center space-y-1 sm:space-y-2 flex flex-col items-center justify-center">
+                    {heroSettings?.hero_feature1_image && (
+                      <img src={heroSettings.hero_feature1_image.startsWith('http') ? heroSettings.hero_feature1_image : `${API_URL}${heroSettings.hero_feature1_image}`} alt="Feature 1" className="h-8 sm:h-12 w-auto object-contain mb-1" />
+                    )}
                     <div className="text-lg sm:text-2xl font-extrabold text-blue-600">{heroSettings?.hero_feature1_title || (lang === 'bn' ? 'ফ্রি' : 'Free')}</div>
                     <div className="text-[10px] sm:text-xs font-medium text-slate-500">{heroSettings?.hero_feature1_subtitle || (lang === 'bn' ? '৳১০০০ এর উপরে শিপিং ফ্রি' : 'Shipping Over $100')}</div>
                   </div>
-                  <div className="bg-white p-3 sm:p-5 rounded-2xl border border-slate-100 text-center space-y-1 sm:space-y-2">
+                  <div className="bg-white p-3 sm:p-5 rounded-2xl border border-slate-100 text-center space-y-1 sm:space-y-2 flex flex-col items-center justify-center">
+                    {heroSettings?.hero_feature2_image && (
+                      <img src={heroSettings.hero_feature2_image.startsWith('http') ? heroSettings.hero_feature2_image : `${API_URL}${heroSettings.hero_feature2_image}`} alt="Feature 2" className="h-8 sm:h-12 w-auto object-contain mb-1" />
+                    )}
                     <div className="text-lg sm:text-2xl font-extrabold text-amber-500">{heroSettings?.hero_feature2_title || (lang === 'bn' ? '৩০ দিন' : '30 Days')}</div>
                     <div className="text-[10px] sm:text-xs font-medium text-slate-500">{heroSettings?.hero_feature2_subtitle || (lang === 'bn' ? 'ফেরত এবং রিফান্ড গ্যারান্টি' : 'Return & Money Back')}</div>
                   </div>

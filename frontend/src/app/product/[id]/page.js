@@ -252,7 +252,7 @@ export default function ProductDetailPage() {
                         src={getImageUrl(allImages[selectedImageIndex] || product.image)}
                         alt={product?.image_alt || product.name}
                         title={product?.image_alt || product.name}
-                        fetchpriority="high"
+                        fetchPriority="high"
                         decoding="async"
                         style={isZoomed ? zoomStyle : {}}
                         className={`w-full h-full object-contain rounded-xl transition-transform duration-200 ease-out ${isZoomed ? '' : ''}`}
@@ -313,7 +313,12 @@ export default function ProductDetailPage() {
                       )}
                     </div>
 
-                    <p className="text-[14px] text-slate-500 leading-relaxed">{product.description}</p>
+                    <div className="pt-2">
+                      <h3 className="text-sm font-bold text-slate-800 mb-1">Description & Specification</h3>
+                      <div className="text-[14px] text-slate-500 leading-relaxed whitespace-pre-wrap">
+                        {product.description}
+                      </div>
+                    </div>
 
                     {product.brand && (
                       <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-slate-700 shadow-sm">

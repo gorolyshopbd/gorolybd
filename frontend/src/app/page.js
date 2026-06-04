@@ -561,7 +561,7 @@ export default function Storefront() {
                 ) : (
                   <div className="flex flex-col items-center gap-6">
                     {viewMode === 'grid' ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 w-full">
                         {visibleProducts.map((product) => {
                           const finalPrice = calculateFinalPrice(product);
                           const isWish = wishlist.some((x) => x._id === product._id);
@@ -574,7 +574,7 @@ export default function Storefront() {
                                 <button onClick={() => handleAddToWishlist(product)} className={`absolute top-2 right-2 p-1.5 rounded-full shadow-xs transition z-10 ${isWish ? 'bg-red-50 text-red-500' : 'bg-white/80 text-slate-400 hover:text-red-500'}`}>
                                   <Heart size={14} fill={isWish ? 'currentColor' : 'none'} />
                                 </button>
-                                <img src={getImageUrl(product.image)} alt={product.name} onClick={() => router.push(`/product/${product._id}`)} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-500 cursor-pointer" />
+                                <img src={getImageUrl(product.image)} alt={product.name} onClick={() => router.push(`/product/${product._id}`)} className="absolute inset-0 w-full h-full object-contain p-3 group-hover:scale-105 transition duration-500 cursor-pointer" />
                                 <button onClick={() => setSelectedProduct(product)} className="absolute bottom-2 right-2 p-1.5 bg-white/90 rounded-lg shadow-xs hover:bg-white transition z-10 text-slate-500 hover:text-[#FF6600]" title={t('quickView')}>
                                   <Eye size={13} />
                                 </button>
@@ -582,7 +582,7 @@ export default function Storefront() {
                               <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
                                 <div>
                                   <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">{product.category}</span>
-                                  <h3 onClick={() => router.push(`/product/${product._id}`)} className="font-bold text-slate-800 text-sm hover:text-[#FF6600] cursor-pointer transition line-clamp-2 leading-snug mt-0.5">{product.name}</h3>
+                                  <h3 onClick={() => router.push(`/product/${product._id}`)} className="font-bold text-slate-800 text-sm hover:text-[#FF6600] cursor-pointer transition line-clamp-2 leading-snug mt-0.5 min-h-[40px]">{product.name}</h3>
                                   <div className="flex items-center gap-1 mt-1">
                                     <div className="flex text-amber-400">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={10} fill={i < Math.floor(product.rating || 5) ? 'currentColor' : 'none'} />)}</div>
                                     <span className="text-slate-400 text-[10px]">({product.numReviews || 12})</span>
@@ -593,7 +593,7 @@ export default function Storefront() {
                                     <span className="text-sm font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</span>
                                     {product.discountPercent > 0 && <span className="text-xs text-slate-400 line-through">{formatPrice(product.price, currencySymbol)}</span>}
                                   </div>
-                                  <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="h-9 w-full px-2.5 bg-[#FF6600] hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition sm:w-auto">{t('add')}</button>
+                                  <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="h-7 w-full px-2 bg-[#FF6600] hover:bg-orange-600 text-white text-[10px] font-bold rounded-md transition sm:w-auto">{t('add')}</button>
                                 </div>
                               </div>
                             </div>
@@ -608,11 +608,11 @@ export default function Storefront() {
                           const isWish = wishlist.some((x) => x._id === product._id);
                           return (
                             <div key={product._id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden group shadow-sm hover:shadow-md transition duration-300 flex flex-col gap-4 p-3 sm:flex-row sm:items-center">
-                              <div className="relative h-36 w-full flex-shrink-0 bg-slate-50 rounded-xl overflow-hidden sm:h-24 sm:w-24">
+                              <div className="w-full sm:w-24 aspect-square bg-slate-50 relative overflow-hidden group-hover:bg-slate-100 transition duration-300 rounded-xl">
                                 {product.discountPercent > 0 && (
                                   <span className="absolute top-1 left-1 bg-red-500 text-white font-extrabold text-[9px] px-1.5 py-0.5 rounded z-10">{formatDiscountLabel(product, currencySymbol)}</span>
                                 )}
-                                <img src={getImageUrl(product.image)} alt={product.name} onClick={() => router.push(`/product/${product._id}`)} className="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition duration-500" />
+                                <img src={getImageUrl(product.image)} alt={product.name} onClick={() => router.push(`/product/${product._id}`)} className="w-full h-full object-contain p-3 cursor-pointer group-hover:scale-105 transition duration-500" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">{product.category}</span>
@@ -629,7 +629,7 @@ export default function Storefront() {
                                   <div className="text-lg font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</div>
                                   {product.discountPercent > 0 && <div className="text-xs text-slate-400 line-through">{formatPrice(product.price, currencySymbol)}</div>}
                                 </div>
-                                <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="h-10 px-4 bg-[#FF6600] hover:bg-orange-600 text-white text-xs font-extrabold rounded-xl transition shadow-md shadow-orange-500/20">{t('addToCart')}</button>
+                                <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="h-8 px-3 bg-[#FF6600] hover:bg-orange-600 text-white text-[10px] font-extrabold rounded-lg transition shadow-md shadow-orange-500/20">{t('addToCart')}</button>
                                 <button onClick={() => handleAddToWishlist(product)} className={`hidden text-xs font-semibold items-center gap-1 sm:flex ${isWish ? 'text-red-500' : 'text-slate-400 hover:text-red-500'} transition`}>
                                   <Heart size={12} fill={isWish ? 'currentColor' : 'none'} /> {t('wishlist')}
                                 </button>
@@ -689,7 +689,7 @@ export default function Storefront() {
                           src={getImageUrl(product.image)}
                           alt={product.name}
                           onClick={() => router.push(`/product/${product._id}`)}
-                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-500 cursor-pointer"
+                          className="absolute inset-0 w-full h-full object-contain p-3 group-hover:scale-105 transition duration-500 cursor-pointer"
                         />
                       </div>
 
@@ -708,7 +708,7 @@ export default function Storefront() {
                           <span className="text-base font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</span>
                           <button
                             onClick={() => addToCart(product, 1)}
-                            className="px-3.5 py-2 bg-[#FF6600] hover:bg-[#e05a00] text-white text-xs font-bold rounded-lg transition shadow-md shadow-[#FF6600]/20"
+                            className="px-2.5 py-1.5 bg-[#FF6600] hover:bg-[#e05a00] text-white text-[10px] font-bold rounded-md transition shadow-md shadow-[#FF6600]/20"
                           >
                             {t('addToCart')}
                           </button>

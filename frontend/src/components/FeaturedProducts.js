@@ -42,7 +42,7 @@ function ProductCard({ product, onProductClick, onAddToWishlist }) {
         <img
           src={getImageUrl(product.image)}
           alt={product.name}
-          className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
+          className="h-full w-full object-contain p-3 transition duration-700 ease-out group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/18 via-transparent to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
       </button>
@@ -100,9 +100,9 @@ function ProductCard({ product, onProductClick, onAddToWishlist }) {
           <button
             type="button"
             onClick={() => addToCart(product, 1)}
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-slate-950 px-3.5 text-xs font-black text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#FF6600] hover:shadow-lg hover:shadow-orange-500/20 active:translate-y-0 active:scale-95 sm:px-4"
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-slate-950 px-2.5 text-[10px] font-black text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#FF6600] hover:shadow-lg hover:shadow-orange-500/20 active:translate-y-0 active:scale-95 sm:px-3"
           >
-            <ShoppingBag size={14} />
+            <ShoppingBag size={12} />
             <span className="hidden sm:inline">Add</span>
           </button>
         </div>
@@ -226,7 +226,7 @@ export default function FeaturedProducts({ products = [], onProductClick, onAddT
 
         <div
           ref={scrollerRef}
-          className="grid snap-x snap-mandatory auto-cols-[calc((100%-0.875rem)/2)] grid-flow-col gap-3.5 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[calc((100%-2rem)/3)] sm:gap-4 lg:auto-cols-auto lg:grid-flow-row lg:grid-cols-3 lg:overflow-visible lg:pb-0"
+          className="grid snap-x snap-mandatory auto-cols-[calc((100%-0.875rem)/2)] grid-flow-col gap-3.5 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[calc((100%-2rem)/3)] sm:gap-4 lg:auto-cols-auto lg:grid-flow-row lg:grid-cols-4 xl:grid-cols-6 lg:overflow-visible lg:pb-0"
         >
           {current.products.map((product) => (
             <div key={product._id} className="min-w-0 snap-start">

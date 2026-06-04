@@ -39,7 +39,7 @@ export default function BannerSlider({ onShopClick }) {
 
   return (
     <section
-      className="group relative h-[210px] w-full overflow-hidden rounded-[28px] border border-white/60 bg-slate-100 shadow-[0_24px_70px_rgba(15,23,42,0.10)] ring-1 ring-slate-950/5 transition duration-300 dark:border-slate-800 dark:bg-slate-900 dark:ring-white/10 sm:h-[330px] lg:h-[430px]"
+      className="group relative h-[250px] w-full overflow-hidden rounded-[28px] border border-white/60 bg-slate-100 shadow-[0_24px_70px_rgba(15,23,42,0.10)] ring-1 ring-slate-950/5 transition duration-300 dark:border-slate-800 dark:bg-slate-900 dark:ring-white/10 sm:h-[400px] lg:aspect-[967/435] lg:h-[435px] lg:w-full"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >

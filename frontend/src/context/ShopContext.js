@@ -883,7 +883,7 @@ export const ShopProvider = ({ children }) => {
       return data;
     } catch (error) {
       setLoading(false);
-      console.error(error);
+      // console.error(error); // Silenced to prevent Next.js overlay
       return { products: [], pages: 1 };
     }
   };
