@@ -1,12 +1,28 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import BannerSlider from './BannerSlider';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function Hero({ onShopClick }) {
-  const { lang, t } = useLanguage();
+  const { lang } = useLanguage();
+  const [offers, setOffers] = useState([]);
+  const [heroSettings, setHeroSettings] = useState(null);
+
+  useEffect(() => {
+    fetch(`${API_URL}/offers/active`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setOffers(data || []))
+      .catch(() => setOffers([]));
+
+    fetch(`${API_URL}/settings/hero`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setHeroSettings(data))
+      .catch(console.error);
+  }, []);
 
   return (
     <section className="relative overflow-hidden bg-slate-50 pt-6 sm:pt-10 pb-0">
@@ -18,41 +34,75 @@ export default function Hero({ onShopClick }) {
             <BannerSlider onShopClick={onShopClick} />
           </div>
 
-          {/* Right Sub-Promo Cards */}
+          {/* Right Sub-Promo Cards - Dynamic from Offers */}
           <div className="lg:col-span-4 flex flex-col justify-between gap-4 sm:gap-6 h-full">
-            {/* Card 1 - Sunglasses Banner */}
-            <div className="bg-slate-100 rounded-3xl p-5 sm:p-8 flex-1 flex flex-col justify-between relative overflow-hidden border border-slate-200/50">
-              <div className="absolute right-3 bottom-3 sm:right-4 sm:bottom-4 w-20 sm:w-28 lg:w-36 h-20 sm:h-28 lg:h-36 pointer-events-none">
-                <img
-                  src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=200&auto=format&fit=crop"
-                  alt="Promo Sunglasses"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              
-              <div className="relative z-10 max-w-[55%] sm:max-w-[60%] space-y-2 sm:space-y-3">
-                <span className="text-[10px] sm:text-xs font-bold text-blue-600 uppercase tracking-wider">{lang === 'bn' ? 'গ্রীষ্মকালীন অফার' : 'Summer Sale'}</span>
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 leading-tight">{lang === 'bn' ? '৫০% ছাড়' : '50% OFF'}</h3>
-                <button
-                  onClick={onShopClick}
-                  className="mt-1 sm:mt-2 text-xs font-bold text-white bg-slate-900 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg hover:bg-slate-800 transition"
+            {offers.length > 0 ? (
+              offers.slice(0, 3).map((offer) => (
+                <div
+                  key={offer.id}
+                  className="bg-slate-100 rounded-3xl p-5 sm:p-8 flex-1 flex flex-col justify-between relative overflow-hidden border border-slate-200/50"
                 >
-                  {lang === 'bn' ? 'এখনই কিনুন' : 'Shop Now'}
-                </button>
-              </div>
-            </div>
-
-            {/* Card 2 - Info Cards grid */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <div className="bg-white p-3 sm:p-5 rounded-2xl border border-slate-100 text-center space-y-1 sm:space-y-2">
-                <div className="text-lg sm:text-2xl font-extrabold text-blue-600">{lang === 'bn' ? 'ফ্রি' : 'Free'}</div>
-                <div className="text-[10px] sm:text-xs font-medium text-slate-500">{lang === 'bn' ? '৳১০০০ এর উপরে শিপিং ফ্রি' : 'Shipping Over $100'}</div>
-              </div>
-              <div className="bg-white p-3 sm:p-5 rounded-2xl border border-slate-100 text-center space-y-1 sm:space-y-2">
-                <div className="text-lg sm:text-2xl font-extrabold text-amber-500">{lang === 'bn' ? '৩০ দিন' : '30 Days'}</div>
-                <div className="text-[10px] sm:text-xs font-medium text-slate-500">{lang === 'bn' ? 'ফেরত এবং রিফান্ড গ্যারান্টি' : 'Return & Money Back'}</div>
-              </div>
-            </div>
+                  {offer.image && (
+                    <div className="absolute right-3 bottom-3 sm:right-4 sm:bottom-4 w-20 sm:w-28 lg:w-36 h-20 sm:h-28 lg:h-36 pointer-events-none">
+                      <img
+                        src={offer.image}
+                        alt={offer.title}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className={`relative z-10 space-y-2 sm:space-y-3 ${offer.image ? 'max-w-[55%] sm:max-w-[60%]' : 'max-w-full'}`}>
+                    {offer.discountPercent > 0 && (
+                      <span className="inline-block text-[10px] sm:text-xs font-bold text-blue-600 uppercase tracking-wider">
+                        {offer.discountPercent}% {lang === 'bn' ? 'ছাড়' : 'OFF'}
+                      </span>
+                    )}
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 leading-tight">
+                      {offer.title}
+                    </h3>
+                    {offer.description && (
+                      <p className="text-xs sm:text-sm text-slate-600 line-clamp-2">{offer.description}</p>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (offer.link) window.open(offer.link, '_blank');
+                        else onShopClick();
+                      }}
+                      className="mt-1 sm:mt-2 text-xs font-bold text-white bg-slate-900 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg hover:bg-slate-800 transition"
+                    >
+                      {lang === 'bn' ? 'এখনই কিনুন' : 'Shop Now'}
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              /* Fallback static cards when no offers exist */
+              <>
+                <div className="bg-slate-100 rounded-3xl p-5 sm:p-8 flex-1 flex flex-col justify-between relative overflow-hidden border border-slate-200/50">
+                  <div className="relative z-10 max-w-[55%] sm:max-w-[60%] space-y-2 sm:space-y-3">
+                    <span className="text-[10px] sm:text-xs font-bold text-blue-600 uppercase tracking-wider">{heroSettings?.hero_badge || (lang === 'bn' ? 'গ্রীষ্মকালীন অফার' : 'Summer Sale')}</span>
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 leading-tight">{heroSettings?.hero_title || (lang === 'bn' ? '৫০% ছাড়' : '50% OFF')}</h3>
+                    <button
+                      onClick={onShopClick}
+                      className="mt-1 sm:mt-2 text-xs font-bold text-white bg-slate-900 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg hover:bg-slate-800 transition"
+                    >
+                      {lang === 'bn' ? 'এখনই কিনুন' : 'Shop Now'}
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="bg-white p-3 sm:p-5 rounded-2xl border border-slate-100 text-center space-y-1 sm:space-y-2">
+                    <div className="text-lg sm:text-2xl font-extrabold text-blue-600">{heroSettings?.hero_feature1_title || (lang === 'bn' ? 'ফ্রি' : 'Free')}</div>
+                    <div className="text-[10px] sm:text-xs font-medium text-slate-500">{heroSettings?.hero_feature1_subtitle || (lang === 'bn' ? '৳১০০০ এর উপরে শিপিং ফ্রি' : 'Shipping Over $100')}</div>
+                  </div>
+                  <div className="bg-white p-3 sm:p-5 rounded-2xl border border-slate-100 text-center space-y-1 sm:space-y-2">
+                    <div className="text-lg sm:text-2xl font-extrabold text-amber-500">{heroSettings?.hero_feature2_title || (lang === 'bn' ? '৩০ দিন' : '30 Days')}</div>
+                    <div className="text-[10px] sm:text-xs font-medium text-slate-500">{heroSettings?.hero_feature2_subtitle || (lang === 'bn' ? 'ফেরত এবং রিফান্ড গ্যারান্টি' : 'Return & Money Back')}</div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
         </div>

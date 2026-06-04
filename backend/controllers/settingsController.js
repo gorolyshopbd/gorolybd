@@ -1,4 +1,6 @@
 import { db } from '../config/db.js';
+import fs from 'fs';
+import path from 'path';
 
 export const getSettings = async (req, res) => {
   try {
@@ -130,6 +132,37 @@ export const getSettings = async (req, res) => {
     };
 
     res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getHeroSettings = (req, res) => {
+  try {
+    const filePath = path.join(process.cwd(), 'config', 'hero.json');
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, 'utf-8');
+      res.json(JSON.parse(data));
+    } else {
+      res.json({
+        hero_badge: 'Summer Sale',
+        hero_title: '50% OFF',
+        hero_feature1_title: 'Free',
+        hero_feature1_subtitle: 'Shipping Over $100',
+        hero_feature2_title: '30 Days',
+        hero_feature2_subtitle: 'Return & Money Back'
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateHeroSettings = (req, res) => {
+  try {
+    const filePath = path.join(process.cwd(), 'config', 'hero.json');
+    fs.writeFileSync(filePath, JSON.stringify(req.body, null, 2));
+    res.json({ message: 'Hero settings updated successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

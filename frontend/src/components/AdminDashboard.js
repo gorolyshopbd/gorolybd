@@ -10,6 +10,7 @@ import {
   BarChart3, PieChart, TrendingUp, Play, Image as ImageIcon, CheckCircle2, MoreVertical, Edit2, Search,
   FolderOpen, Upload, Trash2, Edit, Shirt, Smartphone, Sparkles, Watch, Home, Calendar, Bell, Settings, Download, Wifi, WifiOff, Zap, User, Lock, XCircle
 } from 'lucide-react';
+import HeroSettingsForm from './HeroSettingsForm';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart as RPie, Pie, Cell, LineChart, Line, CartesianGrid, AreaChart, Area } from 'recharts';
 import { useRealtime } from '@/hooks/useRealtime';
 
@@ -8907,6 +8908,8 @@ export default function AdminDashboard({ onTabChange }) {
               <h1 className="text-xl font-bold text-gray-900">Store Settings & Gateways</h1>
               <p className="text-sm text-gray-400 mt-1">Configure OTP gateways, payment gateways, and analytics tracking (Facebook Pixel &amp; Google GA4).</p>
             </div>
+
+            <HeroSettingsForm user={user} />
 
             <form onSubmit={handleSaveSettings} className="space-y-6">
 
