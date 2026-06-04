@@ -199,7 +199,8 @@ const updateUserProfile = async (req, res) => {
     address_details,
     nid_number,
     nid_image_front,
-    nid_image_back
+    nid_image_back,
+    customDomain
   } = req.body;
 
   try {
@@ -219,6 +220,7 @@ const updateUserProfile = async (req, res) => {
     if (nid_number !== undefined) updateData.nid_number = nid_number;
     if (nid_image_front !== undefined) updateData.nid_image_front = nid_image_front;
     if (nid_image_back !== undefined) updateData.nid_image_back = nid_image_back;
+    if (customDomain !== undefined) updateData.customDomain = customDomain;
 
     if ((nid_number || nid_image_front || nid_image_back) && user.verification_status !== 'Verified') {
       updateData.verification_status = 'Pending';

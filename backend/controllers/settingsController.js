@@ -119,7 +119,14 @@ export const getSettings = async (req, res) => {
       sasSmsGatewayUrl: settings.sas_sms_gateway_url || '',
       sasSmsApiKey: settings.sas_sms_api_key || '',
       sasSmsSecretKey: settings.sas_sms_secret_key || '',
-      sasSmsSenderId: settings.sas_sms_sender_id || ''
+      sasSmsSenderId: settings.sas_sms_sender_id || '',
+      // Branding - currency
+      currency: settings.currency || 'BDT',
+      currencySymbol: settings.currency_symbol || '৳',
+      // Advance payment
+      advancePaymentEnabled: settings.advance_payment_enabled || false,
+      advancePaymentThreshold: settings.advance_payment_threshold || 1000,
+      advancePaymentPercent: settings.advance_payment_percent || 50,
     };
 
     res.json(formatted);
@@ -154,28 +161,34 @@ export const updateSettings = async (req, res) => {
       ga4_measurement_id: req.body.ga4MeasurementId,
       google_tag_manager_id: req.body.googleTagManagerId,
       google_tag_manager_enabled: req.body.googleTagManagerEnabled,
+      // Branding fields
       site_title: req.body.siteTitle,
       favicon_url: req.body.faviconUrl,
       header_logo: req.body.headerLogo,
       footer_logo: req.body.footerLogo,
       footer_description: req.body.footerDescription,
+      currency: req.body.currency,
+      currency_symbol: req.body.currencySymbol,
+      // Header colors
       header_bg_color: req.body.headerBgColor,
       header_text_color: req.body.headerTextColor,
       header_accent_color: req.body.headerAccentColor,
-      flash_sale_gradient_start: req.body.flashSaleGradientStart,
-      flash_sale_gradient_mid: req.body.flashSaleGradientMid,
-      flash_sale_gradient_end: req.body.flashSaleGradientEnd,
-      flash_sale_radial_color: req.body.flashSaleRadialColor,
-      flash_sale_accent_color: req.body.flashSaleAccentColor,
+      // Notice bar
       notice_bar_enabled: req.body.noticeBarEnabled,
       notice_bar_text: req.body.noticeBarText,
       notice_bar_bg_color: req.body.noticeBarBgColor,
       notice_bar_text_color: req.body.noticeBarTextColor,
+      // Top bar
       top_bar_helpline: req.body.topBarHelpline,
       top_bar_store_link: req.body.topBarStoreLink,
       top_bar_play_store_link: req.body.topBarPlayStoreLink,
       top_bar_app_store_link: req.body.topBarAppStoreLink,
+      // Advance payment
+      advance_payment_enabled: req.body.advancePaymentEnabled,
+      advance_payment_threshold: req.body.advancePaymentThreshold,
+      advance_payment_percent: req.body.advancePaymentPercent,
       withdraw_min_amount: req.body.withdraw_min_amount,
+      // SMS gateways
       twilio_sid: req.body.twilioSid,
       twilio_auth_token: req.body.twilioAuthToken,
       twilio_phone_number: req.body.twilioPhoneNumber,
@@ -188,15 +201,34 @@ export const updateSettings = async (req, res) => {
       sas_sms_sender_id: req.body.sasSmsSenderId
     };
 
-    // Remove undefined values
+    // Remove undefined values so only provided fields are updated
     Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
 
-    const { data: settings, error } = await db.database.from('settings').select('id').limit(1).single();
+    const { data: existingSettings } = await db.database.from('settings').select('id').limit(1).single();
 
-    if (settings) {
-      await db.database.from('settings').update(updateData).eq('id', settings.id);
+    if (existingSettings) {
+      const { error } = await db.database.from('settings').update(updateData).eq('id', existingSettings.id);
+      if (error) throw new Error(error.message || 'Failed to update settings');
     } else {
-      await db.database.from('settings').insert(updateData);
+      const { error } = await db.database.from('settings').insert(updateData);
+      if (error) throw new Error(error.message || 'Failed to insert settings');
+    }
+
+    // Also try saving flash sale colors separately (these columns may or may not exist)
+    const flashData = {};
+    if (req.body.flashSaleGradientStart) flashData.flash_sale_gradient_start = req.body.flashSaleGradientStart;
+    if (req.body.flashSaleGradientMid) flashData.flash_sale_gradient_mid = req.body.flashSaleGradientMid;
+    if (req.body.flashSaleGradientEnd) flashData.flash_sale_gradient_end = req.body.flashSaleGradientEnd;
+    if (req.body.flashSaleRadialColor) flashData.flash_sale_radial_color = req.body.flashSaleRadialColor;
+    if (req.body.flashSaleAccentColor) flashData.flash_sale_accent_color = req.body.flashSaleAccentColor;
+
+    if (Object.keys(flashData).length > 0 && existingSettings) {
+      // Silently try — won't break if columns don't exist
+      try {
+        await db.database.from('settings').update(flashData).eq('id', existingSettings.id);
+      } catch (err) {
+        // ignore errors for missing flash sale columns
+      }
     }
 
     res.json({ message: 'Settings updated successfully' });

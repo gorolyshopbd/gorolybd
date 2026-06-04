@@ -1,11 +1,11 @@
 import express from 'express';
 import upload from '../middleware/uploadMiddleware.js';
-import { uploadImage, uploadMultipleImages } from '../controllers/uploadController.js';
-import { protect, admin } from '../middleware/authMiddleware.js';
+import { uploadImage, uploadMultipleImages, uploadCategoryImage } from '../controllers/uploadController.js';
+import { protect, admin, adminOrSeller } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/', protect, admin, (req, res, next) => {
+router.post('/', protect, adminOrSeller, (req, res, next) => {
   upload.single('image')(req, res, function (err) {
     if (err) {
       return res.status(400).json({ message: err.message });
@@ -14,7 +14,7 @@ router.post('/', protect, admin, (req, res, next) => {
   });
 }, uploadImage);
 
-router.post('/multiple', protect, admin, (req, res, next) => {
+router.post('/multiple', protect, adminOrSeller, (req, res, next) => {
   upload.array('images', 10)(req, res, function (err) {
     if (err) {
       return res.status(400).json({ message: err.message });
@@ -22,5 +22,14 @@ router.post('/multiple', protect, admin, (req, res, next) => {
     next();
   });
 }, uploadMultipleImages);
+
+router.post('/category', protect, admin, (req, res, next) => {
+  upload.single('image')(req, res, function (err) {
+    if (err) {
+      return res.status(400).json({ message: err.message });
+    }
+    next();
+  });
+}, uploadCategoryImage);
 
 export default router;

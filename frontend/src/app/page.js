@@ -8,7 +8,7 @@ import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import FeatureStrip from '@/components/FeatureStrip';
 import CategorySection from '@/components/CategorySection';
-import CategoryBannerCarousel from '@/components/CategoryBannerCarousel';
+// CategoryBannerCarousel removed from homepage per request
 import FlashSale from '@/components/FlashSale';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import CartDrawer from '@/components/CartDrawer';
@@ -98,7 +98,7 @@ export default function Storefront() {
     if (savedPage) setActiveTab(savedPage);
     frontendPageReadyRef.current = true;
 
-    fetchProducts();
+    fetchProducts({ all: 'true' });
     const fetchBranding = () => {
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/public`)
         .then((r) => r.ok ? r.json() : null)
@@ -187,7 +187,21 @@ export default function Storefront() {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory = selectedCategory ? p.category.toLowerCase() === selectedCategory.toLowerCase() : true;
+    const matchesCategory = selectedCategory ? (() => {
+      const normSelected = selectedCategory.toLowerCase();
+      if (p.category.toLowerCase() === normSelected) return true;
+      
+      const parentCat = shopCategories.find(c => c.name.toLowerCase() === normSelected);
+      if (parentCat && parentCat.subcategories) {
+        const subs = Array.isArray(parentCat.subcategories) 
+          ? parentCat.subcategories 
+          : (typeof parentCat.subcategories === 'string' 
+            ? parentCat.subcategories.split(',').map(s => s.trim()).filter(Boolean) 
+            : []);
+        return subs.map(s => s.toLowerCase()).includes(p.category.toLowerCase());
+      }
+      return false;
+    })() : true;
     const matchesBrand = selectedBrand ? (p.brand && p.brand.toLowerCase() === selectedBrand.toLowerCase()) : true;
     const finalPrice = calculateFinalPrice(p);
     const matchesPrice = finalPrice >= priceRange[0] && finalPrice <= priceRange[1];
@@ -258,6 +272,7 @@ export default function Storefront() {
           currentSearch={searchQuery}
           onTabChange={setActiveTab}
           activeTab={activeTab}
+          onCategoryClick={handleCategoryClick}
         />
       )}
 
@@ -267,7 +282,6 @@ export default function Storefront() {
           <div className="flex flex-col gap-1">
             <Hero onShopClick={() => setActiveTab('shop')} />
             <CategorySection onCategoryClick={handleCategoryClick} />
-            <CategoryBannerCarousel onCategoryClick={handleCategoryClick} />
             <FeatureStrip />
             <div className="flex flex-col gap-4 mt-4">
               <FlashSale 
@@ -326,15 +340,46 @@ export default function Storefront() {
                       >
                         {t('allCategories')}
                       </button>
-                      {shopCategories.map((cat) => (
-                        <button
-                          key={cat._id}
-                          onClick={() => setSelectedCategory(cat.name)}
-                          className={`text-left text-sm px-3 py-2 rounded-lg transition font-semibold ${selectedCategory === cat.name ? 'bg-[#FF6600] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-                        >
-                          {cat.name}
-                        </button>
-                      ))}
+                      {shopCategories.filter(c => !c.rootCategory || c.rootCategory === '--' || !shopCategories.some(p => p.name === c.rootCategory)).map((cat) => {
+                        const subs = cat.subcategories
+                          ? (Array.isArray(cat.subcategories) ? cat.subcategories : (typeof cat.subcategories === 'string' ? cat.subcategories.split(',').map(s => s.trim()).filter(Boolean) : []))
+                          : [];
+                        
+                        // Check if this parent is active (either directly selected or one of its subcategories is selected)
+                        const isParentActive = selectedCategory === cat.name || subs.includes(selectedCategory);
+                        
+                        return (
+                          <div key={cat._id} className="flex flex-col">
+                            <button
+                              onClick={() => setSelectedCategory(cat.name)}
+                              className={`text-left text-sm px-3 py-2 rounded-lg transition font-semibold flex items-center justify-between ${isParentActive ? 'bg-[#FF6600] text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+                            >
+                              <span>{cat.name}</span>
+                              {subs.length > 0 && (
+                                <ChevronDown size={12} className={`transition-transform duration-200 ${isParentActive ? 'rotate-180' : ''}`} />
+                              )}
+                            </button>
+                            
+                            {/* Subcategories dropdown list */}
+                            {isParentActive && subs.length > 0 && (
+                              <div className="pl-4 pr-1 py-1 flex flex-col gap-1 border-l border-slate-200 ml-3.5 mt-1 mb-1.5 space-y-0.5">
+                                {subs.map((sub, sIdx) => {
+                                  const isSubSelected = selectedCategory === sub;
+                                  return (
+                                    <button
+                                      key={sIdx}
+                                      onClick={() => setSelectedCategory(sub)}
+                                      className={`text-left text-xs px-2.5 py-1.5 rounded-md transition font-bold ${isSubSelected ? 'text-[#FF6600] bg-orange-50/75' : 'text-slate-500 hover:text-[#FF6600] hover:bg-slate-50'}`}
+                                    >
+                                      {sub}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -443,37 +488,38 @@ export default function Storefront() {
               {/* ── RIGHT CONTENT ── */}
               <div className="flex-1 min-w-0">
 
-                {/* Category Banner */}
+                {/* Category Banner - consistent height for ALL categories */}
                 {(() => {
-                  const activeCat = shopCategories.find(c => c.name === selectedCategory);
-                  // Use banner if available, otherwise fall back to thumbnail image
+                  const activeCat = shopCategories.find(c => {
+                    const isDirectMatch = String(c.name || '').trim().toLowerCase() === String(selectedCategory || '').trim().toLowerCase();
+                    if (isDirectMatch) return true;
+                    const subs = c.subcategories
+                      ? (Array.isArray(c.subcategories) ? c.subcategories : (typeof c.subcategories === 'string' ? c.subcategories.split(',').map(s => s.trim()).filter(Boolean) : []))
+                      : [];
+                    return subs.map(s => String(s).trim().toLowerCase()).includes(String(selectedCategory || '').trim().toLowerCase());
+                  });
                   const displayImage = activeCat?.banner || activeCat?.image;
+                  const displayName = selectedCategory || t('allProducts');
                   return (
-                    <div className="w-full rounded-2xl overflow-hidden mb-4 relative" style={{ height: activeCat?.banner ? '240px' : '160px' }}>
+                    <div className="w-full rounded-2xl overflow-hidden mb-4 relative" style={{ height: '200px' }}>
                       {displayImage ? (
-                        <img
-                          src={getImageUrl(displayImage)}
-                          alt={activeCat.name}
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={getImageUrl(displayImage)} alt={activeCat.name} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 flex items-center justify-center relative overflow-hidden">
-                          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #FF6600 0%, transparent 50%), radial-gradient(circle at 80% 50%, #3b82f6 0%, transparent 50%)' }} />
-                          <div className="text-center z-10">
-                            <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1">{lang === 'bn' ? 'ব্রাউজ' : 'Browse'}</div>
-                            <div className="text-white text-2xl font-extrabold">{selectedCategory || t('allProducts')}</div>
+                        <div className="w-full h-full flex items-center px-8 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%)' }}>
+                          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 15% 50%, #FF6600 0%, transparent 55%), radial-gradient(circle at 85% 30%, #f59e0b 0%, transparent 45%)' }} />
+                          <div className="relative z-10">
+                            <div className="text-white/40 text-xs font-black uppercase tracking-[0.2em] mb-1">{lang === 'bn' ? 'ব্রাউজ করুন' : 'Browse'}</div>
+                            <div className="text-white text-3xl font-black leading-tight">{displayName}</div>
+                            <div className="mt-2 w-12 h-1 rounded-full bg-[#FF6600]" />
                           </div>
                         </div>
                       )}
-                      {/* Overlay with category name */}
-                      {displayImage && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center px-6">
-                          <div>
-                            <div className="text-white/60 text-xs font-bold uppercase tracking-widest mb-1">{lang === 'bn' ? 'ক্যাটাগরি' : 'Category'}</div>
-                            <div className="text-white text-2xl font-extrabold drop-shadow">{selectedCategory}</div>
-                          </div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent flex items-center px-8">
+                        <div>
+                          <div className="text-white/50 text-xs font-black uppercase tracking-[0.18em] mb-1">{lang === 'bn' ? 'ক্যাটাগরি' : 'Category'}</div>
+                          <div className="text-white text-2xl font-black drop-shadow-lg leading-tight">{displayName}</div>
                         </div>
-                      )}
+                      </div>
                     </div>
                   );
                 })()}
@@ -632,7 +678,7 @@ export default function Storefront() {
                       key={product._id}
                       className="bg-white rounded-2xl border border-slate-100 overflow-hidden group shadow-sm hover:shadow-xl hover:border-slate-200 transition duration-300 flex flex-col justify-between"
                     >
-                      <div className="relative pt-[100%] bg-slate-50 relative overflow-hidden">
+                      <div className="relative pt-[80%] bg-slate-50 overflow-hidden">
                         <button
                           onClick={() => handleAddToWishlist(product)}
                           className="absolute top-3 right-3 p-2 bg-red-50 text-red-500 rounded-full shadow-xs backdrop-blur-xs transition z-10"

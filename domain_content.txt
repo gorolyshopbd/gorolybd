@@ -1,0 +1,197 @@
+{activeTab === 'seller_custom_domain' && (
+        <div className="space-y-6 max-w-3xl w-full animate-fade-in">
+          <div className="border-b border-slate-200 pb-5 flex justify-between items-start flex-wrap gap-3">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Globe size={22} className="text-[#FF6600]" /> কাস্টম ডোমেইন সেটআপ
+              </h1>
+              <p className="text-sm text-gray-400 mt-1">
+                আপনার স্টোরের সাথে নিজের ডোমেইন কানেক্ট করুন (যেমন: <span className="font-semibold text-gray-600">shop.yourbrand.com</span>)।
+              </p>
+            </div>
+            <a
+              href="https://www.youtube.com/results?search_query=custom+domain+CNAME+bangla+tutorial"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 font-bold text-sm rounded-xl hover:bg-red-100 transition border border-red-100 whitespace-nowrap"
+            >
+              <Play size={14} /> ভিডিও টিউটোরিয়াল দেখুন
+            </a>
+          </div>
+
+          {/* Tutorial Steps */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-5">
+            <h3 className="font-black text-blue-900 text-sm mb-4 flex items-center gap-2">
+              📋 ধাপে ধাপে ডোমেইন কানেক্ট করার গাইড
+            </h3>
+            <div className="space-y-4">
+              {[
+                {
+                  num: '১',
+                  title: 'ডোমেইন প্রোভাইডারে লগইন করুন',
+                  desc: 'আপনি যেখান থেকে ডোমেইন কিনেছেন (Namecheap, GoDaddy, Hostinger বা Cloudflare) সেখানে আপনার একাউন্টে লগইন করুন।',
+                  badge: 'Step 1'
+                },
+                {
+                  num: '২',
+                  title: 'DNS Management খুলুন',
+                  desc: '"My Domains" → আপনার ডোমেইনটি সিলেক্ট করুন → "Advanced DNS" বা "DNS Zone Editor" এ যান।',
+                  badge: 'Step 2'
+                },
+                {
+                  num: '৩',
+                  title: 'CNAME রেকর্ড যোগ করুন (সাব-ডোমেইন)',
+                  desc: 'নতুন রেকর্ড যোগ করুন: Type = CNAME, Host = shop (বা www), Value = gorolyshop.com, TTL = Automatic',
+                  badge: 'Step 3'
+                },
+                {
+                  num: '৪',
+                  title: 'A রেকর্ড যোগ করুন (মেইন ডোমেইন, যদি লাগে)',
+                  desc: 'মূল ডোমেইনের জন্য: Type = A Record, Host = @, Value = আপনার সার্ভার IP। এরপর Save করুন।',
+                  badge: 'Step 4'
+                },
+                {
+                  num: '৫',
+                  title: 'নিচে ডোমেইন সেভ করুন ও অপেক্ষা করুন',
+                  desc: 'নিচের বক্সে ডোমেইন নাম দিয়ে "সেভ করুন" চাপুন। DNS প্রোপাগেশনে ১ থেকে ২৪ ঘণ্টা লাগতে পারে।',
+                  badge: 'Step 5'
+                },
+              ].map(({ num, title, desc, badge }) => (
+                <div key={num} className="flex gap-3 items-start bg-white rounded-xl p-4 border border-blue-100 shadow-sm">
+                  <div className="w-7 h-7 rounded-full bg-[#FF6600] text-white text-xs font-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                    {num}
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-900 text-sm">{title}</p>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* DNS Table */}
+          <div className="bg-slate-900 rounded-2xl p-5 text-sm">
+            <h3 className="text-white font-black mb-3 flex items-center gap-2">
+              <span className="text-[#FF6600]">DNS</span> কনফিগারেশন রেফারেন্স
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="text-slate-400 text-xs font-bold border-b border-slate-700">
+                    <th className="pb-2 pr-6">Type</th>
+                    <th className="pb-2 pr-6">Host / Name</th>
+                    <th className="pb-2">Value / Points To</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-300 text-xs font-mono">
+                  <tr className="border-b border-slate-800">
+                    <td className="py-2 pr-6 text-[#FF6600] font-bold">CNAME</td>
+                    <td className="py-2 pr-6">shop <span className="text-slate-500">(বা www)</span></td>
+                    <td className="py-2 text-emerald-400">gorolyshop.com</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-6 text-blue-400 font-bold">A</td>
+                    <td className="py-2 pr-6">@ <span className="text-slate-500">(root)</span></td>
+                    <td className="py-2 text-emerald-400">আপনার সার্ভার IP</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Domain Save Form */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+            <h2 className="font-black text-gray-900 text-sm mb-4 pb-4 border-b border-slate-100 flex items-center justify-between">
+              আপনার কাস্টম ডোমেইন
+              <span className={`px-3 py-1 rounded-xl text-[10px] font-black ${user?.customDomain ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+                {user?.customDomain ? '✅ Connected' : '❌ Not Connected'}
+              </span>
+            </h2>
+
+            {user?.customDomain && (
+              <div className="mb-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-3">
+                <Globe size={16} className="text-emerald-600 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-slate-500 font-semibold">বর্তমান ডোমেইন</p>
+                  <a href={`https://${user.customDomain}`} target="_blank" rel="noreferrer" className="text-sm font-black text-blue-600 hover:underline">{user.customDomain}</a>
+                </div>
+              </div>
+            )}
+
+            {customDomainErr && (
+              <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+                <AlertCircle size={14} /> {customDomainErr}
+              </div>
+            )}
+            {customDomainMsg && (
+              <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+                <CheckCircle2 size={14} /> {customDomainMsg}
+              </div>
+            )}
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setCustomDomainErr('');
+                setCustomDomainMsg('');
+                const domain = customDomainValue.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+                if (!domain) return setCustomDomainErr('অনুগ্রহ করে সঠিক ডোমেইন নাম দিন।');
+                if (!/^[a-zA-Z0-9][a-zA-Z0-9-_.]+\.[a-zA-Z]{2,}$/.test(domain)) {
+                  return setCustomDomainErr('ডোমেইনের ফরমেট ভুল! যেমন: shop.yourbrand.com');
+                }
+                setCustomDomainSaving(true);
+                try {
+                  const res = await fetch(`${API_URL}/users/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                    body: JSON.stringify({ customDomain: domain }),
+                  });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.message || 'ডোমেইন সেভ করতে সমস্যা হয়েছে।');
+                  const updatedUser = { ...user, customDomain: domain };
+                  localStorage.setItem('shop_admin_user', JSON.stringify(updatedUser));
+                  localStorage.setItem('shop_user', JSON.stringify(updatedUser));
+                  setUser(updatedUser);
+                  setCustomDomainMsg('✅ কাস্টম ডোমেইন সেভ হয়েছে! এখন DNS-এ CNAME রেকর্ড যোগ করুন।');
+                } catch (err) {
+                  setCustomDomainErr(err.message || 'ডোমেইন সেভ করতে সমস্যা হয়েছে।');
+                } finally {
+                  setCustomDomainSaving(false);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">ডোমেইনের নাম লিখুন</label>
+                <div className="flex gap-3">
+                  <div className="flex-1 flex items-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-[#FF6600] focus-within:ring-2 focus-within:ring-[#FF6600]/20 transition">
+                    <span className="px-3 text-slate-400 text-sm font-semibold border-r border-slate-200 h-full flex items-center bg-slate-100 select-none">https://</span>
+                    <input
+                      type="text"
+                      value={customDomainValue}
+                      onChange={(e) => setCustomDomainValue(e.target.value)}
+                      placeholder="shop.yourbrand.com"
+                      className="flex-1 px-3 py-2.5 bg-transparent focus:outline-none text-gray-900 text-sm"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={customDomainSaving}
+                    className="px-5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-xl text-sm transition disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {customDomainSaving ? 'সেভ হচ্ছে...' : 'সেভ করুন'}
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-2 font-medium">https:// ছাড়া ডোমেইন দিন। যেমন: <span className="font-semibold">shop.mybrand.com</span></p>
+              </div>
+
+              {customDomainValue && (
+                <div className="p-3 bg-orange-50 border border-orange-100 rounded-xl text-xs text-orange-800 font-semibold flex items-start gap-2">
+                  <span className="mt-0.5">⚠️</span>
+                  <span>সেভ করার পর, আপনার DNS প্রোভাইডারে <strong>{customDomainValue.replace(/^https?:\/\//, '').split('/')[0]}</strong> এর জন্য <strong>gorolyshop.com</strong> পয়েন্ট করে একটি <strong>CNAME</strong> রেকর্ড যোগ করুন।</span>
+                </div>
+              )}
+            </form>
+          </div>
+

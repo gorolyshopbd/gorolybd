@@ -14,8 +14,8 @@ const uploadToInsForge = async (file, folder = 'products') => {
 
   const storageKey = data.key || key;
 
-  // getPublicUrl() returns a string — use it for consistent URLs
-  const publicUrl = data.url || db.storage.from('product').getPublicUrl(storageKey) || '';
+  // Always use getPublicUrl() for a stable, permanent URL (data.url may have expiring ?v= params)
+  const publicUrl = db.storage.from('product').getPublicUrl(storageKey) || data.url || '';
 
   const { error: imgError } = await db.database.from('images').insert({
     filename: storageKey,
@@ -38,6 +38,7 @@ const uploadImage = async (req, res) => {
   }
 
   try {
+    // Default folder for generic product images
     const result = await uploadToInsForge(req.file, 'products');
     res.json({
       message: 'Image uploaded successfully',
@@ -70,5 +71,23 @@ const uploadMultipleImages = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// Category image upload (thumbnail or banner)
+const uploadCategoryImage = async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+  try {
+    // Use 'categories' folder for category images
+    const result = await uploadToInsForge(req.file, 'categories');
+    res.json({
+      message: 'Category image uploaded successfully',
+      image: result.url,
+      filename: result.key,
+      key: result.key,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-export { uploadImage, uploadMultipleImages };
+export { uploadImage, uploadMultipleImages, uploadCategoryImage };

@@ -23,6 +23,7 @@ import sellerSubscriptionRoutes from './routes/sellerSubscriptionRoutes.js';
 import rewardRoutes from './routes/rewardRoutes.js';
 import rupantorpayRoutes from './routes/rupantorpayRoutes.js';
 import subscriberRoutes from './routes/subscriberRoutes.js';
+import marketingRoutes from './routes/marketingRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -48,6 +49,7 @@ app.use('/api/pages', pageRoutes);
 app.use('/api/offers', offerRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/marketing', marketingRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/brands', brandRoutes);
 app.use('/api/videos', videoRoutes);

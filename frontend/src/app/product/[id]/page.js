@@ -168,6 +168,22 @@ export default function ProductDetailPage() {
     }
   };
 
+  const productJsonLd = product ? {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: getImageUrl(product.image),
+    description: product.description,
+    brand: { '@type': 'Brand', name: product.brand || 'Goroly Shop' },
+    offers: {
+      '@type': 'Offer',
+      url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://gorolyshop.com'}/product/${product._id}`,
+      priceCurrency: 'BDT', // Change if different default
+      price: finalPrice,
+      availability: product.countInStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    },
+  } : null;
+
   return (
     <div className="storefront-shell flex flex-col min-h-screen bg-slate-50">
       <Head>
@@ -181,6 +197,12 @@ export default function ProductDetailPage() {
         <meta name="twitter:title" content={product?.metaTitle || product?.name || 'Product - Goroly Shop'} />
         <meta name="twitter:description" content={product?.metaDescription || (product?.description ? product.description.slice(0,160) : '')} />
         <meta name="twitter:image" content={product?.metaImage ? getImageUrl(product.metaImage) : product?.image ? getImageUrl(product.image) : ''} />
+        {productJsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+          />
+        )}
       </Head>
       <Header
         onCartClick={() => setCartOpen(true)}
@@ -228,7 +250,10 @@ export default function ProductDetailPage() {
                     <div className={`w-full h-full flex items-center justify-center ${isZoomed ? '' : ''}`}>
                       <img
                         src={getImageUrl(allImages[selectedImageIndex] || product.image)}
-                        alt={product.name}
+                        alt={product?.image_alt || product.name}
+                        title={product?.image_alt || product.name}
+                        fetchpriority="high"
+                        decoding="async"
                         style={isZoomed ? zoomStyle : {}}
                         className={`w-full h-full object-contain rounded-xl transition-transform duration-200 ease-out ${isZoomed ? '' : ''}`}
                       />
@@ -246,7 +271,7 @@ export default function ProductDetailPage() {
                               : 'border-slate-200 hover:border-slate-300'
                           }`}
                         >
-                          <img src={getImageUrl(img)} alt="" className="w-full h-full object-cover" />
+                          <img src={getImageUrl(img)} alt={`${product.name} thumbnail ${idx+1}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                         </button>
                       ))}
                     </div>

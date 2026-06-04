@@ -395,18 +395,18 @@ export default function AuthModal({ isOpen, onClose }) {
                   )}
                   {authMode === 'register' && (
                     <>
-                      <div className="relative rounded-2xl border border-violet-100 bg-violet-50/45 p-3 shadow-sm">
-                        <label className="text-[10px] font-bold text-violet-500 uppercase tracking-wider">Full Name</label>
+                      <div className="relative rounded-2xl border border-orange-100 bg-orange-50/45 p-3 shadow-sm">
+                        <label className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">Full Name</label>
                         <div className="relative mt-1.5 group">
                           <input
                             type="text"
                             placeholder={accountType === 'seller' ? "e.g. My Store Name" : "e.g. John Doe"}
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-white border border-violet-100 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-violet-500/15 focus:border-violet-500 transition-all duration-300 shadow-sm hover:border-violet-200"
+                            className="w-full pl-11 pr-4 py-3 bg-white border border-orange-100 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-orange-500/15 focus:border-[#FF6600] transition-all duration-300 shadow-sm hover:border-orange-200"
                             required
                           />
-                          <User className="absolute left-3.5 top-3.5 text-violet-400 group-focus-within:text-violet-600 transition-colors duration-300" size={16} />
+                          <User className="absolute left-3.5 top-3.5 text-orange-400 group-focus-within:text-[#FF6600] transition-colors duration-300" size={16} />
                         </div>
                       </div>
                     </>
@@ -553,10 +553,7 @@ export default function AuthModal({ isOpen, onClose }) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`w-full py-3 mt-2 text-white font-bold rounded-xl shadow-lg transition duration-300 hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0 ${authMode === 'register'
-                        ? 'bg-linear-to-r from-violet-600 via-sky-500 to-emerald-500 hover:brightness-105 shadow-sky-500/20'
-                        : 'bg-[#FF6600] hover:bg-[#e05a00] shadow-[#FF6600]/25'
-                      }`}
+                    className="w-full py-3 mt-2 text-white font-bold rounded-xl shadow-lg transition duration-300 hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0 bg-[#FF6600] hover:bg-[#e05a00] shadow-[#FF6600]/25"
                   >
                     {loading ? 'Processing...' : authMode === 'login' ? 'Sign In' : 'Sign Up'}
                   </button>

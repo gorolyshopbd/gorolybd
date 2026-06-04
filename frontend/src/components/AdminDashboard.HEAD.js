@@ -1,14 +1,14 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { ShopContext, getImageUrl, formatPrice } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { 
-  ShoppingBag, ShoppingCart, DollarSign, Contact, Users, AlertCircle, Package, ArrowRight,
+  ShoppingBag, DollarSign, Users, AlertCircle, Package, ArrowRight,
   CircleDot, Tag, Plus, Check, Truck, CreditCard, ChevronRight, X,
   Sliders, Ship, Globe, MessageCircle, MessageSquare, Eye, EyeOff, LayoutGrid, Server,
   BarChart3, PieChart, TrendingUp, Play, Image as ImageIcon, CheckCircle2, MoreVertical, Edit2, Search,
-  FolderOpen, Upload, Trash2, Edit, Shirt, Smartphone, Sparkles, Watch, Home, Calendar, Bell, Settings, Download, Wifi, WifiOff, Zap, User, Lock, XCircle
+  FolderOpen, Upload, Trash2, Edit, Shirt, Smartphone, Sparkles, Watch, Home, Calendar, Bell, Settings, Download, Wifi, WifiOff, Zap
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart as RPie, Pie, Cell, LineChart, Line, CartesianGrid, AreaChart, Area } from 'recharts';
 import { useRealtime } from '@/hooks/useRealtime';
@@ -180,16 +180,8 @@ export default function AdminDashboard({ onTabChange }) {
     status: true
   });
   const [editingCat, setEditingCat] = useState(null);
-
   const [categoryPage, setCategoryPage] = useState(1);
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
-  
-  // Subcategories
-  const [subCatForm, setSubCatForm] = useState({ name: '', parentCategory: '', rootCategory: '' });
-  const [editingSubCat, setEditingSubCat] = useState(null); // { originalName: '', parentId: '' }
-  const [subCategoryPage, setSubCategoryPage] = useState(1);
-  const [subCategorySearchQuery, setSubCategorySearchQuery] = useState('');
-
   // Brands (API-based management)
   const [brandList, setBrandList] = useState([]);
   const [brandForm, setBrandForm] = useState({ name: '', image: '', order: 0 });
@@ -214,7 +206,6 @@ export default function AdminDashboard({ onTabChange }) {
     name: '',
     price: '',
     category: '',
-    parentCategory: '',
     brand: '',
     countInStock: '',
     description: '',
@@ -256,7 +247,7 @@ export default function AdminDashboard({ onTabChange }) {
   // Edit product states
   const [editingProduct, setEditingProduct] = useState(null);
   const [editForm, setEditForm] = useState({
-    name: '', price: '', category: '', parentCategory: '', brand: '', countInStock: '',
+    name: '', price: '', category: '', brand: '', countInStock: '',
     description: '', shortDescription: '', image: '', images: [], discountPercent: '0', discountType: 'percent',
     isFlashSale: false, flashSaleStart: '', flashSaleEnd: '', isDigital: false, digitalFileUrl: '',
     metaTitle: '', metaDescription: '', metaKeywords: '', metaImage: '', tags: '', youtubeUrl: '',
@@ -287,12 +278,6 @@ export default function AdminDashboard({ onTabChange }) {
   const [bannersList, setBannersList] = useState([]);
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '', isActive: true, order: 0 });
   const [editingBanner, setEditingBanner] = useState(null);
-
-  // AI Marketing States
-  const [aiMarketingUrl, setAiMarketingUrl] = useState('');
-  const [aiMarketingType, setAiMarketingType] = useState('image');
-  const [aiMarketingLoading, setAiMarketingLoading] = useState(false);
-  const [aiMarketingResult, setAiMarketingResult] = useState(null);
 
   // Chat states
   const [chatMessages, setChatMessages] = useState([]);
@@ -339,7 +324,7 @@ export default function AdminDashboard({ onTabChange }) {
     headerTextColor: '#FFFFFF',
     headerAccentColor: '#FF6600',
     noticeBarEnabled: true,
-    noticeBarText: 'Summer Sale - All Swim Suits OFF 50%! Free delivery on orders over ৳999.',
+    noticeBarText: 'Summer Sale - All Swim Suits OFF 50%! Free delivery on orders over αº│999.',
     noticeBarBgColor: '#6F1BE4',
     noticeBarTextColor: '#FFFFFF',
     footerDescription: '',
@@ -418,11 +403,7 @@ export default function AdminDashboard({ onTabChange }) {
   const [setPointsValue, setSetPointsValue] = useState(100);
   const [setPointsDesc, setSetPointsDesc] = useState('Manual adjustment');
   const [customerSearchTerm, setCustomerSearchTerm] = useState('');
-  const [customerListSearch, setCustomerListSearch] = useState('');
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
-  const [importFile, setImportFile] = useState(null);
-  const [importing, setImporting] = useState(false);
-  const importFileRef = React.useRef(null);
   const [selectedStatementUser, setSelectedStatementUser] = useState(null);
 
   // Seller Package form state
@@ -469,12 +450,6 @@ export default function AdminDashboard({ onTabChange }) {
   const [automationMessage, setAutomationMessage] = useState('');
   const [automationError, setAutomationError] = useState('');
   const [showAutomationGuide, setShowAutomationGuide] = useState(false);
-  // Custom Domain States
-  const [customDomainValue, setCustomDomainValue] = useState(user?.customDomain || '');
-  const [customDomainSaving, setCustomDomainSaving] = useState(false);
-  const [customDomainMsg, setCustomDomainMsg] = useState('');
-  const [customDomainErr, setCustomDomainErr] = useState('');
-  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -537,7 +512,7 @@ export default function AdminDashboard({ onTabChange }) {
     }
     const minAmount = settings?.withdraw_min_amount || 500;
     if (Number(payoutAmount) < minAmount) {
-      setPayoutError(`Minimum withdrawal amount is ${currencySymbol || '৳'}${minAmount}.`);
+      setPayoutError(`Minimum withdrawal amount is ${currencySymbol || 'αº│'}${minAmount}.`);
       return;
     }
     if (!payoutAccount || payoutAccount.trim().length < 11) {
@@ -963,78 +938,6 @@ export default function AdminDashboard({ onTabChange }) {
   }, [user, activeTab]);
 
   // Actions
-  const handleAnalyzeMedia = async (e) => {
-    e.preventDefault();
-    if (!aiMarketingUrl) return alert('Please enter a valid image or video URL.');
-    setAiMarketingLoading(true);
-    setAiMarketingResult(null);
-    try {
-      const res = await fetch(`${API_URL}/marketing/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
-        body: JSON.stringify({ mediaUrl: aiMarketingUrl, type: aiMarketingType }),
-      });
-      if (res.ok) {
-        setAiMarketingResult(await res.json());
-      } else {
-        const err = await res.json();
-        alert(err.message || 'Failed to analyze media.');
-      }
-    } catch (err) {
-      alert(err.message || 'Error connecting to AI service.');
-    } finally {
-      setAiMarketingLoading(false);
-    }
-  };
-
-  const handleGenerateSeo = async (e, isEdit = false) => {
-    e.preventDefault();
-    const productData = isEdit ? editForm : newProduct;
-    if (!productData.name) return alert('Please enter a Product Name first.');
-
-    setAiMarketingLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/marketing/generate-seo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
-        body: JSON.stringify({
-          name: productData.name,
-          description: productData.description,
-          category: productData.category,
-          brand: productData.brand
-        }),
-      });
-      if (res.ok) {
-        const seo = await res.json();
-        if (isEdit) {
-          setEditForm(prev => ({
-            ...prev,
-            metaTitle: seo.metaTitle || prev.metaTitle,
-            metaDescription: seo.metaDescription || prev.metaDescription,
-            metaKeywords: seo.keywords || prev.metaKeywords,
-            metaImageAlt: seo.altText || prev.metaImageAlt,
-          }));
-        } else {
-          setNewProduct(prev => ({
-            ...prev,
-            metaTitle: seo.metaTitle || prev.metaTitle,
-            metaDescription: seo.metaDescription || prev.metaDescription,
-            metaKeywords: seo.keywords || prev.metaKeywords,
-            metaImageAlt: seo.altText || prev.metaImageAlt,
-          }));
-        }
-        alert('✨ SEO Data generated successfully!');
-      } else {
-        const err = await res.json();
-        alert(err.message || 'Failed to generate SEO.');
-      }
-    } catch (err) {
-      alert(err.message || 'Error connecting to AI service.');
-    } finally {
-      setAiMarketingLoading(false);
-    }
-  };
-
   const handleUpdateStatus = async (orderId, status) => {
     try {
       const res = await fetch(`${API_URL}/orders/${orderId}/status`, {
@@ -1217,7 +1120,6 @@ export default function AdminDashboard({ onTabChange }) {
           name: '',
           price: '',
           category: '',
-          parentCategory: '',
           brand: '',
           countInStock: '',
           description: '',
@@ -1726,7 +1628,7 @@ export default function AdminDashboard({ onTabChange }) {
         const list = await res.json();
         const enriched = list.map((cat, idx) => ({
           ...cat,
-          rootCategory: cat.rootCategory || '',
+          rootCategory: cat.rootCategory || (idx % 3 === 0 ? 'Kids & Baby' : idx % 3 === 1 ? "Men's Clothing" : 'Unisex & Casual Wear'),
           commissionRate: cat.commissionRate || 0,
           featured: cat.featured !== undefined ? cat.featured : (idx === 9),
           status: cat.status !== undefined ? cat.status : true,
@@ -1757,9 +1659,7 @@ export default function AdminDashboard({ onTabChange }) {
           name: catForm.name,
           image: catForm.image,
           banner: catForm.banner,
-          order: catForm.order,
-          rootCategory: catForm.rootCategory,
-          subcategories: catForm.subcategories ? catForm.subcategories.split(',').map(s => s.trim()).filter(Boolean) : []
+          order: catForm.order
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1767,9 +1667,8 @@ export default function AdminDashboard({ onTabChange }) {
         setCatForm({
           name: '', image: '', order: 0, rootCategory: '', slug: '',
           commissionRate: 0, icon: '', banner: '', metaTitle: '', metaDescription: '',
-          featured: false, status: true, subcategories: ''
+          featured: false, status: true
         });
-
         fetchCategories();
         publishRealtime('category_updated', { action: 'create' });
       } else {
@@ -1796,9 +1695,7 @@ export default function AdminDashboard({ onTabChange }) {
           name: catForm.name,
           image: catForm.image,
           banner: catForm.banner,
-          order: catForm.order,
-          rootCategory: catForm.rootCategory,
-          subcategories: catForm.subcategories ? catForm.subcategories.split(',').map(s => s.trim()).filter(Boolean) : []
+          order: catForm.order
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1807,9 +1704,8 @@ export default function AdminDashboard({ onTabChange }) {
         setCatForm({
           name: '', image: '', order: 0, rootCategory: '', slug: '',
           commissionRate: 0, icon: '', banner: '', metaTitle: '', metaDescription: '',
-          featured: false, status: true, subcategories: ''
+          featured: false, status: true
         });
-
         fetchCategories();
         publishRealtime('category_updated', { action: 'update' });
       } else {
@@ -1831,115 +1727,6 @@ export default function AdminDashboard({ onTabChange }) {
         const data = await res.json().catch(() => ({}));
         alert(data.message || 'Failed to delete category');
       }
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  // Subcategory Handlers
-  const handleCreateSubCategory = async (e) => {
-    e.preventDefault();
-    if (!subCatForm.name || !subCatForm.parentCategory) {
-      alert('Please enter a name and select a parent category');
-      return;
-    }
-    const parent = categoryList.find(c => c._id === subCatForm.parentCategory);
-    if (!parent) return;
-
-    let currentSubcats = Array.isArray(parent.subcategories) ? parent.subcategories : [];
-    if (typeof parent.subcategories === 'string') {
-        currentSubcats = parent.subcategories.split(',').map(s => s.trim()).filter(Boolean);
-    }
-    
-    if (currentSubcats.map(s => s.toLowerCase()).includes(subCatForm.name.trim().toLowerCase())) {
-      alert('Subcategory already exists in this parent category');
-      return;
-    }
-
-    const updatedSubcats = [...currentSubcats, subCatForm.name.trim()];
-
-    try {
-      const res = await fetch(`${API_URL}/categories/${parent._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token || ''}` },
-        body: JSON.stringify({ subcategories: updatedSubcats })
-      });
-      if (res.ok) {
-        setSubCatForm({ name: '', parentCategory: '', rootCategory: '' });
-        fetchCategories();
-      } else {
-        const data = await res.json().catch(() => ({}));
-        alert(data.message || 'Failed to create subcategory');
-      }
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  const handleUpdateSubCategory = async (e) => {
-    e.preventDefault();
-    if (!subCatForm.name || !subCatForm.parentCategory || !editingSubCat) return;
-
-    const oldParentId = editingSubCat.parentId;
-    const oldName = editingSubCat.originalName;
-    const newParentId = subCatForm.parentCategory;
-    const newName = subCatForm.name.trim();
-
-    try {
-      if (oldParentId === newParentId) {
-        // Same parent, just update the name in the array
-        const parent = categoryList.find(c => c._id === oldParentId);
-        if (!parent) return;
-        let currentSubcats = Array.isArray(parent.subcategories) ? parent.subcategories : (typeof parent.subcategories === 'string' ? parent.subcategories.split(',').map(s => s.trim()).filter(Boolean) : []);
-        const updatedSubcats = currentSubcats.map(s => s === oldName ? newName : s);
-        
-        await fetch(`${API_URL}/categories/${parent._id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token || ''}` },
-          body: JSON.stringify({ subcategories: updatedSubcats })
-        });
-      } else {
-        // Different parent: remove from old, add to new
-        const oldParent = categoryList.find(c => c._id === oldParentId);
-        const newParent = categoryList.find(c => c._id === newParentId);
-        if (oldParent) {
-          let oldSubcats = Array.isArray(oldParent.subcategories) ? oldParent.subcategories : (typeof oldParent.subcategories === 'string' ? oldParent.subcategories.split(',').map(s => s.trim()).filter(Boolean) : []);
-          await fetch(`${API_URL}/categories/${oldParent._id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token || ''}` },
-            body: JSON.stringify({ subcategories: oldSubcats.filter(s => s !== oldName) })
-          });
-        }
-        if (newParent) {
-          let newSubcats = Array.isArray(newParent.subcategories) ? newParent.subcategories : (typeof newParent.subcategories === 'string' ? newParent.subcategories.split(',').map(s => s.trim()).filter(Boolean) : []);
-          await fetch(`${API_URL}/categories/${newParent._id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token || ''}` },
-            body: JSON.stringify({ subcategories: [...newSubcats, newName] })
-          });
-        }
-      }
-      setEditingSubCat(null);
-      setSubCatForm({ name: '', parentCategory: '', rootCategory: '' });
-      fetchCategories();
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  const handleDeleteSubCategory = async (parentId, subCatName) => {
-    if (!window.confirm(`Are you sure you want to delete the subcategory "${subCatName}"?`)) return;
-    const parent = categoryList.find(c => c._id === parentId);
-    if (!parent) return;
-    let currentSubcats = Array.isArray(parent.subcategories) ? parent.subcategories : (typeof parent.subcategories === 'string' ? parent.subcategories.split(',').map(s => s.trim()).filter(Boolean) : []);
-    
-    try {
-      await fetch(`${API_URL}/categories/${parent._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token || ''}` },
-        body: JSON.stringify({ subcategories: currentSubcats.filter(s => s !== subCatName) })
-      });
-      fetchCategories();
     } catch (err) {
       alert(err.message);
     }
@@ -2158,7 +1945,7 @@ export default function AdminDashboard({ onTabChange }) {
   const renderProductsTable = (list) => {
     if (!list || list.length === 0) {
       return (
-        <div className="p-8 text-center text-gray-500 text-sm">
+        <div className="p-8 text-center text-gray-500 text-xs">
           No products found.
         </div>
       );
@@ -2188,7 +1975,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <div className="flex items-center gap-3">
                     <img src={getImageUrl(prod.image)} className="w-10 h-10 object-cover rounded-lg border border-slate-200 group-hover:scale-105 transition-transform" />
                     <div>
-                      <h4 className="font-bold text-gray-900 text-sm line-clamp-1 max-w-[200px]" title={prod.name}>{prod.name}</h4>
+                      <h4 className="font-bold text-gray-900 text-xs line-clamp-1 max-w-[200px]" title={prod.name}>{prod.name}</h4>
                       {prod.isDigital && (
                         <span className="bg-emerald-100 text-emerald-700 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider mt-1 inline-block">
                           Digital
@@ -2202,12 +1989,12 @@ export default function AdminDashboard({ onTabChange }) {
                     {!prod.user_id || prod.user_id === user?._id ? 'Admin Product' : 'Seller Product'}
                   </span>
                 </td>
-                <td className="py-4 px-4 text-sm text-gray-500 space-y-0.5">
+                <td className="py-4 px-4 text-xs text-gray-500 space-y-0.5">
                   <div>Base Price: {formatPrice(prod.price, currencySymbol)} /{prod.unit || 'pcs'}</div>
                   <div>Total Sale: {prod.salesCount || 0}</div>
                   <div>Rating: {prod.rating || 0}</div>
                 </td>
-                <td className="py-4 px-4 text-sm text-gray-900 font-semibold space-y-0.5">
+                <td className="py-4 px-4 text-xs text-gray-900 font-semibold space-y-0.5">
                   {prod.barcode && <div className="text-[10px] text-gray-400 font-mono">{prod.barcode}</div>}
                   <div>{prod.isDigital ? 'Unlimited' : `${prod.countInStock} Left`}</div>
                 </td>
@@ -2270,18 +2057,8 @@ export default function AdminDashboard({ onTabChange }) {
                 <td className="py-4 px-4 text-right rounded-r-xl space-x-1 whitespace-nowrap">
                   <button
                     onClick={() => {
-                      const parentName = (() => {
-                        if (!prod.category) return '';
-                        const parent = categoryList.find(c => {
-                          const subs = Array.isArray(c.subcategories) ? c.subcategories 
-                            : (typeof c.subcategories === 'string' ? c.subcategories.split(',').map(s => s.trim()).filter(Boolean) : []);
-                          return subs.includes(prod.category);
-                        });
-                        return parent ? parent.name : prod.category;
-                      })();
                       setEditForm({
                         name: prod.name, price: String(prod.price), category: prod.category,
-                        parentCategory: parentName,
                         brand: prod.brand, countInStock: String(prod.countInStock),
                         description: prod.description, image: prod.image, images: prod.images || [''],
                         discountPercent: String(prod.discountPercent || 0),
@@ -2370,7 +2147,7 @@ export default function AdminDashboard({ onTabChange }) {
     const list = ordersToRender || [];
     if (list.length === 0) {
       return (
-        <tr className="text-center text-sm text-gray-400">
+        <tr className="text-center text-xs text-gray-400">
           <td colSpan="7" className="py-12 bg-gray-50/30">
             <div className="flex flex-col items-center justify-center gap-2">
               <Package size={32} className="text-gray-300" />
@@ -2383,7 +2160,7 @@ export default function AdminDashboard({ onTabChange }) {
     return list.map((order) => {
       const statusColors = {
         Pending: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200', progress: 'w-1/4 from-yellow-400 to-yellow-500' },
-        Processing: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', progress: 'w-2/4 from-blue-400 to-blue-500' },
+        Processing: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', progress: 'w-2/4 from-blue-400 to-blue-500' },
         Shipped: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200', progress: 'w-3/4 from-indigo-400 to-indigo-500' },
         Delivered: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', progress: 'w-full from-emerald-400 to-emerald-500' },
         Cancelled: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', progress: 'w-full from-orange-400 to-orange-500' },
@@ -2407,7 +2184,7 @@ export default function AdminDashboard({ onTabChange }) {
           </td>
           <td className="py-4">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-gray-700 text-sm bg-white border border-slate-200 px-2 py-1 rounded-md shadow-xs flex items-center gap-1">
+              <span className="font-bold text-gray-700 text-xs bg-white border border-slate-200 px-2 py-1 rounded-md shadow-xs flex items-center gap-1">
                 {order.paymentMethod === 'Cash on Delivery' ? <Truck size={12} className="text-gray-400" /> : <CreditCard size={12} className="text-blue-400" />}
                 {order.paymentMethod === 'Cash on Delivery' ? 'COD' : order.paymentMethod}
               </span>
@@ -2441,17 +2218,10 @@ export default function AdminDashboard({ onTabChange }) {
           </td>
           <td className="py-4 pr-4 rounded-r-xl text-right">
             <div className="flex items-center justify-end gap-1.5">
-              <button
-                onClick={() => setSelectedOrder(order)}
-                className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all duration-200"
-                title="View Details"
-              >
-                <Eye size={14} />
-              </button>
               {order.status === 'Pending' && (
                 <button 
                   onClick={() => handleUpdateStatus(order._id, 'Processing')}
-                  className="px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-[#FF6600] rounded-lg text-sm font-bold transition flex items-center gap-1"
+                  className="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-600 rounded-lg text-xs font-bold transition flex items-center gap-1"
                 >
                   <Check size={14} /> Approve
                 </button>
@@ -2463,7 +2233,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <button
                       key={courier}
                       onClick={() => handleBookCourier(order._id, courier)}
-                      className="px-2 py-1.5 bg-white border border-slate-200 hover:border-orange-300 hover:bg-orange-50 hover:text-[#FF6600] text-[10px] font-bold rounded-lg text-gray-600 flex items-center gap-1 transition shadow-xs"
+                      className="px-2 py-1.5 bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 text-[10px] font-bold rounded-lg text-gray-600 flex items-center gap-1 transition shadow-xs"
                     >
                       <Truck size={12} /> {courier}
                     </button>
@@ -2474,7 +2244,7 @@ export default function AdminDashboard({ onTabChange }) {
               {order.status === 'Shipped' && (
                 <button 
                   onClick={() => handleUpdateStatus(order._id, 'Delivered')}
-                  className="px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-600 rounded-lg text-sm font-bold transition flex items-center gap-1"
+                  className="px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-600 rounded-lg text-xs font-bold transition flex items-center gap-1"
                 >
                   <CheckCircle2 size={14} /> Delivered
                 </button>
@@ -2490,13 +2260,15 @@ export default function AdminDashboard({ onTabChange }) {
                 </button>
               )}
 
-              <button
-                onClick={() => handleDeleteOrder(order._id)}
-                className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition-all duration-200 ml-1"
-                title="Delete Order"
-              >
-                <Trash2 size={14} />
-              </button>
+              {user?.role !== 'seller' && (
+                <button
+                  onClick={() => handleDeleteOrder(order._id)}
+                  className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition-all duration-200 ml-1"
+                  title="Delete Order"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
             </div>
           </td>
         </tr>
@@ -2758,7 +2530,7 @@ export default function AdminDashboard({ onTabChange }) {
               className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition group"
               title="Visit Store (Opens in new tab)"
             >
-              <div className="w-9 h-9 bg-[#FF6600] rounded-lg flex items-center justify-center shadow-md shadow-orange-500/10 group-hover:scale-105 transition-transform duration-200">
+              <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-md shadow-blue-600/10 group-hover:scale-105 transition-transform duration-200">
                 <ShoppingBag size={18} className="text-white" />
               </div>
               <div className="text-2xl font-black text-white tracking-tight flex items-center gap-1" style={{ fontWeight: 900 }}>
@@ -2772,7 +2544,6 @@ export default function AdminDashboard({ onTabChange }) {
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
           {[
             { id: 'dashboard', label: 'Dashboard', icon: CircleDot },
-            { id: 'ai_marketing', label: 'AI Marketing', icon: Sparkles, adminOnly: true },
             { id: 'server_tracking', label: 'Server Tracking', icon: BarChart3, adminOnly: true },
             { 
               id: 'orders', label: 'Orders', icon: ShoppingBag, badge: metrics.pendingOrders,
@@ -2785,7 +2556,7 @@ export default function AdminDashboard({ onTabChange }) {
               ]
             },
             { 
-              id: 'products', label: 'Products', icon: ShoppingCart,
+              id: 'products', label: 'Products', icon: Package,
               subItems: [
                 { id: 'products_add', label: 'Add New Product' },
                 { id: 'products_all', label: 'All Product' },
@@ -2808,16 +2579,10 @@ export default function AdminDashboard({ onTabChange }) {
             { id: 'pages', label: 'Pages', icon: Globe, adminOnly: true },
             { id: 'offers', label: 'Offers', icon: TrendingUp, adminOnly: true },
             { id: 'banners', label: 'Banners', icon: Globe, adminOnly: true },
-            { 
-              id: 'users', label: 'Customers', icon: Contact, adminOnly: true,
-              subItems: [
-                { id: 'users_all', label: 'All Customer' },
-                { id: 'users_import', label: 'Import Customers' }
-              ]
-            },
+            { id: 'users', label: 'Users', icon: Users, adminOnly: true },
             { id: 'staffs', label: 'Manage Staffs', icon: Users, adminOnly: true },
             { 
-              id: 'sellers', label: 'Sellers', icon: Package, adminOnly: true,
+              id: 'sellers', label: 'Sellers', icon: Users, adminOnly: true,
               subItems: [
                 { id: 'sellers_all', label: 'All Seller' },
                 { id: 'sellers_payouts', label: 'Payouts' },
@@ -2839,7 +2604,6 @@ export default function AdminDashboard({ onTabChange }) {
             { id: 'seller_own_payouts', label: 'Payouts', icon: DollarSign, sellerOnly: true },
             { id: 'seller_api_integrations', label: 'API Integrations', icon: Server, sellerOnly: true },
             { id: 'seller_steadfast_integration', label: 'SteadFast Integration', icon: Truck, sellerOnly: true },
-            { id: 'seller_custom_domain', label: 'Custom Domain', icon: Globe, sellerOnly: true },
             { id: 'seller_own_profile', label: 'My Profile', icon: Settings, sellerOnly: true },
             { id: 'videos', label: 'Videos', icon: Play, adminOnly: true },
             { 
@@ -2871,9 +2635,7 @@ export default function AdminDashboard({ onTabChange }) {
                                             (sub.id === 'orders_admin' && activeTab === 'orders_admin') ||
                                             (sub.id === 'orders_seller' && activeTab === 'orders_seller') ||
                                             (sub.id === 'orders_pickup_hub' && activeTab === 'orders_pickup_hub') ||
-                                            (sub.id === 'orders_pickup' && activeTab === 'orders_pickup') ||
-                                            (sub.id === 'users_all' && activeTab === 'users') ||
-                                            (sub.id === 'users_import' && activeTab === 'users_import');
+                                            (sub.id === 'orders_pickup' && activeTab === 'orders_pickup');
                                    }));
 
             return (
@@ -2889,17 +2651,17 @@ export default function AdminDashboard({ onTabChange }) {
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group text-left ${
                     isParentActive
                       ? hasSub
-                        ? (item.id === 'orders' || item.id === 'users')
+                        ? item.id === 'orders'
                           ? 'text-amber-400 bg-slate-800/40 font-semibold'
                           : 'text-white bg-slate-800/40 font-semibold'
-                        : 'bg-[#FF6600] text-white shadow-sm font-semibold'
+                        : 'bg-blue-600 text-white shadow-sm font-semibold'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 relative ${
                       isParentActive
-                        ? (item.id === 'orders' || item.id === 'users') ? 'text-amber-400' : 'text-white'
+                        ? item.id === 'orders' ? 'text-amber-400' : 'text-white'
                         : 'bg-transparent text-slate-400 group-hover:text-slate-200'
                     }`}>
                       <Icon size={15} />
@@ -2909,7 +2671,7 @@ export default function AdminDashboard({ onTabChange }) {
                     </div>
                     <span className={`text-sm ${
                       isParentActive
-                        ? (item.id === 'orders' || item.id === 'users') ? 'font-semibold text-amber-400' : 'font-semibold text-white'
+                        ? item.id === 'orders' ? 'font-semibold text-amber-400' : 'font-semibold text-white'
                         : 'font-medium'
                     }`}>
                       {item.label}
@@ -2924,9 +2686,9 @@ export default function AdminDashboard({ onTabChange }) {
                     {(hasSub || item.id === 'rewards') && (
                       <ChevronRight size={13} className={`transition-transform duration-200 ${
                         isExpanded
-                          ? (item.id === 'orders' || item.id === 'users') ? 'rotate-90 text-amber-400' : 'rotate-90 text-slate-300'
+                          ? item.id === 'orders' ? 'rotate-90 text-amber-400' : 'rotate-90 text-slate-300'
                           : isParentActive
-                            ? (item.id === 'orders' || item.id === 'users') ? 'text-amber-400' : 'text-slate-300'
+                            ? item.id === 'orders' ? 'text-amber-400' : 'text-slate-300'
                             : 'text-slate-600'
                       }`} />
                     )}
@@ -2967,11 +2729,9 @@ export default function AdminDashboard({ onTabChange }) {
                                           (sub.id === 'orders_admin' && activeTab === 'orders_admin') ||
                                           (sub.id === 'orders_seller' && activeTab === 'orders_seller') ||
                                           (sub.id === 'orders_pickup_hub' && activeTab === 'orders_pickup_hub') ||
-                                          (sub.id === 'orders_pickup' && activeTab === 'orders_pickup') ||
-                                          (sub.id === 'users_all' && activeTab === 'users') ||
-                                          (sub.id === 'users_import' && activeTab === 'users_import');
+                                          (sub.id === 'orders_pickup' && activeTab === 'orders_pickup');
 
-                      const isAmberSub = sub.id.startsWith('orders_') || sub.id.startsWith('users_');
+                      const isOrdersSub = sub.id.startsWith('orders_');
 
                       return (
                         <button
@@ -2979,7 +2739,7 @@ export default function AdminDashboard({ onTabChange }) {
                           onClick={() => {
                             if (sub.id.startsWith('products_')) {
                               const subTab = sub.id.replace('products_', '');
-                              if (subTab === 'categories' || subTab === 'category') {
+                              if (subTab === 'categories') {
                                 setActiveTab('categories');
                               } else if (subTab === 'brands') {
                                 setActiveTab('brands');
@@ -2993,22 +2753,16 @@ export default function AdminDashboard({ onTabChange }) {
                               } else {
                                 setActiveTab(sub.id);
                               }
-                            } else if (sub.id.startsWith('users_')) {
-                              if (sub.id === 'users_all') {
-                                setActiveTab('users');
-                              } else {
-                                setActiveTab(sub.id);
-                              }
                             } else {
                               setActiveTab(sub.id);
                             }
                           }}
-                          className={`w-full text-left px-3 py-2 text-sm rounded-xl transition-all duration-200 ${
+                          className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all duration-200 ${
                             isSubActive
-                              ? isAmberSub
+                              ? isOrdersSub
                                 ? 'text-amber-400 font-semibold'
-                                : 'text-white font-semibold bg-[#FF6600]/90 shadow-xs'
-                              : isAmberSub
+                                : 'text-white font-semibold bg-blue-600/90 shadow-xs'
+                              : isOrdersSub
                                 ? 'text-slate-400 hover:text-amber-300 hover:bg-slate-800/30'
                                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
                           }`}
@@ -3044,7 +2798,7 @@ export default function AdminDashboard({ onTabChange }) {
               />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-white truncate">{user?.name || 'Account'}</div>
+              <div className="text-xs font-bold text-white truncate">{user?.name || 'Account'}</div>
               <div className="text-[10px] text-slate-400 font-semibold">{isSellerAccount ? 'Seller' : 'Admin'}</div>
             </div>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-450 group-hover:text-white transition">
@@ -3072,13 +2826,6 @@ export default function AdminDashboard({ onTabChange }) {
               <span className={`w-1.5 h-1.5 rounded-full ${rtConnected ? 'bg-emerald-500 animate-pulse' : 'bg-orange-500'}`} />
               {rtConnected ? 'LIVE' : 'OFFLINE'}
             </div>
-            {/* Seller Dashboard Title */}
-            {user?.role === 'seller' && (
-              <div className="hidden sm:flex items-center gap-2 ml-2 px-3 py-1.5 bg-[#FF6600]/10 border border-[#FF6600]/20 rounded-lg text-[#FF6600] font-extrabold text-sm tracking-tight shadow-sm">
-                <ShoppingBag size={15} />
-                Seller Dashboard
-              </div>
-            )}
           </div>
 
           {/* Right part: Header Actions & Profile exactly like the picture */}
@@ -3132,7 +2879,7 @@ export default function AdminDashboard({ onTabChange }) {
             {/* TN (DT) Dropdown Button */}
             <div className="relative">
               <button
-                className="h-10 bg-white border border-slate-200 rounded-lg px-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="h-10 bg-white border border-slate-200 rounded-lg px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <span>TN (DT)</span>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
@@ -3153,7 +2900,7 @@ export default function AdminDashboard({ onTabChange }) {
                     window.location.href = '/admin';
                   }
                 }}
-                className="h-10 bg-white border border-slate-200 rounded-lg pl-2 pr-3 py-1.5 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition flex items-center gap-2 cursor-pointer shadow-xs"
+                className="h-10 bg-white border border-slate-200 rounded-lg pl-2 pr-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition flex items-center gap-2 cursor-pointer shadow-xs"
                 title="Click to logout"
               >
                 <img 
@@ -3173,98 +2920,16 @@ export default function AdminDashboard({ onTabChange }) {
         {/* Main Content Area */}
         <main className="flex-1 p-4 sm:p-5 space-y-5 overflow-x-hidden overflow-y-auto">
         
-        {/* AI MARKETING TAB */}
-        {activeTab === 'ai_marketing' && (
-          <div className="animate-fade-in space-y-6 max-w-5xl">
-            <div>
-              <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-                AI Marketing Analyzer <Sparkles size={24} className="text-[#FF6600]" />
-              </h1>
-              <p className="text-sm text-slate-500 font-medium">Instantly extract products, text, and audience insights from your marketing assets.</p>
-            </div>
-
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-              <form onSubmit={handleAnalyzeMedia} className="flex flex-col sm:flex-row gap-4 items-end">
-                <div className="flex-1 space-y-1.5 w-full">
-                  <label className="text-xs font-bold text-slate-700">Media URL</label>
-                  <input
-                    type="url"
-                    required
-                    value={aiMarketingUrl}
-                    onChange={(e) => setAiMarketingUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    className="w-full h-11 px-3 border border-slate-200 rounded-xl focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20"
-                  />
-                </div>
-                <div className="w-full sm:w-40 space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Media Type</label>
-                  <select
-                    value={aiMarketingType}
-                    onChange={(e) => setAiMarketingType(e.target.value)}
-                    className="w-full h-11 px-3 border border-slate-200 rounded-xl focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20"
-                  >
-                    <option value="image">Image URL</option>
-                    <option value="video">Video/YouTube URL</option>
-                  </select>
-                </div>
-                <button
-                  type="submit"
-                  disabled={aiMarketingLoading}
-                  className="w-full sm:w-auto h-11 px-6 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-md transition disabled:opacity-50"
-                >
-                  {aiMarketingLoading ? 'Analyzing...' : 'Analyze Media'}
-                </button>
-              </form>
-            </div>
-
-            {aiMarketingResult && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3 text-slate-800">
-                    <Search size={18} className="text-[#FF6600]" />
-                    <h3 className="font-black">Detected Content</h3>
-                  </div>
-                  <p className="text-sm text-slate-600 font-medium leading-relaxed">{aiMarketingResult.content}</p>
-                </div>
-
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3 text-slate-800">
-                    <LayoutGrid size={18} className="text-[#FF6600]" />
-                    <h3 className="font-black">Extracted Text (OCR)</h3>
-                  </div>
-                  <p className="text-sm text-slate-600 font-medium leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">{aiMarketingResult.ocrText}</p>
-                </div>
-
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3 text-slate-800">
-                    <MessageSquare size={18} className="text-[#FF6600]" />
-                    <h3 className="font-black">Marketing Summary</h3>
-                  </div>
-                  <p className="text-sm text-slate-600 font-medium leading-relaxed">{aiMarketingResult.summary}</p>
-                </div>
-
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3 text-slate-800">
-                    <Users size={18} className="text-[#FF6600]" />
-                    <h3 className="font-black">Target Audience</h3>
-                  </div>
-                  <p className="text-sm text-slate-600 font-medium leading-relaxed">{aiMarketingResult.audience}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* DASHBOARD TAB */}
         {activeTab === 'dashboard' && (
           <div className="animate-fade-in space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2 tracking-tight">Welcome back, Asif! <span className="animate-bounce">👋</span></h1>
-                <p className="text-sm text-slate-500 font-medium">Here's what's happening with your store today.</p>
+                <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2 tracking-tight">Welcome back, Asif! <span className="animate-bounce">≡ƒæï</span></h1>
+                <p className="text-xs text-slate-500 font-medium">Here's what's happening with your store today.</p>
               </div>
               <div>
-                <button className="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-650 shadow-xs hover:border-slate-350 transition">
+                <button className="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-650 shadow-xs hover:border-slate-350 transition">
                   <span>May 12 - May 18, 2024</span>
                   <Calendar size={13} className="text-slate-400" />
                 </button>
@@ -3279,12 +2944,12 @@ export default function AdminDashboard({ onTabChange }) {
                       <h3 className="font-black text-slate-900 text-sm">Store Readiness</h3>
                       <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Complete these steps to unlock smoother selling.</p>
                     </div>
-                    <div className="w-14 h-14 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-700 font-black text-sm">
+                    <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 font-black text-sm">
                       {sellerReadinessScore}%
                     </div>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-4">
-                    <div className="h-full bg-[#FF6600] rounded-full transition-all" style={{ width: `${sellerReadinessScore}%` }} />
+                    <div className="h-full bg-blue-600 rounded-full transition-all" style={{ width: `${sellerReadinessScore}%` }} />
                   </div>
                   <div className="space-y-2">
                     {sellerReadinessItems.map((item) => (
@@ -3293,7 +2958,7 @@ export default function AdminDashboard({ onTabChange }) {
                         onClick={item.action}
                         className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl text-left transition"
                       >
-                        <span className="text-sm font-bold text-slate-700">{item.label}</span>
+                        <span className="text-xs font-bold text-slate-700">{item.label}</span>
                         <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${item.done ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
                           {item.done ? 'Done' : 'Action'}
                         </span>
@@ -3320,7 +2985,7 @@ export default function AdminDashboard({ onTabChange }) {
                       <button
                         key={item.label}
                         onClick={item.action}
-                        className="p-4 bg-slate-50 hover:bg-white border border-slate-100 hover:border-orange-200 rounded-2xl text-left transition shadow-xs"
+                        className="p-4 bg-slate-50 hover:bg-white border border-slate-100 hover:border-blue-200 rounded-2xl text-left transition shadow-xs"
                       >
                         <span className="text-[10px] uppercase tracking-wider font-black text-slate-400">{item.label}</span>
                         <div className="text-2xl font-black text-slate-900 mt-1">{item.value}</div>
@@ -3343,7 +3008,7 @@ export default function AdminDashboard({ onTabChange }) {
                         <button
                           key={action.label}
                           onClick={action.action}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 bg-slate-50 hover:bg-orange-50 border border-slate-100 hover:border-orange-100 rounded-xl text-sm font-bold text-slate-700 hover:text-orange-700 transition"
+                          className="w-full flex items-center gap-3 px-3 py-2.5 bg-slate-50 hover:bg-blue-50 border border-slate-100 hover:border-blue-100 rounded-xl text-xs font-bold text-slate-700 hover:text-blue-700 transition"
                         >
                           <Icon size={14} />
                           {action.label}
@@ -3359,15 +3024,15 @@ export default function AdminDashboard({ onTabChange }) {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
                   <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Average Order Value</span>
-                  <div className="text-sm font-black text-slate-900 mt-1">{formatPrice(sellerAverageOrderValue, currencySymbol)}</div>
+                  <div className="text-lg font-black text-slate-900 mt-1">{formatPrice(sellerAverageOrderValue, currencySymbol)}</div>
                 </div>
                 <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
                   <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Delivery Completion</span>
-                  <div className="text-sm font-black text-slate-900 mt-1">{sellerDeliveryRate}%</div>
+                  <div className="text-lg font-black text-slate-900 mt-1">{sellerDeliveryRate}%</div>
                 </div>
                 <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
                   <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Published Products</span>
-                  <div className="text-sm font-black text-slate-900 mt-1">{sellerProducts.length - sellerDraftProducts.length}/{sellerProducts.length}</div>
+                  <div className="text-lg font-black text-slate-900 mt-1">{sellerProducts.length - sellerDraftProducts.length}/{sellerProducts.length}</div>
                 </div>
               </div>
             )}
@@ -3380,7 +3045,7 @@ export default function AdminDashboard({ onTabChange }) {
                 { label: isSellerAccount ? 'Low Stock' : 'Total Customers', val: isSellerAccount ? sellerLowStockProducts.length.toLocaleString() : (metrics.totalCustomers ? metrics.totalCustomers.toLocaleString() : '0'), icon: isSellerAccount ? AlertCircle : Users, iconBg: 'bg-orange-100 text-orange-600' },
                 { label: 'Pending Orders', val: isSellerAccount ? sellerPendingOrders.length.toLocaleString() : (metrics.pendingOrders ? metrics.pendingOrders.toLocaleString() : '0'), icon: AlertCircle, iconBg: 'bg-amber-100 text-amber-600' },
                 { label: 'Cancelled Orders', val: cancelledOrdersCount.toLocaleString(), icon: X, iconBg: 'bg-red-100 text-red-600' },
-                { label: isSellerAccount ? 'My Products' : 'Total Products', val: isSellerAccount ? sellerProducts.length.toLocaleString() : (metrics.totalProducts ? metrics.totalProducts.toLocaleString() : '0'), icon: Package, iconBg: 'bg-blue-100 text-[#FF6600]' },
+                { label: isSellerAccount ? 'My Products' : 'Total Products', val: isSellerAccount ? sellerProducts.length.toLocaleString() : (metrics.totalProducts ? metrics.totalProducts.toLocaleString() : '0'), icon: Package, iconBg: 'bg-blue-100 text-blue-600' },
               ].map((card, idx) => {
                 const Icon = card.icon;
                 return (
@@ -3406,13 +3071,13 @@ export default function AdminDashboard({ onTabChange }) {
               <div className="lg:col-span-6 bg-white p-4 border border-slate-200/80 rounded-2xl shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">Revenue Overview</h3>
+                    <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Revenue Overview</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xl font-extrabold text-slate-800">{metrics.totalRevenue ? `${currencySymbol}${metrics.totalRevenue.toLocaleString()}` : '--'}</span>
                       <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-600">Live graph</span>
                     </div>
                   </div>
-                  <select className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-650 focus:outline-none focus:border-orange-500 cursor-pointer">
+                  <select className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-650 focus:outline-none focus:border-blue-500 cursor-pointer">
                     <option>This Week</option>
                     <option>This Month</option>
                   </select>
@@ -3447,7 +3112,7 @@ export default function AdminDashboard({ onTabChange }) {
               {/* Order Statistics (PieChart / Donut) */}
               <div className="lg:col-span-3 bg-white p-5 border border-slate-200/80 rounded-2xl shadow-xs flex flex-col justify-between">
                 <div className="mb-2">
-                  <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">Order Statistics</h3>
+                  <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Order Statistics</h3>
                   <p className="mt-1 text-[10px] font-semibold text-slate-400">Status distribution</p>
                 </div>
                 <div className="h-44">
@@ -3473,7 +3138,7 @@ export default function AdminDashboard({ onTabChange }) {
               {/* Sales by Category */}
               <div className="lg:col-span-3 bg-white p-5 border border-slate-200/80 rounded-2xl shadow-xs flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">Sales by Category</h3>
+                  <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Sales by Category</h3>
                   <span className="rounded-full bg-orange-50 px-2 py-1 text-[9px] font-black text-orange-600">Top 5</span>
                 </div>
                 <div className="h-44">
@@ -3497,7 +3162,7 @@ export default function AdminDashboard({ onTabChange }) {
               <div className="lg:col-span-8 bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
                 <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
                   <div>
-                    <h3 className="font-extrabold text-slate-900 text-sm uppercase tracking-wider">Recent Orders</h3>
+                    <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">Recent Orders</h3>
                   </div>
                   <button 
                     onClick={() => setActiveTab('orders')}
@@ -3519,11 +3184,11 @@ export default function AdminDashboard({ onTabChange }) {
                           <th className="py-3 px-4">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="text-sm">
+                      <tbody className="text-xs">
                         {metrics.orders.slice(0, 5).map((order, index) => {
                           const statusStyles = {
                             Delivered: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
-                            Processing: 'bg-orange-50 text-[#FF6600] border border-orange-100',
+                            Processing: 'bg-blue-50 text-blue-600 border border-blue-100',
                             Pending: 'bg-amber-50 text-amber-600 border border-amber-100',
                             Cancelled: 'bg-orange-50 text-orange-600 border border-orange-100'
                           };
@@ -3533,7 +3198,7 @@ export default function AdminDashboard({ onTabChange }) {
                               <td className="py-3 px-4 font-mono font-bold text-slate-800 text-[10px]">#{order._id?.substring(0, 8)}</td>
                               <td className="py-3 px-4"><span className="font-bold text-slate-800">{order.shippingAddress?.name || order.customer || 'Customer'}</span></td>
                               <td className="py-3 px-4 text-slate-500 font-medium">{new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                              <td className="py-3 px-4 font-extrabold text-slate-850">৳{order.totalPrice?.toLocaleString()}</td>
+                              <td className="py-3 px-4 font-extrabold text-slate-850">αº│{order.totalPrice?.toLocaleString()}</td>
                               <td className="py-3 px-4"><span className="px-2 py-0.5 rounded text-[10px] font-bold inline-block capitalize bg-slate-100 text-slate-600 border">{order.paymentMethod || 'COD'}</span></td>
                               <td className="py-3 px-4"><span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide inline-block ${statusStyles[displayStatus] || 'bg-slate-100 text-slate-500'}`}>{displayStatus}</span></td>
                             </tr>
@@ -3543,7 +3208,7 @@ export default function AdminDashboard({ onTabChange }) {
                     </table>
                   ) : (
                     <div className="p-10 text-center">
-                      <p className="text-sm text-slate-400 font-semibold">No orders yet</p>
+                      <p className="text-xs text-slate-400 font-semibold">No orders yet</p>
                     </div>
                   )}
                 </div>
@@ -3556,8 +3221,8 @@ export default function AdminDashboard({ onTabChange }) {
                 <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">Top Selling Products</h3>
-                      <button onClick={() => setActiveTab('products')} className="text-[#FF6600] text-[10px] font-bold hover:underline">View All</button>
+                      <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Top Selling Products</h3>
+                      <button onClick={() => setActiveTab('products')} className="text-blue-600 text-[10px] font-bold hover:underline">View All</button>
                     </div>
                     <div className="space-y-4">
                       {productsList.filter(p => p.salesCount > 0).length > 0 ? (
@@ -3570,11 +3235,11 @@ export default function AdminDashboard({ onTabChange }) {
                                 <span className="text-[9px] text-slate-400 font-semibold">{item.salesCount || 0} Sold</span>
                               </div>
                             </div>
-                            <span className="text-[11px] font-black text-slate-800">৳{item.price?.toLocaleString()}</span>
+                            <span className="text-[11px] font-black text-slate-800">αº│{item.price?.toLocaleString()}</span>
                           </div>
                         ))
                       ) : (
-                        <p className="text-sm text-slate-400 font-semibold text-center py-4">No sales data yet</p>
+                        <p className="text-xs text-slate-400 font-semibold text-center py-4">No sales data yet</p>
                       )}
                     </div>
                   </div>
@@ -3583,8 +3248,8 @@ export default function AdminDashboard({ onTabChange }) {
                 {/* Low Stock Alert */}
                 <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">Low Stock Alert</h3>
-                    <button onClick={() => setActiveTab('products')} className="text-[#FF6600] text-[10px] font-bold hover:underline">View All</button>
+                    <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Low Stock Alert</h3>
+                    <button onClick={() => setActiveTab('products')} className="text-blue-600 text-[10px] font-bold hover:underline">View All</button>
                   </div>
                   {productsList.filter(p => !p.isDigital && p.countInStock !== undefined && Number(p.countInStock) <= 10).length > 0 ? (
                     productsList.filter(p => !p.isDigital && p.countInStock !== undefined && Number(p.countInStock) <= 10).sort((a, b) => Number(a.countInStock) - Number(b.countInStock)).slice(0, 1).map((item, idx) => (
@@ -3623,7 +3288,7 @@ export default function AdminDashboard({ onTabChange }) {
                     Server Side Tracking
                   </div>
                   <h1 className="text-2xl font-black tracking-tight">Facebook Pixel & GA4 Realtime Reports</h1>
-                  <p className="mt-1 max-w-2xl text-sm font-medium text-slate-200">Monitor server events, conversion signals, and analytics health from one admin view.</p>
+                  <p className="mt-1 max-w-2xl text-xs font-medium text-slate-200">Monitor server events, conversion signals, and analytics health from one admin view.</p>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[
@@ -3632,7 +3297,7 @@ export default function AdminDashboard({ onTabChange }) {
                     { label: 'Conv.', value: `${trackingConversionRate}%` },
                   ].map((item) => (
                     <div key={item.label} className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-center backdrop-blur">
-                      <div className="text-sm font-black">{item.value}</div>
+                      <div className="text-lg font-black">{item.value}</div>
                       <div className="text-[9px] font-black uppercase tracking-wider text-slate-300">{item.label}</div>
                     </div>
                   ))}
@@ -3654,8 +3319,8 @@ export default function AdminDashboard({ onTabChange }) {
                   </div>
                   <div className="mt-4">
                     <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{card.label}</p>
-                    <h3 className="mt-1 text-sm font-black text-slate-900">{card.value}</h3>
-                    <p className="mt-1 text-sm font-semibold text-slate-500">{card.sub}</p>
+                    <h3 className="mt-1 text-lg font-black text-slate-900">{card.value}</h3>
+                    <p className="mt-1 text-xs font-semibold text-slate-500">{card.sub}</p>
                   </div>
                 </div>
               ))}
@@ -3674,7 +3339,7 @@ export default function AdminDashboard({ onTabChange }) {
                   {Object.entries(trackingEventCounts).map(([eventName, count], index) => (
                     <div key={eventName} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                       <div className={`mb-3 h-9 w-9 rounded-xl flex items-center justify-center text-white shadow-sm ${
-                        ['bg-orange-500', 'bg-cyan-500', 'bg-orange-500', 'bg-amber-500', 'bg-emerald-500', 'bg-violet-500'][index % 6]
+                        ['bg-blue-500', 'bg-cyan-500', 'bg-orange-500', 'bg-amber-500', 'bg-emerald-500', 'bg-violet-500'][index % 6]
                       }`}>
                         <BarChart3 size={15} />
                       </div>
@@ -3738,11 +3403,11 @@ export default function AdminDashboard({ onTabChange }) {
                 <div className="space-y-2">
                   {trackingSourceData.map((entry) => (
                     <div key={entry.name} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                      <span className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                      <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
                         {entry.name}
                       </span>
-                      <span className="text-sm font-black text-slate-900">{entry.value}</span>
+                      <span className="text-xs font-black text-slate-900">{entry.value}</span>
                     </div>
                   ))}
                 </div>
@@ -3768,7 +3433,7 @@ export default function AdminDashboard({ onTabChange }) {
                         <th className="px-3 py-3 rounded-r-xl">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="text-sm">
+                    <tbody className="text-xs">
                       {(Array.isArray(trackingReport?.recentEvents) && trackingReport.recentEvents.length ? trackingReport.recentEvents : (trackingOrders.length ? trackingOrders.slice(0, 6).map((order, index) => ({
                         event: index % 2 === 0 ? 'Purchase' : 'ViewContent',
                         destination: index % 2 === 0 ? 'Facebook CAPI + GA4' : 'GA4 Realtime',
@@ -3798,10 +3463,10 @@ export default function AdminDashboard({ onTabChange }) {
                     { label: 'Review realtime graph after order events', done: trackingOrders.length > 0 },
                   ].map((step, index) => (
                     <div key={step.label} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                      <div className={`grid h-8 w-8 place-items-center rounded-xl text-sm font-black ${step.done ? 'bg-emerald-500 text-white' : 'bg-white text-slate-400 border border-slate-200'}`}>
+                      <div className={`grid h-8 w-8 place-items-center rounded-xl text-xs font-black ${step.done ? 'bg-emerald-500 text-white' : 'bg-white text-slate-400 border border-slate-200'}`}>
                         {step.done ? <Check size={15} /> : index + 1}
                       </div>
-                      <div className="text-sm font-bold text-slate-700">{step.label}</div>
+                      <div className="text-xs font-bold text-slate-700">{step.label}</div>
                     </div>
                   ))}
                 </div>
@@ -3815,11 +3480,11 @@ export default function AdminDashboard({ onTabChange }) {
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
               <div>
                 <h1 className="text-xl font-black text-gray-900 tracking-tight">Orders Overview</h1>
-                <p className="text-sm text-gray-500 font-medium mt-1">Review orders, manage payment status, and initiate courier shipments.</p>
+                <p className="text-xs text-gray-500 font-medium mt-1">Review orders, manage payment status, and initiate courier shipments.</p>
               </div>
               <div className="px-4 py-2 bg-gray-50 rounded-xl border border-slate-100 shadow-inner">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Total Orders</span>
-                <span className="text-sm font-black text-gray-900">{metrics.orders?.length || 0}</span>
+                <span className="text-lg font-black text-gray-900">{metrics.orders?.length || 0}</span>
               </div>
             </div>
             
@@ -3871,9 +3536,9 @@ export default function AdminDashboard({ onTabChange }) {
                 <button
                   key={subTab.id}
                   onClick={() => setProductSubTab(subTab.id)}
-                  className={`px-4 py-2 text-sm font-bold rounded-xl transition ${
+                  className={`px-4 py-2 text-xs font-bold rounded-xl transition ${
                     productSubTab === subTab.id
-                      ? 'bg-[#FF6600] text-white shadow-md'
+                      ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-white border border-slate-200 hover:text-gray-900'
                   }`}
                 >
@@ -3899,7 +3564,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={() => setProductSubTab('add')} 
-                      className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                      className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-sm"
                     >
                       <Plus size={14} /> ADD NEW PRODUCT
                     </button>
@@ -3922,7 +3587,7 @@ export default function AdminDashboard({ onTabChange }) {
                       key={pill.id}
                       type="button"
                       onClick={() => setProductStatusFilter(pill.id)}
-                      className={`px-4 py-2.5 text-sm font-bold rounded-xl transition cursor-pointer border flex items-center gap-2 ${
+                      className={`px-4 py-2.5 text-xs font-bold rounded-xl transition cursor-pointer border flex items-center gap-2 ${
                         productStatusFilter === pill.id
                           ? 'bg-amber-500 border-amber-500 text-white shadow-md'
                           : 'bg-white border-slate-200 text-gray-500 hover:bg-slate-50'
@@ -3954,7 +3619,7 @@ export default function AdminDashboard({ onTabChange }) {
                           <select
                             value={productSellerFilter}
                             onChange={(e) => setProductSellerFilter(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-700 font-semibold cursor-pointer"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-xs text-gray-700 font-semibold cursor-pointer"
                           >
                             <option value="all">Select Seller</option>
                             <option value="admin">Admin Products</option>
@@ -3970,7 +3635,7 @@ export default function AdminDashboard({ onTabChange }) {
                         <select
                           value={productCategoryFilter}
                           onChange={(e) => setProductCategoryFilter(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-700 font-semibold cursor-pointer"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-xs text-gray-700 font-semibold cursor-pointer"
                         >
                           <option value="all">Select Category</option>
                           {categoryList.map((cat) => (
@@ -3984,7 +3649,7 @@ export default function AdminDashboard({ onTabChange }) {
                         <select
                           value={productSortOrder}
                           onChange={(e) => setProductSortOrder(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-700 font-semibold cursor-pointer"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-xs text-gray-700 font-semibold cursor-pointer"
                         >
                           <option value="latest">Latest On Top</option>
                           <option value="oldest">Oldest On Top</option>
@@ -4002,7 +3667,7 @@ export default function AdminDashboard({ onTabChange }) {
                           onChange={(e) => setProductSearchQuery(e.target.value)}
                           className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-xs text-gray-700"
                         />
-                        <button type="button" className="p-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition cursor-pointer flex items-center justify-center">
+                        <button className="p-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition cursor-pointer flex items-center justify-center">
                           <Search size={14} />
                         </button>
                       </div>
@@ -5283,18 +4948,7 @@ export default function AdminDashboard({ onTabChange }) {
                         formActiveTab === 'seo' && (
                           <div className="space-y-5">
                             <div className="border border-slate-200 rounded-2xl p-5 space-y-4">
-                              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-  <h3 className="font-bold text-gray-900 text-sm">SEO Settings</h3>
-  <button
-    type="button"
-    onClick={(e) => handleGenerateSeo(e, false)}
-    disabled={aiMarketingLoading}
-    className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-[#FF6600] text-white text-xs font-bold rounded-lg hover:from-orange-600 hover:to-orange-700 transition disabled:opacity-50 cursor-pointer"
-  >
-    <Sparkles size={14} />
-    {aiMarketingLoading ? 'Generating...' : 'Auto Generate AI SEO'}
-  </button>
-</div>
+                              <h3 className="font-bold text-gray-900 text-sm border-b border-slate-100 pb-3">SEO Settings</h3>
                               <div className="grid gap-4">
                                 <div>
                                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Meta Title</label>
@@ -5989,7 +5643,7 @@ export default function AdminDashboard({ onTabChange }) {
                         }}
                         className="flex-1 px-3 py-2 bg-white border border-slate-200 border-r-0 rounded-l-lg focus:outline-none text-xs text-gray-750 placeholder-gray-400"
                       />
-                      <button type="button" className="p-2 bg-slate-900 hover:bg-slate-800 text-white rounded-r-lg border border-slate-900 transition cursor-pointer flex items-center justify-center h-[34px] w-[34px]">
+                      <button className="p-2 bg-slate-900 hover:bg-slate-800 text-white rounded-r-lg border border-slate-900 transition cursor-pointer flex items-center justify-center h-[34px] w-[34px]">
                         <Search size={14} />
                       </button>
                     </div>
@@ -6536,7 +6190,7 @@ export default function AdminDashboard({ onTabChange }) {
                   </select>
                   <div className="flex items-center">
                     <input type="text" placeholder="Search" className="border border-slate-200 border-r-0 rounded-l-lg px-3 py-1.5 text-xs w-48 focus:outline-hidden" />
-                    <button type="button" className="bg-gray-800 text-white px-3 py-1.5 rounded-r-lg hover:bg-black transition">
+                    <button className="bg-gray-800 text-white px-3 py-1.5 rounded-r-lg hover:bg-black transition">
                       <Search size={14} />
                     </button>
                   </div>
@@ -6558,7 +6212,7 @@ export default function AdminDashboard({ onTabChange }) {
                       <th className="py-3 px-4 border-b border-slate-100 text-center">Options</th>
                     </tr>
                   </thead>
-                  <tbody className="text-sm">
+                  <tbody className="text-xs">
                     {allUsers.filter(u => u.role === 'seller').map((seller, index) => (
                       <tr key={seller._id} className="border-b border-gray-50 hover:bg-slate-50 transition">
                         <td className="py-4 px-4 text-center text-gray-500">{index + 1}</td>
@@ -6608,10 +6262,10 @@ export default function AdminDashboard({ onTabChange }) {
                           {(seller.nid_image_front || seller.nid_image_back) && (
                             <div className="flex gap-1 mt-1.5">
                               {seller.nid_image_front && (
-                                <a href={seller.nid_image_front} target="_blank" rel="noreferrer" className="text-[9px] text-[#FF6600] underline">NID Front</a>
+                                <a href={seller.nid_image_front} target="_blank" rel="noreferrer" className="text-[9px] text-blue-500 underline">NID Front</a>
                               )}
                               {seller.nid_image_back && (
-                                <a href={seller.nid_image_back} target="_blank" rel="noreferrer" className="text-[9px] text-[#FF6600] underline ml-1">NID Back</a>
+                                <a href={seller.nid_image_back} target="_blank" rel="noreferrer" className="text-[9px] text-blue-500 underline ml-1">NID Back</a>
                               )}
                             </div>
                           )}
@@ -6721,245 +6375,274 @@ export default function AdminDashboard({ onTabChange }) {
           </div>
         )}
 
-                {/* USERS TAB (Customer Lists) */}
+        {/* USERS TAB */}
         {activeTab === 'users' && (
-          <div className="space-y-4 max-w-7xl w-full animate-fade-in">
-            {/* Header Area */}
-            <div className="flex items-center justify-between pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-1 bg-amber-500 rounded-full"></div>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900">Customer Lists</h1>
-                  <p className="text-sm text-gray-400 mt-0.5">You have total {allUsers.filter(u => u.role !== 'admin' && u.role !== 'seller').length} customers</p>
-                </div>
+          <div className="space-y-8 max-w-6xl w-full">
+            <div className="border-b border-slate-200 pb-5 flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">{activeTab === 'sellers_all' ? 'Seller Management' : 'User Management'}</h1>
+                <p className="text-xs text-gray-400 mt-1">Manage users, roles, and permissions.</p>
               </div>
-              <button className="flex items-center gap-2 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-black hover:to-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
-                <Plus size={16} /> ADD CUSTOMER
-              </button>
+              <div className="flex gap-3">
+                <button onClick={() => setShowOwnPasswordForm(!showOwnPasswordForm)}
+                  className="text-[11px] px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl transition-all duration-200">Change Password</button>
+                <button onClick={() => setShowOwnEmailForm(!showOwnEmailForm)}
+                  className="text-[11px] px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl transition-all duration-200">Change Email</button>
+              </div>
             </div>
 
-            {/* Main Content Card */}
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-              {/* Card Header & Search */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b border-slate-100 gap-4">
-                <h2 className="text-base font-bold text-gray-900">Customers</h2>
-                <div className="flex w-full sm:w-auto shadow-sm hover:shadow-md transition-shadow duration-300 rounded-lg">
-                  <input
-                    type="text"
-                    placeholder="Search customers..."
-                    value={customerListSearch || ''}
-                    onChange={e => setCustomerListSearch(e.target.value)}
-                    className="px-4 py-2.5 border border-gray-300 border-r-0 rounded-l-lg text-sm outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20 w-full sm:w-72 transition-all duration-300 bg-gray-50 hover:bg-white focus:bg-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setCustomerListSearch('')}
-                    className="bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-900 hover:to-black text-white px-5 py-2.5 rounded-r-lg transition-all duration-300 flex items-center justify-center border border-transparent"
-                  >
-                    {customerListSearch ? <X size={16} /> : <Search size={16} />}
-                  </button>
+            {/* Own Password Form */}
+            {showOwnPasswordForm && (
+              <form onSubmit={handleOwnPasswordChange} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 max-w-md">
+                <h3 className="font-bold text-gray-900 text-sm">Change Your Password</h3>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Current Password</label>
+                  <input type="password" required value={ownPasswordData.currentPassword}
+                    onChange={(e) => setOwnPasswordData({ ...ownPasswordData, currentPassword: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                 </div>
-              </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">New Password</label>
+                  <input type="password" required value={ownPasswordData.newPassword}
+                    onChange={(e) => setOwnPasswordData({ ...ownPasswordData, newPassword: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="flex-1 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl text-sm">Update Password</button>
+                  <button type="button" onClick={() => { setShowOwnPasswordForm(false); setOwnPasswordData({ currentPassword: '', newPassword: '' }); }}
+                    className="py-2 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-sm">Cancel</button>
+                </div>
+              </form>
+            )}
 
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse whitespace-nowrap">
+            {/* Own Email Form */}
+            {showOwnEmailForm && (
+              <form onSubmit={handleOwnEmailChange} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 max-w-md">
+                <h3 className="font-bold text-gray-900 text-sm">Change Your Email</h3>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Current Password</label>
+                  <input type="password" required value={ownEmailData.password}
+                    onChange={(e) => setOwnEmailData({ ...ownEmailData, password: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">New Email</label>
+                  <input type="email" required value={ownEmailData.newEmail}
+                    onChange={(e) => setOwnEmailData({ ...ownEmailData, newEmail: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="flex-1 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl text-sm">Update Email</button>
+                  <button type="button" onClick={() => { setShowOwnEmailForm(false); setOwnEmailData({ password: '', newEmail: '' }); }}
+                    className="py-2 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-sm">Cancel</button>
+                </div>
+              </form>
+            )}
+
+            {/* User List */}
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md ">
+              <div className="overflow-x-auto p-2">
+                <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50 text-gray-600 text-xs font-bold border-b border-slate-200">
-                      <th className="py-3.5 px-4 w-12">#</th>
-                      <th className="py-3.5 px-4">Name</th>
-                      <th className="py-3.5 px-4">Phone</th>
-                      <th className="py-3.5 px-4">Current Balance</th>
-                      <th className="py-3.5 px-4">Last Login</th>
-                      <th className="py-3.5 px-4">Status</th>
-                      <th className="py-3.5 px-4">Options</th>
+                    <tr className="bg-slate-50 text-gray-500 text-[10px] uppercase tracking-widest font-bold">
+                      <th className="py-3 px-4 rounded-l-xl">User</th>
+                      <th className="py-3 px-4">Contact</th>
+                      <th className="py-3 px-4">Role</th>
+                      <th className="py-3 px-4">Permissions</th>
+                      <th className="py-3 px-4 text-right rounded-r-xl">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm">
-                    {(() => {
-                      const filtered = allUsers.filter(u => {
-                        if (u.role === 'admin' || u.role === 'seller') return false;
-                        if (!customerListSearch) return true;
-                        const term = customerListSearch.toLowerCase();
-                        return (
-                          u.name?.toLowerCase().includes(term) ||
-                          u.email?.toLowerCase().includes(term) ||
-                          u.phone?.toLowerCase().includes(term)
-                        );
-                      });
-                      return filtered.length === 0 ? (
-                        <tr>
-                          <td colSpan="7" className="text-center py-12">
-                            <div className="flex flex-col items-center gap-2">
-                              <Search size={32} className="text-gray-200" />
-                              <p className="text-gray-400 font-medium text-sm">No customers found for <span className="font-bold text-gray-600">"{customerListSearch}"</span></p>
-                              <button onClick={() => setCustomerListSearch('')} className="mt-1 text-xs text-[#FF6600] hover:underline">Clear search</button>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : filtered.map((u, index) => (
-                      <tr key={u._id} className="border-b border-slate-100 bg-white even:bg-[#f8f9fa] hover:bg-[#fff9f5] transition-colors duration-300 group">
-                        <td className="py-4 px-4 text-gray-500 font-medium">{index + 1}</td>
-                        <td className="py-4 px-4">
+                    {allUsers.filter(u => activeTab === 'sellers_all' ? u.role === 'seller' : true).map((u) => (
+                      <tr key={u._id} className="border-b border-transparent hover:bg-slate-50 transition group">
+                        <td className="py-4 px-4 rounded-l-xl">
                           <div className="flex items-center gap-3">
-                            <div className="relative transform group-hover:scale-105 transition-transform duration-300">
-                              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm shadow-md shrink-0" style={{ background: `linear-gradient(135deg, #${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')} 0%, #${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')} 100%)` }}>
-                                {u.name.substring(0, 2).toUpperCase()}
-                              </div>
-                              <div className={`w-3 h-3 rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white shadow-sm transition-colors duration-300 ${index === 3 ? 'bg-gray-300' : 'bg-emerald-500 group-hover:bg-emerald-400'}`}></div>
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm shadow-inner" style={{ background: `linear-gradient(135deg, #${Math.floor(Math.random()*16777215).toString(16)} 0%, #${Math.floor(Math.random()*16777215).toString(16)} 100%)` }}>
+                              {u.name.substring(0, 2).toUpperCase()}
                             </div>
-                            <div>
-                              <div className="font-bold text-gray-800 text-sm group-hover:text-[#FF6600] transition-colors">{u.name}</div>
-                              <div className="flex items-center text-xs text-gray-500 mt-0.5">
-                                <CheckCircle2 size={12} className="text-emerald-500 mr-1" />
-                                {maskEmail(u.email)}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 text-gray-600 text-sm">{u.phone || '-'}</td>
-                        <td className="py-4 px-4 text-gray-600 text-sm font-medium">DT0.00</td>
-                        <td className="py-4 px-4 text-gray-600 text-sm">{formatLastLogin(u.lastLogin)}</td>
-                        <td className="py-4 px-4">
-                          <div className="flex justify-start">
-                            <div className="w-10 h-5 flex items-center rounded-full p-1 cursor-pointer bg-amber-400 hover:bg-amber-500 transition-colors duration-300 shadow-inner group-hover:shadow-md">
-                              <div className="bg-white w-3.5 h-3.5 rounded-full shadow-sm transform duration-300 ease-in-out translate-x-4.5 group-hover:scale-110"></div>
-                            </div>
+                            <div className="font-extrabold text-gray-900">{u.name}</div>
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <div className="flex items-center justify-start gap-2">
-                            <button className="w-9 h-9 rounded-full bg-slate-100 text-gray-400 hover:bg-[#FF6600]/10 hover:text-[#FF6600] flex items-center justify-center transform hover:scale-110 active:scale-95 transition-all duration-200">
-                              <Edit size={15} />
+                          <div className="text-gray-600 font-medium">{u.email}</div>
+                          <div className="text-[10px] text-gray-400 font-semibold">{u.phone || '-'}</div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border ${
+                            u.role === 'superadmin' ? 'bg-purple-100 text-purple-700 border-purple-200' :
+                            u.role === 'admin' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                            u.role === 'manager' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                            u.role === 'moderator' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                            u.role === 'seller' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                            'bg-gray-100 text-gray-600 border-slate-200'
+                          }`}>{u.role || 'customer'}</span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex flex-wrap gap-1 max-w-[200px]">
+                            {(u.permissions || []).slice(0, 3).map((p) => (
+                              <span key={p} className="px-2 py-1 bg-gray-100/80 text-gray-500 rounded-lg text-[9px] font-bold border border-slate-200/50">{p}</span>
+                            ))}
+                            {(u.permissions || []).length > 3 && (
+                              <span className="px-2 py-1 bg-gray-100/50 text-gray-500 rounded-lg text-[9px] font-bold border border-slate-200/50">+{u.permissions.length - 3}</span>
+                            )}
+                            {(u.permissions || []).length === 0 && <span className="text-gray-400 text-xs italic">-</span>}
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 text-right rounded-r-xl">
+                          <div className="flex items-center justify-end gap-2">
+                            <button onClick={() => {
+                              setEditingUserId(u._id);
+                              setEditingUserForm({ name: u.name, email: u.email, phone: u.phone || '', role: u.role || 'customer', permissions: u.permissions || [] });
+                            }} className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 rounded-lg font-bold transition flex items-center gap-1">
+                              <Edit size={14} /> Edit
                             </button>
-                            <div className="relative group/dropdown">
-                              <button className="w-9 h-9 rounded-full bg-slate-100 text-gray-400 hover:bg-gray-200 hover:text-gray-700 flex items-center justify-center transform hover:scale-110 active:scale-95 transition-all duration-200">
-                                <MoreVertical size={15} />
-                              </button>
-                              <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover/dropdown:opacity-100 group-hover/dropdown:visible transition-all duration-300 z-50 transform origin-top-right scale-95 group-hover/dropdown:scale-100">
-                                <div className="py-2">
-                                  <button className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-orange-50 hover:text-[#FF6600] flex items-center gap-3 transition-colors font-medium">
-                                    <User size={15} /> Profile
-                                  </button>
-                                  <button className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-orange-50 hover:text-[#FF6600] flex items-center gap-3 transition-colors font-medium">
-                                    <Lock size={15} /> Ban This customer
-                                  </button>
-                                  <button className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3 transition-colors font-medium border-t border-gray-50 mt-1 pt-3">
-                                    <XCircle size={15} /> Unverify Account
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
+                            {u._id !== user?._id && (
+                              <>
+                                <button onClick={() => setPasswordResetUserId(passwordResetUserId === u._id ? null : u._id)}
+                                  className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 rounded-lg font-bold transition">Key</button>
+                                <button onClick={() => handleDeleteUser(u._id)}
+                                  className="px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-lg font-bold transition">
+                                  <Trash2 size={14} />
+                                </button>
+                              </>
+                            )}
                           </div>
+                          {passwordResetUserId === u._id && (
+                            <div className="mt-3 flex gap-2 justify-end animate-fade-in">
+                              <input type="text" placeholder="New password" value={passwordResetValue}
+                                onChange={(e) => setPasswordResetValue(e.target.value)}
+                                className="w-32 px-3 py-1.5 bg-white border border-amber-200 rounded-lg text-gray-900 text-xs focus:ring-2 focus:ring-amber-500 outline-none" />
+                              <button onClick={() => handlePasswordReset(u._id)}
+                                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg text-xs transition shadow-sm">Set</button>
+                            </div>
+                          )}
                         </td>
                       </tr>
-                      ));
-                    })()}
-
+                    ))}
+                    {allUsers.length === 0 && (
+                      <tr><td colSpan="6" className="text-center py-12 text-gray-500 font-medium">No users found.</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* USERS IMPORT TAB */}
-        {activeTab === 'users_import' && (
-          <div className="space-y-6 max-w-7xl w-full animate-fade-in">
-            <div className="flex items-center gap-3 pb-2">
-              <div className="w-8 h-1 bg-amber-500 rounded-full"></div>
-              <h1 className="text-xl font-bold text-gray-900">Import Customers</h1>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Panel */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden h-fit">
-                <div className="px-6 py-4 border-b border-slate-100 bg-white">
-                  <h2 className="text-sm font-bold text-gray-900">Import Customers</h2>
+            {/* Create User Form */}
+            <form onSubmit={handleCreateUser} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 max-w-lg">
+              <h3 className="font-bold text-gray-900 text-sm">Create New User</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Name</label>
+                  <input required value={userForm.name} onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                 </div>
-                <div className="p-6 space-y-6">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-2">
-                      Import File <span className="text-red-500">*</span>{' '}
-                      <span className="text-gray-400 font-medium text-[11px]">(.csv/.xlsx/.xls File)</span>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email</label>
+                  <input type="email" required value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Password</label>
+                  <input required value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone</label>
+                  <input value={userForm.phone} onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Role</label>
+                <select value={userForm.role} onChange={(e) => {
+                  const role = e.target.value;
+                  setUserForm({ ...userForm, role, permissions: ROLE_PERMS[role] || [] });
+                }} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm">
+                  {Object.keys(ROLE_PERMS).map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Permissions</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {ALL_PERMS.map((perm) => (
+                    <label key={perm} className="flex items-center gap-1.5 text-[11px] text-gray-400 cursor-pointer">
+                      <input type="checkbox" checked={userForm.permissions.includes(perm)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setUserForm({ ...userForm, permissions: [...userForm.permissions, perm] });
+                          } else {
+                            setUserForm({ ...userForm, permissions: userForm.permissions.filter((p) => p !== perm) });
+                          }
+                        }} className="accent-blue-600" />
+                      {perm}
                     </label>
-                    <input
-                      type="file"
-                      ref={importFileRef}
-                      accept=".csv,.xlsx,.xls"
-                      className="hidden"
-                      onChange={e => setImportFile(e.target.files[0] || null)}
-                    />
-                    <div className="flex rounded-lg overflow-hidden border border-gray-300 hover:border-gray-400 focus-within:border-[#FF6600] focus-within:ring-2 focus-within:ring-[#FF6600]/20 transition-all">
-                      <div className="flex-1 px-4 py-2.5 bg-slate-50 text-sm flex items-center gap-2 overflow-hidden">
-                        {importFile ? (
-                          <span className="text-gray-700 font-medium truncate">{importFile.name}</span>
-                        ) : (
-                          <span className="text-gray-400">Choose file...</span>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => importFileRef.current?.click()}
-                        className="px-6 py-2.5 bg-slate-200 hover:bg-slate-300 border-l border-gray-300 text-gray-700 text-sm font-bold transition-colors shrink-0"
-                      >
-                        Browse
-                      </button>
-                    </div>
-                    {importFile && (
-                      <p className="mt-2 text-xs text-emerald-600 font-medium flex items-center gap-1">
-                        <CheckCircle2 size={12} /> {importFile.name} selected ({(importFile.size / 1024).toFixed(1)} KB)
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex justify-end pt-2">
-                    <button
-                      onClick={() => {
-                        if (!importFile) { alert('Please select a file first.'); return; }
-                        setImporting(true);
-                        setTimeout(() => { setImporting(false); alert('Import completed successfully!'); setImportFile(null); }, 1500);
-                      }}
-                      disabled={importing || !importFile}
-                      className={`flex items-center gap-2 px-8 py-2.5 rounded-lg font-bold text-sm transition-all shadow-md ${
-                        importFile && !importing
-                          ? 'bg-gray-900 hover:bg-black text-white hover:shadow-lg transform hover:-translate-y-0.5'
-                          : 'bg-gray-300 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      {importing ? (
-                        <><span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span> Importing...</>
-                      ) : 'SAVE'}
-                    </button>
-                  </div>
+                  ))}
                 </div>
               </div>
+              <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition text-sm">Create User</button>
+            </form>
 
-              {/* Right Panel */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden h-fit">
-                <div className="px-6 py-4 border-b border-slate-100 bg-white">
-                  <h2 className="text-sm font-bold text-gray-900">Customer Import Procedures</h2>
-                </div>
-                <div className="p-6">
-                  <p className="text-sm text-gray-700 mb-5 font-medium">Please check this before importing your file:</p>
-                  <ol className="list-decimal pl-5 space-y-3 text-sm text-gray-600 font-medium">
-                    <li>Uploaded File type must be: <span className="text-gray-900 font-bold">.xlsx Or .xls Or .csv</span></li>
-                    <li>The file must contain: <span className="text-gray-900 font-bold">first_name, last_name</span></li>
-                    <li>If OTP System activated than phone Or email must be provided. Otherwise email is required</li>
-                    <li>If password is provided then it must be within 6-32 characters long</li>
-                    <li>Gender must be within: <span className="text-gray-900 font-bold">male, female, others</span></li>
-                  </ol>
-                  <div className="mt-6">
-                    <a href="#" className="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 text-sm font-bold transition-colors">
-                      <Download size={16} /> Customer Import Sample Download
-                    </a>
-                  </div>
+            {/* Edit User Modal */}
+            {editingUserId && (
+              <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setEditingUserId(null)}>
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+                  <h3 className="font-bold text-gray-900 text-sm">Edit User</h3>
+                  <form onSubmit={handleUpdateUser} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Name</label>
+                        <input required value={editingUserForm.name} onChange={(e) => setEditingUserForm({ ...editingUserForm, name: e.target.value })}
+                          className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email</label>
+                        <input type="email" required value={editingUserForm.email} onChange={(e) => setEditingUserForm({ ...editingUserForm, email: e.target.value })}
+                          className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone</label>
+                        <input value={editingUserForm.phone} onChange={(e) => setEditingUserForm({ ...editingUserForm, phone: e.target.value })}
+                          className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Role</label>
+                        <select value={editingUserForm.role} onChange={(e) => {
+                          const role = e.target.value;
+                          setEditingUserForm({ ...editingUserForm, role, permissions: ROLE_PERMS[role] || [] });
+                        }} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm">
+                          {Object.keys(ROLE_PERMS).map((r) => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Permissions</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {ALL_PERMS.map((perm) => (
+                          <label key={perm} className="flex items-center gap-1.5 text-[11px] text-gray-400 cursor-pointer">
+                            <input type="checkbox" checked={editingUserForm.permissions.includes(perm)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setEditingUserForm({ ...editingUserForm, permissions: [...editingUserForm.permissions, perm] });
+                                } else {
+                                  setEditingUserForm({ ...editingUserForm, permissions: editingUserForm.permissions.filter((p) => p !== perm) });
+                                }
+                              }} className="accent-blue-600" />
+                            {perm}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="submit" className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl text-sm">Save Changes</button>
+                      <button type="button" onClick={() => { setEditingUserId(null); setEditingUserForm({ name: '', email: '', phone: '', role: 'customer', permissions: [] }); }}
+                        className="py-2.5 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-sm">Cancel</button>
+                    </div>
+                  </form>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
-
-
 
         {/* STAFFS TAB */}
         {activeTab === 'staffs' && (() => {
@@ -6982,11 +6665,11 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="w-6 h-1.5 bg-amber-500 rounded-full"></div>
                     <h1 className="text-xl font-bold text-slate-800 tracking-tight">Staff Lists</h1>
                   </div>
-                  <p className="text-sm text-slate-500 font-semibold pl-9">You have total {filteredStaffs.length} Staffs</p>
+                  <p className="text-xs text-slate-500 font-semibold pl-9">You have total {filteredStaffs.length} Staffs</p>
                 </div>
                 <button 
                   onClick={() => setShowAddStaffForm(!showAddStaffForm)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-[#2a3038] hover:bg-[#1a2028] text-white text-sm font-bold rounded-xl transition duration-200 uppercase tracking-wider"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-[#2a3038] hover:bg-[#1a2028] text-white text-xs font-bold rounded-xl transition duration-200 uppercase tracking-wider"
                 >
                   + ADD STAFF
                 </button>
@@ -7000,22 +6683,22 @@ export default function AdminDashboard({ onTabChange }) {
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Name</label>
                       <input required value={userForm.name} onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
-                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email</label>
                       <input type="email" required value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Password</label>
                       <input required value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
-                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone</label>
                       <input value={userForm.phone} onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
-                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                     </div>
                   </div>
                   <div>
@@ -7023,7 +6706,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <select value={userForm.role} onChange={(e) => {
                       const role = e.target.value;
                       setUserForm({ ...userForm, role, permissions: ROLE_PERMS[role] || [] });
-                    }} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm">
+                    }} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm">
                       {Object.keys(ROLE_PERMS)
                         .filter((r) => ['superadmin', 'admin', 'manager', 'moderator'].includes(r))
                         .map((r) => <option key={r} value={r}>{r}</option>)}
@@ -7048,7 +6731,7 @@ export default function AdminDashboard({ onTabChange }) {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button type="submit" className="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition text-sm">Create Staff</button>
+                    <button type="submit" className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition text-sm">Create Staff</button>
                     <button type="button" onClick={() => setShowAddStaffForm(false)} className="py-2.5 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-sm">Cancel</button>
                   </div>
                 </form>
@@ -7065,9 +6748,9 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="Search"
                       value={staffSearch}
                       onChange={(e) => setStaffSearch(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2 text-sm text-slate-700 font-medium focus:outline-none focus:border-orange-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500"
                     />
-                    <button type="button" className="absolute right-0 h-full px-3.5 bg-[#2a3038] hover:bg-[#1a2028] text-white rounded-r-xl transition flex items-center justify-center">
+                    <button className="absolute right-0 h-full px-3.5 bg-[#2a3038] hover:bg-[#1a2028] text-white rounded-r-xl transition flex items-center justify-center">
                       <Search size={13} />
                     </button>
                   </div>
@@ -7087,7 +6770,7 @@ export default function AdminDashboard({ onTabChange }) {
                         <th className="py-3.5 px-4 text-center">Options</th>
                       </tr>
                     </thead>
-                    <tbody className="text-sm">
+                    <tbody className="text-xs">
                       {filteredStaffs.map((u, idx) => (
                         <tr key={u._id || idx} className="border-b border-slate-50 hover:bg-slate-50 transition">
                           <td className="py-3.5 px-4 text-center font-bold text-slate-500">
@@ -7179,24 +6862,24 @@ export default function AdminDashboard({ onTabChange }) {
                         <div>
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Name</label>
                           <input required value={editingUserForm.name} onChange={(e) => setEditingUserForm({ ...editingUserForm, name: e.target.value })}
-                            className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                            className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                         </div>
                         <div>
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email</label>
                           <input type="email" required value={editingUserForm.email} onChange={(e) => setEditingUserForm({ ...editingUserForm, email: e.target.value })}
-                            className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                            className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                         </div>
                         <div>
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone</label>
                           <input value={editingUserForm.phone} onChange={(e) => setEditingUserForm({ ...editingUserForm, phone: e.target.value })}
-                            className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                            className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                         </div>
                         <div>
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Role</label>
                           <select value={editingUserForm.role} onChange={(e) => {
                             const role = e.target.value;
                             setEditingUserForm({ ...editingUserForm, role, permissions: ROLE_PERMS[role] || [] });
-                          }} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm">
+                          }} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm">
                             {Object.keys(ROLE_PERMS)
                               .filter((r) => ['superadmin', 'admin', 'manager', 'moderator'].includes(r))
                               .map((r) => <option key={r} value={r}>{r}</option>)}
@@ -7222,7 +6905,7 @@ export default function AdminDashboard({ onTabChange }) {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button type="submit" className="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl text-sm">Save Changes</button>
+                        <button type="submit" className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl text-sm">Save Changes</button>
                         <button type="button" onClick={() => { setEditingUserId(null); setEditingUserForm({ name: '', email: '', phone: '', role: 'customer', permissions: [] }); }}
                           className="py-2.5 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-sm">Cancel</button>
                       </div>
@@ -7257,7 +6940,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="w-6 h-1.5 bg-amber-500 rounded-full"></div>
                     <h1 className="text-xl font-bold text-slate-800 tracking-tight">Users Reward List</h1>
                   </div>
-                  <p className="text-sm text-slate-500 font-semibold pl-9">You have total {(userPoints || []).length} Reward Users</p>
+                  <p className="text-xs text-slate-500 font-semibold pl-9">You have total {(userPoints || []).length} Reward Users</p>
                 </div>
               </div>
 
@@ -7268,7 +6951,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
                     <button 
                       onClick={() => setRewardSubTab('summary')}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-bold transition ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                         rewardSubTab === 'summary' 
                           ? 'bg-white text-slate-800 shadow-xs' 
                           : 'text-slate-500 hover:text-slate-800'
@@ -7278,7 +6961,7 @@ export default function AdminDashboard({ onTabChange }) {
                     </button>
                     <button 
                       onClick={() => setRewardSubTab('logs')}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-bold transition ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                         rewardSubTab === 'logs' 
                           ? 'bg-white text-slate-800 shadow-xs' 
                           : 'text-slate-500 hover:text-slate-800'
@@ -7295,9 +6978,9 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="Search"
                       value={rewardSearch}
                       onChange={(e) => setRewardSearch(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2 text-sm text-slate-700 font-medium focus:outline-none focus:border-orange-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500"
                     />
-                    <button type="button" className="absolute right-0 h-full px-3.5 bg-[#2a3038] hover:bg-[#1a2028] text-white rounded-r-xl transition flex items-center justify-center">
+                    <button className="absolute right-0 h-full px-3.5 bg-[#2a3038] hover:bg-[#1a2028] text-white rounded-r-xl transition flex items-center justify-center">
                       <Search size={13} />
                     </button>
                   </div>
@@ -7317,7 +7000,7 @@ export default function AdminDashboard({ onTabChange }) {
                           <th className="py-3 px-4 text-center">Statement</th>
                         </tr>
                       </thead>
-                      <tbody className="text-sm">
+                      <tbody className="text-xs">
                         {filteredPoints.map((row, idx) => (
                           <tr key={row._id || idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition">
                             <td className="py-3.5 px-4 text-center font-bold text-slate-500">{idx + 1}</td>
@@ -7358,7 +7041,7 @@ export default function AdminDashboard({ onTabChange }) {
                           <th className="py-3 px-4">Date</th>
                         </tr>
                       </thead>
-                      <tbody className="text-sm">
+                      <tbody className="text-xs">
                         {filteredLogs.map((log, idx) => (
                           <tr key={log._id || idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition">
                             <td className="py-3.5 px-4 text-center font-bold text-slate-500">{idx + 1}</td>
@@ -7373,7 +7056,7 @@ export default function AdminDashboard({ onTabChange }) {
                               <span className={`px-2 py-0.5 rounded text-[9px] font-bold border uppercase tracking-wider ${
                                 log.type === 'earn' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                                 log.type === 'redeem' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                                'bg-orange-50 text-[#FF6600] border-orange-100'
+                                'bg-blue-50 text-blue-600 border-blue-100'
                               }`}>
                                 {log.type === 'admin_adjustment' ? 'Adjust' : log.type}
                               </span>
@@ -7408,7 +7091,7 @@ export default function AdminDashboard({ onTabChange }) {
                           required
                           value={adjustPointsValue}
                           onChange={(e) => setAdjustPointsValue(Number(e.target.value))}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition text-sm font-semibold"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition text-xs font-semibold"
                           placeholder="e.g. 100 or -50"
                         />
                       </div>
@@ -7419,15 +7102,15 @@ export default function AdminDashboard({ onTabChange }) {
                           required
                           value={adjustDescription}
                           onChange={(e) => setAdjustDescription(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition text-sm font-semibold"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition text-xs font-semibold"
                           placeholder="e.g. Campaign bonus"
                         />
                       </div>
                       <div className="flex gap-2">
-                        <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl text-sm transition shadow-sm">
+                        <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-sm">
                           {loading ? 'Confirming...' : 'Confirm Adjustment'}
                         </button>
-                        <button type="button" onClick={() => setAdjustModalUser(null)} className="py-2.5 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-sm">Cancel</button>
+                        <button type="button" onClick={() => setAdjustModalUser(null)} className="py-2.5 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-xs">Cancel</button>
                       </div>
                     </form>
                   </div>
@@ -7464,7 +7147,7 @@ export default function AdminDashboard({ onTabChange }) {
                               <th className="py-2.5 px-3">Date</th>
                             </tr>
                           </thead>
-                          <tbody className="text-sm">
+                          <tbody className="text-xs">
                             {userLogs.map((log, idx) => (
                               <tr key={log._id || idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition">
                                 <td className="py-3 px-3 text-center font-bold text-slate-500">{idx + 1}</td>
@@ -7475,7 +7158,7 @@ export default function AdminDashboard({ onTabChange }) {
                                   <span className={`px-2 py-0.5 rounded text-[9px] font-bold border uppercase tracking-wider ${
                                     log.type === 'earn' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                                     log.type === 'redeem' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                                    'bg-orange-50 text-[#FF6600] border-orange-100'
+                                    'bg-blue-50 text-blue-600 border-blue-100'
                                   }`}>
                                     {log.type === 'admin_adjustment' ? 'Adjust' : log.type}
                                   </span>
@@ -7499,7 +7182,7 @@ export default function AdminDashboard({ onTabChange }) {
                         <button 
                           type="button" 
                           onClick={() => setSelectedStatementUser(null)} 
-                          className="py-2 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-sm transition"
+                          className="py-2 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-xs transition"
                         >
                           Close
                         </button>
@@ -7543,7 +7226,7 @@ export default function AdminDashboard({ onTabChange }) {
                     step="1"
                     value={localRewardSettings.earn_rate}
                     onChange={(e) => setLocalRewardSettings({ ...localRewardSettings, earn_rate: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition text-sm font-semibold"
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition text-xs font-semibold"
                   />
                 </div>
 
@@ -7579,7 +7262,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="w-6 h-1.5 bg-amber-500 rounded-full"></div>
                     <h1 className="text-xl font-bold text-slate-800 tracking-tight">Set Reward</h1>
                   </div>
-                  <p className="text-sm text-slate-500 font-semibold pl-9">Manually adjust or set loyalty points for specific customers.</p>
+                  <p className="text-xs text-slate-500 font-semibold pl-9">Manually adjust or set loyalty points for specific customers.</p>
                 </div>
               </div>
 
@@ -7593,10 +7276,10 @@ export default function AdminDashboard({ onTabChange }) {
                   <div className="space-y-2 relative">
                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Customer</label>
                     {selectedSetUser ? (
-                      <div className="flex items-center justify-between p-3.5 bg-orange-50 border border-orange-100 rounded-xl">
+                      <div className="flex items-center justify-between p-3.5 bg-blue-50 border border-blue-100 rounded-xl">
                         <div>
-                          <div className="font-bold text-blue-900 text-sm">{selectedSetUser.name}</div>
-                          <div className="text-[10px] text-[#FF6600] font-semibold">{selectedSetUser.email}</div>
+                          <div className="font-bold text-blue-900 text-xs">{selectedSetUser.name}</div>
+                          <div className="text-[10px] text-blue-500 font-semibold">{selectedSetUser.email}</div>
                         </div>
                         <button 
                           type="button" 
@@ -7604,7 +7287,7 @@ export default function AdminDashboard({ onTabChange }) {
                             setSelectedSetUser(null);
                             setCustomerSearchTerm('');
                           }}
-                          className="p-1 hover:bg-blue-100 rounded-full text-[#FF6600] transition"
+                          className="p-1 hover:bg-blue-100 rounded-full text-blue-500 transition"
                         >
                           <X size={15} />
                         </button>
@@ -7622,7 +7305,7 @@ export default function AdminDashboard({ onTabChange }) {
                             }}
                             onFocus={() => setShowCustomerDropdown(true)}
                             onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
-                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition text-sm font-semibold"
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition text-xs font-semibold"
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
                             <Search size={14} />
@@ -7641,12 +7324,12 @@ export default function AdminDashboard({ onTabChange }) {
                                 }}
                                 className="w-full text-left px-4 py-3 hover:bg-slate-50 transition flex flex-col"
                               >
-                                <span className="text-sm font-bold text-slate-800">{c.name}</span>
+                                <span className="text-xs font-bold text-slate-800">{c.name}</span>
                                 <span className="text-[10px] text-slate-400 font-medium">{c.email}</span>
                               </button>
                             ))}
                             {filteredCustomersForSelect.length === 0 && (
-                              <div className="px-4 py-3 text-sm text-slate-400 text-center">No customers found</div>
+                              <div className="px-4 py-3 text-xs text-slate-400 text-center">No customers found</div>
                             )}
                           </div>
                         )}
@@ -7662,7 +7345,7 @@ export default function AdminDashboard({ onTabChange }) {
                       required
                       value={setPointsValue}
                       onChange={(e) => setSetPointsValue(Number(e.target.value))}
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition text-sm font-semibold"
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition text-xs font-semibold"
                       placeholder="e.g. 100 or -50"
                     />
                   </div>
@@ -7675,7 +7358,7 @@ export default function AdminDashboard({ onTabChange }) {
                       required
                       value={setPointsDesc}
                       onChange={(e) => setSetPointsDesc(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition text-sm font-semibold"
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition text-xs font-semibold"
                       placeholder="e.g. Manual bonus, Loyalty reward correction"
                     />
                   </div>
@@ -7683,7 +7366,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <button 
                     type="submit" 
                     disabled={loading}
-                    className="w-full py-3 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2"
                   >
                     {loading ? 'Processing...' : 'Set / Adjust Points'}
                   </button>
@@ -7698,7 +7381,7 @@ export default function AdminDashboard({ onTabChange }) {
           <div className="space-y-8 max-w-4xl">
             <div className="border-b border-slate-200 pb-5">
               <h1 className="text-xl font-bold text-gray-900">Page Manager</h1>
-              <p className="text-sm text-gray-400 mt-1">Create and manage custom pages (About, Contact, Terms, Privacy, etc.).</p>
+              <p className="text-xs text-gray-400 mt-1">Create and manage custom pages (About, Contact, Terms, Privacy, etc.).</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -7709,7 +7392,7 @@ export default function AdminDashboard({ onTabChange }) {
                 </div>
                 <div className="divide-y divide-slate-100">
                   {pagesList.map((page) => (
-                    <div key={page._id} className="p-4 flex items-center justify-between text-sm">
+                    <div key={page._id} className="p-4 flex items-center justify-between text-xs">
                       <div>
                         <div className="font-bold text-gray-900 flex items-center gap-2">
                           {page.title}
@@ -7728,7 +7411,7 @@ export default function AdminDashboard({ onTabChange }) {
                     </div>
                   ))}
                   {pagesList.length === 0 && (
-                    <p className="text-center text-gray-500 text-sm py-8">No pages yet. Create your first page!</p>
+                    <p className="text-center text-gray-500 text-xs py-8">No pages yet. Create your first page!</p>
                   )}
                 </div>
               </div>
@@ -7739,24 +7422,24 @@ export default function AdminDashboard({ onTabChange }) {
                 {editingPage && (
                   <button onClick={() => { setEditingPage(null); setPageForm({ title: '', slug: '', content: '', isPublished: false }); }} className="text-[10px] hover:text-gray-900">Cancel edit</button>
                 )}
-                <form onSubmit={editingPage ? handleUpdatePage : handleCreatePage} className="space-y-4 text-sm">
+                <form onSubmit={editingPage ? handleUpdatePage : handleCreatePage} className="space-y-4 text-xs">
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Page Title</label>
                     <input type="text" required placeholder="e.g. About Us" value={pageForm.title}
                       onChange={(e) => setPageForm({ ...pageForm, title: e.target.value, slug: editingPage ? pageForm.slug : e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })}
-                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Slug (URL identifier)</label>
                     <input type="text" required placeholder="about-us" value={pageForm.slug}
                       onChange={(e) => setPageForm({ ...pageForm, slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })}
-                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-mono" />
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-mono" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Content (HTML supported)</label>
                     <textarea rows="6" placeholder="Write page content here..." value={pageForm.content}
                       onChange={(e) => setPageForm({ ...pageForm, content: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm font-mono"></textarea>
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs font-mono"></textarea>
                   </div>
                   <div className="flex items-center gap-2">
                     <input type="checkbox" id="page-published" checked={pageForm.isPublished}
@@ -7764,7 +7447,7 @@ export default function AdminDashboard({ onTabChange }) {
                       className="accent-blue-600 rounded-sm cursor-pointer" />
                     <label htmlFor="page-published" className="text-[10px] font-bold text-gray-400 cursor-pointer">Published (visible to visitors)</label>
                   </div>
-                  <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition">
+                  <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition">
                     {editingPage ? 'Update Page' : 'Create Page'}
                   </button>
                 </form>
@@ -7778,7 +7461,7 @@ export default function AdminDashboard({ onTabChange }) {
           <div className="space-y-8 max-w-4xl">
             <div className="border-b border-slate-200 pb-5">
               <h1 className="text-xl font-bold text-gray-900">Offer Manager</h1>
-              <p className="text-sm text-gray-400 mt-1">Create promotional offers and banners for the storefront.</p>
+              <p className="text-xs text-gray-400 mt-1">Create promotional offers and banners for the storefront.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -7789,7 +7472,7 @@ export default function AdminDashboard({ onTabChange }) {
                 </div>
                 <div className="divide-y divide-slate-100">
                   {offersList.map((offer) => (
-                    <div key={offer._id} className="p-4 flex items-center justify-between text-sm">
+                    <div key={offer._id} className="p-4 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-3">
                         {offer.image && <img src={getImageUrl(offer.image)} className="w-10 h-10 rounded-lg object-cover bg-gray-100 border border-gray-300" />}
                         <div>
@@ -7809,7 +7492,7 @@ export default function AdminDashboard({ onTabChange }) {
                     </div>
                   ))}
                   {offersList.length === 0 && (
-                    <p className="text-center text-gray-500 text-sm py-8">No offers yet.</p>
+                    <p className="text-center text-gray-500 text-xs py-8">No offers yet.</p>
                   )}
                 </div>
               </div>
@@ -7820,38 +7503,38 @@ export default function AdminDashboard({ onTabChange }) {
                 {editingOffer && (
                   <button onClick={() => { setEditingOffer(null); setOfferForm({ title: '', description: '', discountPercent: '', image: '', link: '', isActive: true }); }} className="text-[10px] hover:text-gray-900">Cancel edit</button>
                 )}
-                <form onSubmit={editingOffer ? handleUpdateOffer : handleCreateOffer} className="space-y-4 text-sm">
+                <form onSubmit={editingOffer ? handleUpdateOffer : handleCreateOffer} className="space-y-4 text-xs">
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Offer Title</label>
                     <input type="text" required placeholder="e.g. Summer Sale" value={offerForm.title}
                       onChange={(e) => setOfferForm({ ...offerForm, title: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Description</label>
                     <textarea rows="2" placeholder="Short description..." value={offerForm.description}
                       onChange={(e) => setOfferForm({ ...offerForm, description: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner"></textarea>
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner"></textarea>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Discount %</label>
                       <input type="number" min="0" max="100" placeholder="e.g. 30" value={offerForm.discountPercent}
                         onChange={(e) => setOfferForm({ ...offerForm, discountPercent: e.target.value })}
-                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Image URL</label>
                       <input type="text" placeholder="https://..." value={offerForm.image}
                         onChange={(e) => setOfferForm({ ...offerForm, image: e.target.value })}
-                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                     </div>
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Link (optional)</label>
                     <input type="text" placeholder="e.g. /shop?category=Fashion" value={offerForm.link}
                       onChange={(e) => setOfferForm({ ...offerForm, link: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div className="flex items-center gap-2">
                     <input type="checkbox" id="offer-active" checked={offerForm.isActive}
@@ -7859,7 +7542,7 @@ export default function AdminDashboard({ onTabChange }) {
                       className="accent-blue-600 rounded-sm cursor-pointer" />
                     <label htmlFor="offer-active" className="text-[10px] font-bold text-gray-400 cursor-pointer">Active (visible on storefront)</label>
                   </div>
-                  <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition">
+                  <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition">
                     {editingOffer ? 'Update Offer' : 'Create Offer'}
                   </button>
                 </form>
@@ -7873,7 +7556,7 @@ export default function AdminDashboard({ onTabChange }) {
           <div className="space-y-8 max-w-5xl">
             <div className="border-b border-slate-200 pb-5">
               <h1 className="text-xl font-bold text-gray-900">Banner Manager</h1>
-              <p className="text-sm text-gray-400 mt-1">Manage homepage slider banners.</p>
+              <p className="text-xs text-gray-400 mt-1">Manage homepage slider banners.</p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               <div className="lg:col-span-7 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300">
@@ -7882,7 +7565,7 @@ export default function AdminDashboard({ onTabChange }) {
                 </div>
                 <div className="divide-y divide-slate-100">
                   {bannersList.map((b) => (
-                    <div key={b._id} className="p-4 flex items-center gap-4 text-sm">
+                    <div key={b._id} className="p-4 flex items-center gap-4 text-xs">
                       <img src={getImageUrl(b.image)} className="w-20 h-14 object-cover rounded-lg bg-gray-100 border border-gray-300 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="font-bold text-gray-900 flex items-center gap-2">
@@ -7898,7 +7581,7 @@ export default function AdminDashboard({ onTabChange }) {
                       </div>
                     </div>
                   ))}
-                  {bannersList.length === 0 && <p className="text-center text-gray-500 text-sm py-8">No banners yet.</p>}
+                  {bannersList.length === 0 && <p className="text-center text-gray-500 text-xs py-8">No banners yet.</p>}
                 </div>
               </div>
               <div className="lg:col-span-5 bg-white/90  p-6 border border-slate-200 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 space-y-4">
@@ -7906,26 +7589,26 @@ export default function AdminDashboard({ onTabChange }) {
                 {editingBanner && (
                   <button onClick={() => { setEditingBanner(null); setBannerForm({ title: '', subtitle: '', image: '', link: '', isActive: true, order: 0 }); }} className="text-[10px] hover:text-gray-900">Cancel edit</button>
                 )}
-                <form onSubmit={editingBanner ? handleUpdateBanner : handleCreateBanner} className="space-y-4 text-sm">
+                <form onSubmit={editingBanner ? handleUpdateBanner : handleCreateBanner} className="space-y-4 text-xs">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Title</label>
-                      <input type="text" placeholder="Summer Sale" value={bannerForm.title} onChange={(e) => setBannerForm({ ...bannerForm, title: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                      <input type="text" placeholder="Summer Sale" value={bannerForm.title} onChange={(e) => setBannerForm({ ...bannerForm, title: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Order</label>
-                      <input type="number" min="0" value={bannerForm.order} onChange={(e) => setBannerForm({ ...bannerForm, order: Number(e.target.value) })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                      <input type="number" min="0" value={bannerForm.order} onChange={(e) => setBannerForm({ ...bannerForm, order: Number(e.target.value) })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                     </div>
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Subtitle</label>
-                    <input type="text" placeholder="Get up to 50% off" value={bannerForm.subtitle} onChange={(e) => setBannerForm({ ...bannerForm, subtitle: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    <input type="text" placeholder="Get up to 50% off" value={bannerForm.subtitle} onChange={(e) => setBannerForm({ ...bannerForm, subtitle: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Image URL</label>
                     <div className="flex gap-2 mt-1">
-                      <input type="text" required placeholder="https://..." value={bannerForm.image} onChange={(e) => setBannerForm({ ...bannerForm, image: e.target.value })} className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
-                      <label className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-lg cursor-pointer text-sm whitespace-nowrap flex items-center">
+                      <input type="text" required placeholder="https://..." value={bannerForm.image} onChange={(e) => setBannerForm({ ...bannerForm, image: e.target.value })} className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                      <label className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-lg cursor-pointer text-xs whitespace-nowrap flex items-center">
                         Upload
                         <input type="file" accept="image/*" className="hidden"
                           onChange={async (e) => {
@@ -7949,13 +7632,13 @@ export default function AdminDashboard({ onTabChange }) {
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Link (optional)</label>
-                    <input type="text" placeholder="/shop" value={bannerForm.link} onChange={(e) => setBannerForm({ ...bannerForm, link: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    <input type="text" placeholder="/shop" value={bannerForm.link} onChange={(e) => setBannerForm({ ...bannerForm, link: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div className="flex items-center gap-2">
                     <input type="checkbox" id="banner-active" checked={bannerForm.isActive} onChange={(e) => setBannerForm({ ...bannerForm, isActive: e.target.checked })} className="accent-blue-600 rounded-sm cursor-pointer" />
                     <label htmlFor="banner-active" className="text-[10px] font-bold text-gray-400 cursor-pointer">Active</label>
                   </div>
-                  <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition">{editingBanner ? 'Update Banner' : 'Create Banner'}</button>
+                  <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition">{editingBanner ? 'Update Banner' : 'Create Banner'}</button>
                 </form>
               </div>
             </div>
@@ -7966,7 +7649,7 @@ export default function AdminDashboard({ onTabChange }) {
           <div className="space-y-6 max-w-7xl w-full animate-fade-in">
             <div className="border-b border-slate-200 pb-5">
               <h1 className="text-xl font-bold text-gray-900">Seller Payouts History</h1>
-              <p className="text-sm text-gray-400 mt-1">View completed and rejected payout requests.</p>
+              <p className="text-xs text-gray-400 mt-1">View completed and rejected payout requests.</p>
             </div>
             <div className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
@@ -7981,7 +7664,7 @@ export default function AdminDashboard({ onTabChange }) {
                       <th className="py-3 px-4 border-b border-slate-100">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="text-sm">
+                  <tbody className="text-xs">
                     {(payouts || []).filter(p => p.status !== 'pending').map((p) => (
                       <tr key={p.id} className="border-b border-gray-50 hover:bg-slate-50">
                         <td className="py-4 px-4 text-gray-500 whitespace-nowrap">
@@ -8021,7 +7704,7 @@ export default function AdminDashboard({ onTabChange }) {
           <div className="space-y-6 max-w-7xl w-full animate-fade-in">
             <div className="border-b border-slate-200 pb-5">
               <h1 className="text-xl font-bold text-gray-900">Pending Payout Requests</h1>
-              <p className="text-sm text-gray-400 mt-1">Approve or reject incoming payout requests from sellers.</p>
+              <p className="text-xs text-gray-400 mt-1">Approve or reject incoming payout requests from sellers.</p>
             </div>
             <div className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
@@ -8035,7 +7718,7 @@ export default function AdminDashboard({ onTabChange }) {
                       <th className="py-3 px-4 border-b border-slate-100 text-center">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="text-sm">
+                  <tbody className="text-xs">
                     {(payouts || []).filter(p => p.status === 'pending').map((p) => (
                       <tr key={p.id} className="border-b border-gray-50 hover:bg-slate-50">
                         <td className="py-4 px-4 text-gray-500 whitespace-nowrap">
@@ -8174,7 +7857,7 @@ export default function AdminDashboard({ onTabChange }) {
                   if (res.success) alert('Seller settings updated successfully!');
                   else alert(res.error || 'Failed to update settings');
                 }}
-                className="px-6 py-2 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition-all duration-200 shadow-xs"
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition-all duration-200 shadow-xs"
               >
                 Save Settings
               </button>
@@ -8198,7 +7881,7 @@ export default function AdminDashboard({ onTabChange }) {
                 </div>
                 <div className="p-6 space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Import File <span className="text-gray-400">*(.csv/.xlsx/.xls File)</span></label>
+                    <label className="block text-xs text-gray-600 mb-1">Import File <span className="text-gray-400">*(.csv/.xlsx/.xls File)</span></label>
                     <div className="flex">
                       <div className="flex-1 border border-slate-200 border-r-0 rounded-l-lg bg-white overflow-hidden flex items-center px-3 text-sm text-gray-500 h-10 truncate">
                         {sellerImportFile ? sellerImportFile.name : 'Choose file...'}
@@ -8252,7 +7935,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <li>Gender must be within: male, female, others</li>
                   </ol>
                   <div className="mt-4">
-                    <a href={`${API_URL}/seller_import_sample.csv`} download className="text-[#FF6600] hover:text-[#FF6600] text-sm flex items-center gap-1 transition">
+                    <a href={`${API_URL}/seller_import_sample.csv`} download className="text-blue-500 hover:text-blue-600 text-sm flex items-center gap-1 transition">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
@@ -8287,7 +7970,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <select
                       value={localSellerSettings.subscription_method || 'Adjustable'}
                       onChange={(e) => setLocalSellerSettings({ ...localSellerSettings, subscription_method: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-slate-800 text-sm font-semibold cursor-pointer"
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 text-xs font-semibold cursor-pointer"
                     >
                       <option value="Adjustable">Adjustable</option>
                       <option value="Not Adjustable">Not Adjustable</option>
@@ -8297,7 +7980,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-6 py-2.5 bg-[#2a3038] hover:bg-[#1a2028] text-white text-sm font-bold rounded-xl transition duration-200 uppercase tracking-wider shadow-xs"
+                      className="px-6 py-2.5 bg-[#2a3038] hover:bg-[#1a2028] text-white text-xs font-bold rounded-xl transition duration-200 uppercase tracking-wider shadow-xs"
                     >
                       {loading ? 'Saving...' : 'Save'}
                     </button>
@@ -8310,8 +7993,8 @@ export default function AdminDashboard({ onTabChange }) {
                 
                 {/* Method Info Card */}
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-6">
-                  <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wider mb-4">Method Info</h3>
-                  <div className="text-sm text-slate-600 space-y-4 leading-relaxed">
+                  <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-4">Method Info</h3>
+                  <div className="text-xs text-slate-600 space-y-4 leading-relaxed">
                     <p className="font-bold text-slate-700">Type Setting:</p>
                     <div className="space-y-3.5 pl-1">
                       <div className="flex gap-2">
@@ -8332,8 +8015,8 @@ export default function AdminDashboard({ onTabChange }) {
 
                 {/* Cron Job Setting Card */}
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-6">
-                  <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wider mb-4">Cron Job Setting</h3>
-                  <div className="text-sm text-slate-600 space-y-4 leading-relaxed">
+                  <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-4">Cron Job Setting</h3>
+                  <div className="text-xs text-slate-600 space-y-4 leading-relaxed">
                     <p>For managing auto expiration of subscription/notify the sellers, you need to set cron job.</p>
                     <p className="font-semibold text-slate-700">Add the following command to your cron job:</p>
                     <div className="bg-slate-50 border border-slate-150 p-3 rounded-xl font-mono text-[10px] text-slate-650 overflow-x-auto whitespace-pre">
@@ -8341,7 +8024,7 @@ export default function AdminDashboard({ onTabChange }) {
                     </div>
                     <div className="text-slate-400 text-[10px] flex items-center gap-1">
                       <span>For More Info</span>
-                      <a href="#" className="text-[#FF6600] hover:text-[#FF6600] font-semibold hover:underline">Click Here</a>
+                      <a href="#" className="text-blue-500 hover:text-blue-600 font-semibold hover:underline">Click Here</a>
                     </div>
                     <div className="pt-2">
                       <button
@@ -8349,7 +8032,7 @@ export default function AdminDashboard({ onTabChange }) {
                         onClick={async () => {
                           alert('Triggered cron manually. Subscriptions auto-expiration checked!');
                         }}
-                        className="px-4 py-2.5 bg-[#2a3038] hover:bg-[#1a2028] text-white text-sm font-bold rounded-xl transition duration-200 uppercase tracking-wider shadow-xs"
+                        className="px-4 py-2.5 bg-[#2a3038] hover:bg-[#1a2028] text-white text-xs font-bold rounded-xl transition duration-200 uppercase tracking-wider shadow-xs"
                       >
                         Run Cron Manually
                       </button>
@@ -8371,11 +8054,11 @@ export default function AdminDashboard({ onTabChange }) {
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
                   <div>
                     <h1 className="text-xl font-black text-gray-900 tracking-tight">Seller Packages</h1>
-                    <p className="text-sm text-gray-500 font-medium mt-1">Create and manage subscription packages for sellers.</p>
+                    <p className="text-xs text-gray-500 font-medium mt-1">Create and manage subscription packages for sellers.</p>
                   </div>
                   <div className="px-4 py-2 bg-gray-50 rounded-xl border border-slate-100 shadow-inner">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Total</span>
-                    <span className="text-sm font-black text-gray-900">{sellerPackages?.length || 0}</span>
+                    <span className="text-lg font-black text-gray-900">{sellerPackages?.length || 0}</span>
                   </div>
                 </div>
                 <div className="overflow-x-auto p-2">
@@ -8408,7 +8091,7 @@ export default function AdminDashboard({ onTabChange }) {
                                 <input type="number" value={editPkgForm.product_limit} onChange={(e) => setEditPkgForm({...editPkgForm, product_limit: e.target.value})} className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm" />
                               </td>
                               <td className="py-3 px-4">
-                                <select value={editPkgForm.is_active ? 'active' : 'inactive'} onChange={(e) => setEditPkgForm({...editPkgForm, is_active: e.target.value === 'active'})} className="px-2 py-1 border border-gray-300 rounded-lg text-sm">
+                                <select value={editPkgForm.is_active ? 'active' : 'inactive'} onChange={(e) => setEditPkgForm({...editPkgForm, is_active: e.target.value === 'active'})} className="px-2 py-1 border border-gray-300 rounded-lg text-xs">
                                   <option value="active">Active</option>
                                   <option value="inactive">Inactive</option>
                                 </select>
@@ -8419,7 +8102,7 @@ export default function AdminDashboard({ onTabChange }) {
                                     const res = await updateSellerPackage(editingPkgId, editPkgForm);
                                     if (res.success) { setEditingPkgId(null); alert('Package updated!'); }
                                     else alert(res.error || 'Update failed');
-                                  }} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition flex items-center gap-1">
+                                  }} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition flex items-center gap-1">
                                     <Check size={14} /> Save
                                   </button>
                                   <button onClick={() => setEditingPkgId(null)} className="p-1.5 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 transition">
@@ -8456,7 +8139,7 @@ export default function AdminDashboard({ onTabChange }) {
                                   <button onClick={() => {
                                     setEditingPkgId(pkg._id || pkg.id);
                                     setEditPkgForm({ name: pkg.name, price: String(pkg.price), duration_days: String(pkg.duration_days), product_limit: String(pkg.product_limit), is_active: pkg.is_active });
-                                  }} className="px-3 py-1.5 bg-orange-500/10 text-[#FF6600] rounded-lg text-[10px] font-bold hover:bg-orange-500/20 transition flex items-center gap-1">
+                                  }} className="px-3 py-1.5 bg-blue-500/10 text-blue-600 rounded-lg text-[10px] font-bold hover:bg-blue-500/20 transition flex items-center gap-1">
                                     <Edit size={12} /> Edit
                                   </button>
                                   <button onClick={async () => {
@@ -8475,7 +8158,7 @@ export default function AdminDashboard({ onTabChange }) {
                         </tr>
                       ))}
                       {(sellerPackages || []).length === 0 && (
-                        <tr className="text-center text-gray-500 text-sm">
+                        <tr className="text-center text-gray-500 text-xs">
                           <td colSpan="6" className="py-12">
                             <div className="flex flex-col items-center gap-2">
                               <Package size={32} className="text-gray-300" />
@@ -8492,8 +8175,8 @@ export default function AdminDashboard({ onTabChange }) {
               {/* Add Package Form */}
               <div className="lg:col-span-4 bg-white p-8 border border-slate-200 shadow-lg rounded-2xl space-y-6  h-fit">
                 <div className="flex items-center gap-2 mb-2 pb-4 border-b border-slate-100">
-                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                  <h3 className="font-black text-gray-900 text-sm">Create Package</h3>
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <h3 className="font-black text-gray-900 text-lg">Create Package</h3>
                 </div>
                 <form onSubmit={async (e) => {
                   e.preventDefault();
@@ -8558,7 +8241,7 @@ export default function AdminDashboard({ onTabChange }) {
                   </div>
                   <button
                     type="submit"
-                    className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-black rounded-xl shadow-lg shadow-orange-500/30 transition text-sm flex items-center justify-center gap-2"
+                    className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-black rounded-xl shadow-lg shadow-blue-500/30 transition text-sm flex items-center justify-center gap-2"
                   >
                     <Plus size={16} /> Create Package
                   </button>
@@ -8592,13 +8275,13 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="w-6 h-1.5 bg-[#f59e0b] rounded-full"></div>
                     <h1 className="text-xl font-bold text-slate-800 tracking-tight">Online Purchase History</h1>
                   </div>
-                  <p className="text-sm text-slate-500 font-semibold pl-9">Found {filtered.length} Rows</p>
+                  <p className="text-xs text-slate-500 font-semibold pl-9">Found {filtered.length} Rows</p>
                 </div>
                 <button
                   onClick={() => setActiveTab('dashboard')}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#2a3038] hover:bg-[#1a2028] text-white text-sm font-bold rounded-xl transition duration-200"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#2a3038] hover:bg-[#1a2028] text-white text-xs font-bold rounded-xl transition duration-200"
                 >
-                  ← BACK
+                  ΓåÉ BACK
                 </button>
               </div>
 
@@ -8614,7 +8297,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <select
                       value={onlineSellerFilter}
                       onChange={(e) => setOnlineSellerFilter(e.target.value)}
-                      className="w-full sm:w-44 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 cursor-pointer focus:outline-none focus:border-orange-500"
+                      className="w-full sm:w-44 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 cursor-pointer focus:outline-none focus:border-blue-500"
                     >
                       <option value="">Select Seller</option>
                       {uniqueSellers.map((seller, idx) => (
@@ -8626,7 +8309,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <select
                       value={onlineSortOrder}
                       onChange={(e) => setOnlineSortOrder(e.target.value)}
-                      className="w-full sm:w-40 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 cursor-pointer focus:outline-none focus:border-orange-500"
+                      className="w-full sm:w-40 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 cursor-pointer focus:outline-none focus:border-blue-500"
                     >
                       <option value="Latest On Top">Latest On Top</option>
                       <option value="Oldest On Top">Oldest On Top</option>
@@ -8639,9 +8322,9 @@ export default function AdminDashboard({ onTabChange }) {
                         placeholder="Search"
                         value={onlineSearch}
                         onChange={(e) => setOnlineSearch(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2 text-sm text-slate-700 font-medium focus:outline-none focus:border-orange-500"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500"
                       />
-                      <button type="button" className="absolute right-0 h-full px-3.5 bg-[#2a3038] hover:bg-[#1a2028] text-white rounded-r-xl transition flex items-center justify-center">
+                      <button className="absolute right-0 h-full px-3.5 bg-[#2a3038] hover:bg-[#1a2028] text-white rounded-r-xl transition flex items-center justify-center">
                         <Search size={13} />
                       </button>
                     </div>
@@ -8662,7 +8345,7 @@ export default function AdminDashboard({ onTabChange }) {
                         <th className="py-3.5 px-4">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="text-sm">
+                    <tbody className="text-xs">
                       {filtered.map((sub, idx) => (
                         <tr key={sub._id || idx} className="border-b border-slate-50 hover:bg-slate-50 transition">
                           <td className="py-3.5 px-4 text-center font-bold text-slate-500">
@@ -8676,12 +8359,12 @@ export default function AdminDashboard({ onTabChange }) {
                             <span className="font-semibold text-slate-700">{sub.package_name}</span>
                           </td>
                           <td className="py-3.5 px-4">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold inline-block bg-orange-50 text-[#FF6600] border border-orange-100">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold inline-block bg-blue-50 text-blue-600 border border-blue-100">
                               {sub.payment_method}
                             </span>
                           </td>
                           <td className="py-3.5 px-4 font-extrabold text-slate-850">
-                            ৳{Number(sub.package_price).toLocaleString()}
+                            αº│{Number(sub.package_price).toLocaleString()}
                           </td>
                           <td className="py-3.5 px-4 text-slate-500 font-medium">
                             {new Date(sub.purchase_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -8699,7 +8382,7 @@ export default function AdminDashboard({ onTabChange }) {
                       ))}
                       {filtered.length === 0 && (
                         <tr>
-                          <td colSpan="7" className="py-12 text-center text-slate-400 text-sm bg-slate-50/20 font-medium">
+                          <td colSpan="7" className="py-12 text-center text-slate-400 text-xs bg-slate-50/20 font-medium">
                             No online purchases found.
                           </td>
                         </tr>
@@ -8738,13 +8421,13 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="w-6 h-1.5 bg-[#f59e0b] rounded-full"></div>
                     <h1 className="text-xl font-bold text-slate-800 tracking-tight">Offline Purchase History</h1>
                   </div>
-                  <p className="text-sm text-slate-500 font-semibold pl-9">Found {filtered.length} Rows</p>
+                  <p className="text-xs text-slate-500 font-semibold pl-9">Found {filtered.length} Rows</p>
                 </div>
                 <button
                   onClick={() => setActiveTab('dashboard')}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#2a3038] hover:bg-[#1a2028] text-white text-sm font-bold rounded-xl transition duration-200"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#2a3038] hover:bg-[#1a2028] text-white text-xs font-bold rounded-xl transition duration-200"
                 >
-                  ← BACK
+                  ΓåÉ BACK
                 </button>
               </div>
 
@@ -8760,7 +8443,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <select
                       value={offlineSellerFilter}
                       onChange={(e) => setOfflineSellerFilter(e.target.value)}
-                      className="w-full sm:w-44 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 cursor-pointer focus:outline-none focus:border-orange-500"
+                      className="w-full sm:w-44 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 cursor-pointer focus:outline-none focus:border-blue-500"
                     >
                       <option value="">Select Seller</option>
                       {uniqueSellers.map((seller, idx) => (
@@ -8772,7 +8455,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <select
                       value={offlineSortOrder}
                       onChange={(e) => setOfflineSortOrder(e.target.value)}
-                      className="w-full sm:w-40 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 cursor-pointer focus:outline-none focus:border-orange-500"
+                      className="w-full sm:w-40 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 cursor-pointer focus:outline-none focus:border-blue-500"
                     >
                       <option value="Latest On Top">Latest On Top</option>
                       <option value="Oldest On Top">Oldest On Top</option>
@@ -8785,9 +8468,9 @@ export default function AdminDashboard({ onTabChange }) {
                         placeholder="Search"
                         value={offlineSearch}
                         onChange={(e) => setOfflineSearch(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2 text-sm text-slate-700 font-medium focus:outline-none focus:border-orange-500"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500"
                       />
-                      <button type="button" className="absolute right-0 h-full px-3.5 bg-[#2a3038] hover:bg-[#1a2028] text-white rounded-r-xl transition flex items-center justify-center">
+                      <button className="absolute right-0 h-full px-3.5 bg-[#2a3038] hover:bg-[#1a2028] text-white rounded-r-xl transition flex items-center justify-center">
                         <Search size={13} />
                       </button>
                     </div>
@@ -8808,7 +8491,7 @@ export default function AdminDashboard({ onTabChange }) {
                         <th className="py-3.5 px-4">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="text-sm">
+                    <tbody className="text-xs">
                       {filtered.map((sub, idx) => (
                         <tr key={sub._id || idx} className="border-b border-slate-50 hover:bg-slate-50 transition">
                           <td className="py-3.5 px-4 text-center font-bold text-slate-500">
@@ -8827,7 +8510,7 @@ export default function AdminDashboard({ onTabChange }) {
                             </span>
                           </td>
                           <td className="py-3.5 px-4 font-extrabold text-slate-850">
-                            ৳{Number(sub.package_price).toLocaleString()}
+                            αº│{Number(sub.package_price).toLocaleString()}
                           </td>
                           <td className="py-3.5 px-4 text-slate-500 font-medium">
                             {new Date(sub.purchase_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -8845,7 +8528,7 @@ export default function AdminDashboard({ onTabChange }) {
                       ))}
                       {filtered.length === 0 && (
                         <tr>
-                          <td colSpan="7" className="py-12 text-center text-slate-400 text-sm bg-slate-50/20 font-medium">
+                          <td colSpan="7" className="py-12 text-center text-slate-400 text-xs bg-slate-50/20 font-medium">
                             No offline purchases found.
                           </td>
                         </tr>
@@ -8864,21 +8547,21 @@ export default function AdminDashboard({ onTabChange }) {
           <div className="space-y-8 max-w-4xl">
             <div className="border-b border-slate-200 pb-5">
               <h1 className="text-xl font-bold text-gray-900">Support Chat</h1>
-              <p className="text-sm text-gray-400 mt-1">View and reply to customer messages in real-time.</p>
+              <p className="text-xs text-gray-400 mt-1">View and reply to customer messages in real-time.</p>
             </div>
             <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300">
               <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2"><MessageSquare size={16} className="text-[#FF6600]" /> Messages ({chatMessages.filter((m) => !m.isAdmin).length})</h3>
+                <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2"><MessageSquare size={16} className="text-blue-500" /> Messages ({chatMessages.filter((m) => !m.isAdmin).length})</h3>
                 <div className="flex items-center gap-2">
                   <button onClick={handleCloseChat} className="text-[10px] text-orange-400 hover:text-orange-300 hover:underline font-semibold">Close Chat</button>
                   <button onClick={fetchChatMessages} className="text-[10px] text-blue-400 hover:underline">Refresh</button>
                 </div>
               </div>
               <div className="h-[400px] overflow-y-auto p-4 space-y-3 bg-slate-50">
-                {chatMessages.length === 0 && <p className="text-center text-gray-500 text-sm py-10">No messages yet.</p>}
+                {chatMessages.length === 0 && <p className="text-center text-gray-500 text-xs py-10">No messages yet.</p>}
                 {chatMessages.map((m) => (
                   <div key={m._id} className={`flex ${m.isAdmin ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] p-3 rounded-2xl text-sm ${m.isAdmin ? 'bg-[#FF6600] text-white' : 'bg-gray-200 text-gray-800'}`}>
+                    <div className={`max-w-[75%] p-3 rounded-2xl text-xs ${m.isAdmin ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}>
                       <div className="font-bold text-[10px] opacity-70 mb-0.5">{m.isAdmin ? 'You (Admin)' : m.username}</div>
                       <div>{m.message}</div>
                       <div className="flex items-center gap-2 mt-1">
@@ -8893,8 +8576,8 @@ export default function AdminDashboard({ onTabChange }) {
                 ))}
               </div>
               <form onSubmit={handleSendChatReply} className="border-t border-slate-200 p-3 flex gap-2 bg-white">
-                <input type="text" placeholder="Type your reply..." value={chatReply} onChange={(e) => setChatReply(e.target.value)} className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
-                <button type="submit" className="px-4 py-2 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-lg text-sm transition">Send</button>
+                <input type="text" placeholder="Type your reply..." value={chatReply} onChange={(e) => setChatReply(e.target.value)} className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                <button type="submit" className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-lg text-xs transition">Send</button>
               </form>
             </div>
           </div>
@@ -8905,7 +8588,7 @@ export default function AdminDashboard({ onTabChange }) {
           <div className="space-y-8 max-w-4xl">
             <div className="border-b border-slate-200 pb-5">
               <h1 className="text-xl font-bold text-gray-900">Store Settings & Gateways</h1>
-              <p className="text-sm text-gray-400 mt-1">Configure OTP gateways, payment gateways, and analytics tracking (Facebook Pixel &amp; Google GA4).</p>
+              <p className="text-xs text-gray-400 mt-1">Configure OTP gateways, payment gateways, and analytics tracking (Facebook Pixel &amp; Google GA4).</p>
             </div>
 
             <form onSubmit={handleSaveSettings} className="space-y-6">
@@ -8918,22 +8601,22 @@ export default function AdminDashboard({ onTabChange }) {
                   </svg>
                   Advance Payment Rules
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                   <div className="flex items-center gap-2 pt-2">
                     <input type="checkbox" id="advance-payment-enabled" checked={settings.advancePaymentEnabled || false} onChange={(e) => setSettings({ ...settings, advancePaymentEnabled: e.target.checked })} className="accent-blue-600 rounded-sm cursor-pointer" />
-                    <label htmlFor="advance-payment-enabled" className="font-bold text-gray-700 text-sm cursor-pointer">Enable Advance Payment</label>
+                    <label htmlFor="advance-payment-enabled" className="font-bold text-gray-700 text-xs cursor-pointer">Enable Advance Payment</label>
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Amount Threshold</label>
                     <input type="number" min="0" value={settings.advancePaymentThreshold || 1000} onChange={(e) => setSettings({ ...settings, advancePaymentThreshold: Number(e.target.value) })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                     />
                     <p className="text-[9px] text-gray-400 mt-1">Orders above this amount require advance payment.</p>
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Advance %</label>
                     <input type="number" min="1" max="100" value={settings.advancePaymentPercent || 50} onChange={(e) => setSettings({ ...settings, advancePaymentPercent: Number(e.target.value) })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                     />
                     <p className="text-[9px] text-gray-400 mt-1">Percentage to pay upfront.</p>
                   </div>
@@ -8943,7 +8626,7 @@ export default function AdminDashboard({ onTabChange }) {
               {/* Branding Section */}
               <div className="bg-white/90  p-6 border border-slate-200 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 space-y-4 shadow-xl">
                 <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
-                  <LayoutGrid size={16} className="text-[#FF6600]" />
+                  <LayoutGrid size={16} className="text-blue-500" />
                   Branding Settings
                 </h3>
                 <div className="space-y-3">
@@ -8951,7 +8634,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Site Title</label>
                     <input type="text" value={settings.siteTitle || ''}
                       onChange={(e) => setSettings({ ...settings, siteTitle: e.target.value })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -8959,10 +8642,10 @@ export default function AdminDashboard({ onTabChange }) {
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Currency</label>
                       <select value={settings.currency || 'USD'}
                         onChange={(e) => {
-                          const pairs = { USD: '$', EUR: '€', GBP: '£', BDT: '৳', INR: '₹', JPY: '¥', AUD: 'A$', CAD: 'C$', SGD: 'S$', MYR: 'RM', PKR: '₨', LKR: '₨', NPR: '₨' };
+                          const pairs = { USD: '$', EUR: 'Γé¼', GBP: '┬ú', BDT: 'αº│', INR: 'Γé╣', JPY: '┬Ñ', AUD: 'A$', CAD: 'C$', SGD: 'S$', MYR: 'RM', PKR: 'Γé¿', LKR: 'Γé¿', NPR: 'Γé¿' };
                           setSettings({ ...settings, currency: e.target.value, currencySymbol: pairs[e.target.value] || '$' });
                         }}
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm font-semibold"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs font-semibold"
                       >
                         {['USD','EUR','GBP','BDT','INR','JPY','AUD','CAD','SGD','MYR','PKR','LKR','NPR'].map((c) => (
                           <option key={c} value={c}>{c}</option>
@@ -8973,7 +8656,7 @@ export default function AdminDashboard({ onTabChange }) {
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Symbol</label>
                       <input type="text" value={settings.currencySymbol || '$'}
                         onChange={(e) => setSettings({ ...settings, currencySymbol: e.target.value })}
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                       />
                     </div>
                   </div>
@@ -8982,7 +8665,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="mt-1.5 flex gap-2">
                       <input type="text" value={settings.faviconUrl || ''}
                         onChange={(e) => setSettings({ ...settings, faviconUrl: e.target.value })}
-                        className="min-w-0 flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                        className="min-w-0 flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                       />
                       <label className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-black uppercase tracking-wider cursor-pointer transition">
                         <Upload size={13} />
@@ -9002,7 +8685,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="mt-1.5 flex gap-2">
                       <input type="text" value={settings.headerLogo || ''}
                         onChange={(e) => setSettings({ ...settings, headerLogo: e.target.value })}
-                        className="min-w-0 flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                        className="min-w-0 flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                       />
                       <label className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#FF6600] hover:bg-[#e05a00] text-white text-[10px] font-black uppercase tracking-wider cursor-pointer transition shadow-sm shadow-orange-500/20">
                         <Upload size={13} />
@@ -9022,9 +8705,9 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="mt-1.5 flex gap-2">
                       <input type="text" value={settings.footerLogo || ''}
                         onChange={(e) => setSettings({ ...settings, footerLogo: e.target.value })}
-                        className="min-w-0 flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                        className="min-w-0 flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                       />
-                      <label className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#FF6600] hover:bg-[#e05a00] text-white text-[10px] font-black uppercase tracking-wider cursor-pointer transition shadow-sm shadow-orange-500/20">
+                      <label className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-wider cursor-pointer transition shadow-sm shadow-blue-500/20">
                         <Upload size={13} />
                         Upload
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => handleBrandingUpload(e.target.files?.[0], 'footerLogo')} />
@@ -9040,7 +8723,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <div>
-                        <h4 className="text-sm font-black text-slate-800">Header Colors</h4>
+                        <h4 className="text-xs font-black text-slate-800">Header Colors</h4>
                         <p className="text-[10px] font-semibold text-slate-400">Change main header menu color from admin panel.</p>
                       </div>
                       <div
@@ -9067,14 +8750,14 @@ export default function AdminDashboard({ onTabChange }) {
                               type="text"
                               value={settings[item.key] || item.fallback}
                               onChange={(e) => setSettings({ ...settings, [item.key]: e.target.value })}
-                              className="min-w-0 flex-1 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 shadow-inner text-sm font-semibold"
+                              className="min-w-0 flex-1 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 shadow-inner text-xs font-semibold"
                             />
                           </div>
                         </div>
                       ))}
                     </div>
                     <div
-                      className="mt-4 flex items-center justify-between rounded-xl px-4 py-3 text-sm font-black shadow-lg"
+                      className="mt-4 flex items-center justify-between rounded-xl px-4 py-3 text-xs font-black shadow-lg"
                       style={{
                         backgroundColor: settings.headerBgColor || '#F97316',
                         color: settings.headerTextColor || '#FFFFFF',
@@ -9117,7 +8800,7 @@ export default function AdminDashboard({ onTabChange }) {
                                 type="text"
                                 value={settings[item.key] || item.fallback}
                                 onChange={(e) => setSettings({ ...settings, [item.key]: e.target.value })}
-                                className="min-w-0 flex-1 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 shadow-inner text-sm font-semibold"
+                                className="min-w-0 flex-1 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 shadow-inner text-xs font-semibold"
                               />
                             </div>
                           </div>
@@ -9125,39 +8808,6 @@ export default function AdminDashboard({ onTabChange }) {
                       </div>
                     </div>
                   </div>
-                {/* Branding Save Button */}
-                <div className="pt-3 flex justify-end">
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={async () => {
-                      setLoading(true);
-                      try {
-                        await saveSettings(settings);
-                        notifySettingsUpdated(settings);
-                        alert('Branding Settings saved successfully!');
-                        fetchSettings();
-                      } catch (err) {
-                        alert(err.message || 'Failed to save branding settings');
-                      } finally {
-                        setLoading(false);
-                      }
-                    }}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                        Saving...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <Check size={15} />
-                        Save Branding Settings
-                      </span>
-                    )}
-                  </button>
-                </div>
                 </div>
               </div>
 
@@ -9183,7 +8833,7 @@ export default function AdminDashboard({ onTabChange }) {
                   </button>
                 </div>
 
-                <div className="space-y-4 text-sm">
+                <div className="space-y-4 text-xs">
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Notice Text</label>
                     <textarea
@@ -9191,7 +8841,7 @@ export default function AdminDashboard({ onTabChange }) {
                       value={settings.noticeBarText || ''}
                       onChange={(e) => setSettings({ ...settings, noticeBarText: e.target.value })}
                       placeholder="Write notice text for the storefront header"
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                     />
                   </div>
 
@@ -9209,7 +8859,7 @@ export default function AdminDashboard({ onTabChange }) {
                           type="text"
                           value={settings.noticeBarBgColor || '#6F1BE4'}
                           onChange={(e) => setSettings({ ...settings, noticeBarBgColor: e.target.value })}
-                          className="min-w-0 flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm font-semibold"
+                          className="min-w-0 flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs font-semibold"
                         />
                       </div>
                     </div>
@@ -9226,7 +8876,7 @@ export default function AdminDashboard({ onTabChange }) {
                           type="text"
                           value={settings.noticeBarTextColor || '#FFFFFF'}
                           onChange={(e) => setSettings({ ...settings, noticeBarTextColor: e.target.value })}
-                          className="min-w-0 flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm font-semibold"
+                          className="min-w-0 flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs font-semibold"
                         />
                       </div>
                     </div>
@@ -9248,7 +8898,7 @@ export default function AdminDashboard({ onTabChange }) {
               <div className="bg-white/90  p-6 border border-slate-200 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 space-y-4 shadow-xl">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                    <Sliders size={16} className="text-[#FF6600]" />
+                    <Sliders size={16} className="text-blue-500" />
                     OTP Configuration Settings
                   </h3>
                   {/* Checkout OTP Master Toggle */}
@@ -9275,7 +8925,7 @@ export default function AdminDashboard({ onTabChange }) {
                     </button>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">SMS Gateway</label>
                     <div className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-gray-900 font-semibold cursor-not-allowed opacity-80">
@@ -9287,7 +8937,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <select
                       value={settings.otpLength}
                       onChange={(e) => setSettings({ ...settings, otpLength: Number(e.target.value) })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
                     >
                       <option value={4}>4 Digits Code</option>
                       <option value={6}>6 Digits Code</option>
@@ -9302,13 +8952,13 @@ export default function AdminDashboard({ onTabChange }) {
                       max="60"
                       value={settings.otpExpiry}
                       onChange={(e) => setSettings({ ...settings, otpExpiry: Number(e.target.value) })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
                     />
                   </div>
                 </div>
 
                 {/* SAS Bulk SMS Credentials */}
-                <div className="border-t border-slate-100 pt-4 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                <div className="border-t border-slate-100 pt-4 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gateway URL</label>
                     <input
@@ -9316,7 +8966,7 @@ export default function AdminDashboard({ onTabChange }) {
                       value={settings.sasSmsGatewayUrl || ''}
                       onChange={(e) => setSettings({ ...settings, sasSmsGatewayUrl: e.target.value })}
                       placeholder="http://sms.sasbulksms.com"
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
                     />
                   </div>
                   <div>
@@ -9326,7 +8976,7 @@ export default function AdminDashboard({ onTabChange }) {
                       value={settings.sasSmsApiKey || ''}
                       onChange={(e) => setSettings({ ...settings, sasSmsApiKey: e.target.value })}
                       placeholder="API Token (e.g. 7639814fe75b2cbd)"
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
                     />
                   </div>
                   <div>
@@ -9336,7 +8986,7 @@ export default function AdminDashboard({ onTabChange }) {
                       value={settings.sasSmsSecretKey || ''}
                       onChange={(e) => setSettings({ ...settings, sasSmsSecretKey: e.target.value })}
                       placeholder="Secret Key (e.g. 13382300000000)"
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
                     />
                   </div>
                   <div>
@@ -9346,7 +8996,7 @@ export default function AdminDashboard({ onTabChange }) {
                       value={settings.sasSmsSenderId || ''}
                       onChange={(e) => setSettings({ ...settings, sasSmsSenderId: e.target.value })}
                       placeholder="Sender ID (e.g. 8809617633299)"
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
                     />
                   </div>
                 </div>
@@ -9365,7 +9015,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="md:col-span-3 space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-                        <h4 className="font-bold text-gray-900 text-sm">bKash Merchant PG</h4>
+                        <h4 className="font-bold text-gray-900 text-xs">bKash Merchant PG</h4>
                       </div>
                       <p className="text-[10px] text-gray-500 leading-tight">Accept payments in BDT automatically via bkash API.</p>
                       <div className="pt-2 flex items-center gap-1.5">
@@ -9374,13 +9024,13 @@ export default function AdminDashboard({ onTabChange }) {
                           id="bkash-enable"
                           checked={settings.bkashEnabled}
                           onChange={(e) => setSettings({ ...settings, bkashEnabled: e.target.checked })}
-                          className="accent-orange-600 rounded-sm cursor-pointer"
+                          className="accent-pink-600 rounded-sm cursor-pointer"
                         />
                         <label htmlFor="bkash-enable" className="text-[10px] font-bold text-gray-400 cursor-pointer">Active</label>
                       </div>
                     </div>
 
-                    <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                       <div>
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gateway Mode</label>
                         <select
@@ -9412,7 +9062,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="md:col-span-3 space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-                        <h4 className="font-bold text-gray-900 text-sm">Nagad Wallet PG</h4>
+                        <h4 className="font-bold text-gray-900 text-xs">Nagad Wallet PG</h4>
                       </div>
                       <p className="text-[10px] text-gray-500 leading-tight">Accept payments in BDT automatically via Nagad API.</p>
                       <div className="pt-2 flex items-center gap-1.5">
@@ -9427,7 +9077,7 @@ export default function AdminDashboard({ onTabChange }) {
                       </div>
                     </div>
 
-                    <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                       <div>
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gateway Mode</label>
                         <select
@@ -9459,7 +9109,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="md:col-span-3 space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                        <h4 className="font-bold text-gray-900 text-sm">Rupantor Pay PG</h4>
+                        <h4 className="font-bold text-gray-900 text-xs">Rupantor Pay PG</h4>
                       </div>
                       <p className="text-[10px] text-gray-500 leading-tight">Accept payments via Rupantor Pay API.</p>
                       <div className="pt-2 flex items-center gap-1.5">
@@ -9474,7 +9124,7 @@ export default function AdminDashboard({ onTabChange }) {
                       </div>
                     </div>
 
-                    <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                       <div>
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gateway Mode</label>
                         <select
@@ -9518,8 +9168,8 @@ export default function AdminDashboard({ onTabChange }) {
                   <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                     <div className="md:col-span-3 space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-                        <h4 className="font-bold text-gray-900 text-sm">SSLCommerz PG</h4>
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                        <h4 className="font-bold text-gray-900 text-xs">SSLCommerz PG</h4>
                       </div>
                       <p className="text-[10px] text-gray-500 leading-tight">Accept Cards, Net Banking & Mobile Wallets via SSL Gateway.</p>
                       <div className="pt-2 flex items-center gap-1.5">
@@ -9534,7 +9184,7 @@ export default function AdminDashboard({ onTabChange }) {
                       </div>
                     </div>
 
-                    <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                       <div>
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gateway Mode</label>
                         <select
@@ -9566,7 +9216,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
-                        <h4 className="font-bold text-gray-900 text-sm">Cash on Delivery (COD)</h4>
+                        <h4 className="font-bold text-gray-900 text-xs">Cash on Delivery (COD)</h4>
                       </div>
                       <p className="text-[10px] text-gray-500 leading-tight">Allow customers to order and pay when order is delivered to their doorstep.</p>
                     </div>
@@ -9591,16 +9241,16 @@ export default function AdminDashboard({ onTabChange }) {
                   </svg>
                   Analytics &amp; Tracking
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
                   <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md space-y-3">
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#FF6600]"></span>
-                      <h4 className="font-bold text-gray-900 text-sm">Facebook Pixel</h4>
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                      <h4 className="font-bold text-gray-900 text-xs">Facebook Pixel</h4>
                     </div>
                     <p className="text-[10px] text-gray-500">Track conversions, optimize ads, and build targeted audiences.</p>
-                    <div className="bg-orange-50 border border-orange-100 p-3 rounded-xl mt-2 mb-3">
+                    <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl mt-2 mb-3">
                       <h5 className="text-[10px] font-bold text-blue-800 mb-1">Setup Guide:</h5>
-                      <ol className="text-[10px] text-orange-700 list-decimal pl-4 space-y-1">
+                      <ol className="text-[10px] text-blue-700 list-decimal pl-4 space-y-1">
                         <li>Go to Meta Events Manager and select your Pixel.</li>
                         <li>Copy the 15-digit Pixel ID from the settings tab.</li>
                         <li>For Conversions API, scroll down and click "Generate access token".</li>
@@ -9615,7 +9265,7 @@ export default function AdminDashboard({ onTabChange }) {
                           placeholder="e.g. 123456789012345"
                           value={settings.facebookPixelId}
                           onChange={(e) => setSettings({ ...settings, facebookPixelId: e.target.value })}
-                          className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner placeholder-gray-400"
+                          className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner placeholder-gray-400"
                         />
                       </div>
                       <div>
@@ -9625,7 +9275,7 @@ export default function AdminDashboard({ onTabChange }) {
                           placeholder="EAAB..."
                           value={settings.facebookAccessToken}
                           onChange={(e) => setSettings({ ...settings, facebookAccessToken: e.target.value })}
-                          className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner placeholder-gray-400"
+                          className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner placeholder-gray-400"
                         />
                       </div>
                       <div className="flex items-center gap-3">
@@ -9633,12 +9283,12 @@ export default function AdminDashboard({ onTabChange }) {
                           type="button"
                           onClick={handleTestFacebookPixel}
                           disabled={fbConnectionStatus.loading}
-                          className="px-4 py-2 bg-[#FF6600] hover:bg-[#e05a00] text-white text-sm font-semibold rounded-lg transition-all duration-200 disabled:opacity-50"
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all duration-200 disabled:opacity-50"
                         >
                           {fbConnectionStatus.loading ? 'Saving & Testing...' : 'Save & Test Connection'}
                         </button>
-                        {fbConnectionStatus.success && <span className="text-emerald-500 text-sm font-semibold flex items-center gap-1"><Check className="w-3 h-3" /> Connected</span>}
-                        {fbConnectionStatus.error && <span className="text-red-500 text-sm font-semibold flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {fbConnectionStatus.error}</span>}
+                        {fbConnectionStatus.success && <span className="text-emerald-500 text-xs font-semibold flex items-center gap-1"><Check className="w-3 h-3" /> Connected</span>}
+                        {fbConnectionStatus.error && <span className="text-red-500 text-xs font-semibold flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {fbConnectionStatus.error}</span>}
                       </div>
                     </div>
                   </div>
@@ -9646,7 +9296,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md space-y-3">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                      <h4 className="font-bold text-gray-900 text-sm">Google Analytics (GA4)</h4>
+                      <h4 className="font-bold text-gray-900 text-xs">Google Analytics (GA4)</h4>
                     </div>
                     <p className="text-[10px] text-gray-500">Track site traffic, user behavior, and e-commerce events.</p>
                     <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl mt-2 mb-3">
@@ -9665,7 +9315,7 @@ export default function AdminDashboard({ onTabChange }) {
                         placeholder="e.g. G-XXXXXXXXXX"
                         value={settings.ga4MeasurementId}
                         onChange={(e) => setSettings({ ...settings, ga4MeasurementId: e.target.value })}
-                        className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner placeholder-gray-400"
+                        className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner placeholder-gray-400"
                       />
                     </div>
                     {settings.ga4MeasurementId && (
@@ -9677,7 +9327,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                        <h4 className="font-bold text-gray-900 text-sm">Google Tag Manager</h4>
+                        <h4 className="font-bold text-gray-900 text-xs">Google Tag Manager</h4>
                       </div>
                       <button
                         type="button"
@@ -9715,7 +9365,7 @@ export default function AdminDashboard({ onTabChange }) {
                 <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                    <h4 className="font-bold text-gray-900 text-sm">Custom Header Code</h4>
+                    <h4 className="font-bold text-gray-900 text-xs">Custom Header Code</h4>
                   </div>
                   <p className="text-[10px] text-gray-500">Paste any custom HTML/JS (Facebook Pixel full code, Google Tag Manager, analytics, etc.). It will be injected into the &lt;head&gt;.</p>
                   <textarea
@@ -9723,7 +9373,7 @@ export default function AdminDashboard({ onTabChange }) {
                     placeholder="<script>...</script>"
                     value={settings.customHeaderCode || ''}
                     onChange={(e) => setSettings({ ...settings, customHeaderCode: e.target.value })}
-                    className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm font-mono placeholder-gray-400"
+                    className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs font-mono placeholder-gray-400"
                   />
                   {settings.customHeaderCode && (
                     <p className="text-[10px] text-emerald-400 font-semibold">Custom code will be injected into &lt;head&gt; on storefront.</p>
@@ -9734,10 +9384,10 @@ export default function AdminDashboard({ onTabChange }) {
               {/* Top Utility Bar Settings */}
               <div className="bg-white/90  p-6 border border-slate-200 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 space-y-4 shadow-xl">
                 <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
-                  <Globe size={16} className="text-[#FF6600]" />
+                  <Globe size={16} className="text-blue-500" />
                   Top Utility Bar Settings
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Top Bar Helpline Number</label>
                     <input
@@ -9745,7 +9395,7 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="e.g. 8801234567890"
                       value={settings.topBarHelpline || ''}
                       onChange={(e) => setSettings({ ...settings, topBarHelpline: e.target.value })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                     />
                   </div>
                   <div>
@@ -9755,7 +9405,7 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="e.g. /pages/store-locator"
                       value={settings.topBarStoreLink || ''}
                       onChange={(e) => setSettings({ ...settings, topBarStoreLink: e.target.value })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                     />
                   </div>
                   <div>
@@ -9765,7 +9415,7 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="https://play.google.com/store/apps/details?id=..."
                       value={settings.topBarPlayStoreLink || ''}
                       onChange={(e) => setSettings({ ...settings, topBarPlayStoreLink: e.target.value })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                     />
                   </div>
                   <div>
@@ -9775,7 +9425,7 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="https://apps.apple.com/us/app/..."
                       value={settings.topBarAppStoreLink || ''}
                       onChange={(e) => setSettings({ ...settings, topBarAppStoreLink: e.target.value })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                     />
                   </div>
                 </div>
@@ -9787,50 +9437,50 @@ export default function AdminDashboard({ onTabChange }) {
                   <Globe size={16} className="text-purple-500" />
                   Footer Settings
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div className="md:col-span-2">
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Footer About / Brand Description</label>
-                    <textarea rows="3" value={settings.footerDescription || ''} onChange={(e) => setSettings({ ...settings, footerDescription: e.target.value })} className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner leading-relaxed" />
+                    <textarea rows="3" value={settings.footerDescription || ''} onChange={(e) => setSettings({ ...settings, footerDescription: e.target.value })} className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner leading-relaxed" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email</label>
-                    <input type="text" value={settings.footerEmail || ''} onChange={(e) => setSettings({ ...settings, footerEmail: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    <input type="text" value={settings.footerEmail || ''} onChange={(e) => setSettings({ ...settings, footerEmail: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone</label>
-                    <input type="text" value={settings.footerPhone || ''} onChange={(e) => setSettings({ ...settings, footerPhone: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    <input type="text" value={settings.footerPhone || ''} onChange={(e) => setSettings({ ...settings, footerPhone: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Address</label>
-                    <input type="text" value={settings.footerAddress || ''} onChange={(e) => setSettings({ ...settings, footerAddress: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    <input type="text" value={settings.footerAddress || ''} onChange={(e) => setSettings({ ...settings, footerAddress: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Copyright Text</label>
-                    <input type="text" value={settings.footerCopyright || ''} onChange={(e) => setSettings({ ...settings, footerCopyright: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    <input type="text" value={settings.footerCopyright || ''} onChange={(e) => setSettings({ ...settings, footerCopyright: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Newsletter Title</label>
-                    <input type="text" value={settings.footerNewsletterTitle || ''} onChange={(e) => setSettings({ ...settings, footerNewsletterTitle: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    <input type="text" value={settings.footerNewsletterTitle || ''} onChange={(e) => setSettings({ ...settings, footerNewsletterTitle: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Newsletter Subtitle</label>
-                    <input type="text" value={settings.footerNewsletterSubtitle || ''} onChange={(e) => setSettings({ ...settings, footerNewsletterSubtitle: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    <input type="text" value={settings.footerNewsletterSubtitle || ''} onChange={(e) => setSettings({ ...settings, footerNewsletterSubtitle: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Facebook URL</label>
-                    <input type="text" placeholder="https://facebook.com/..." value={settings.footerFacebook || ''} onChange={(e) => setSettings({ ...settings, footerFacebook: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    <input type="text" placeholder="https://facebook.com/..." value={settings.footerFacebook || ''} onChange={(e) => setSettings({ ...settings, footerFacebook: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Twitter URL</label>
-                    <input type="text" placeholder="https://twitter.com/..." value={settings.footerTwitter || ''} onChange={(e) => setSettings({ ...settings, footerTwitter: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    <input type="text" placeholder="https://twitter.com/..." value={settings.footerTwitter || ''} onChange={(e) => setSettings({ ...settings, footerTwitter: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Instagram URL</label>
-                    <input type="text" placeholder="https://instagram.com/..." value={settings.footerInstagram || ''} onChange={(e) => setSettings({ ...settings, footerInstagram: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    <input type="text" placeholder="https://instagram.com/..." value={settings.footerInstagram || ''} onChange={(e) => setSettings({ ...settings, footerInstagram: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Youtube URL</label>
-                    <input type="text" placeholder="https://youtube.com/..." value={settings.footerYoutube || ''} onChange={(e) => setSettings({ ...settings, footerYoutube: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    <input type="text" placeholder="https://youtube.com/..." value={settings.footerYoutube || ''} onChange={(e) => setSettings({ ...settings, footerYoutube: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                 </div>
               </div>
@@ -9843,43 +9493,43 @@ export default function AdminDashboard({ onTabChange }) {
                   </svg>
                   Offer Popup &amp; Recent Sale
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md space-y-3">
                     <div className="flex items-center gap-2">
                       <input type="checkbox" id="popup-enabled" checked={settings.popupEnabled || false} onChange={(e) => setSettings({ ...settings, popupEnabled: e.target.checked })} className="accent-blue-600 rounded-sm cursor-pointer" />
-                      <label htmlFor="popup-enabled" className="font-bold text-gray-900 text-sm cursor-pointer">Enable Offer Popup</label>
+                      <label htmlFor="popup-enabled" className="font-bold text-gray-900 text-xs cursor-pointer">Enable Offer Popup</label>
                     </div>
                     <p className="text-[10px] text-gray-500">Shows once per session when visitor lands on the site.</p>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Popup Title</label>
-                      <input type="text" value={settings.popupTitle || ''} onChange={(e) => setSettings({ ...settings, popupTitle: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                      <input type="text" value={settings.popupTitle || ''} onChange={(e) => setSettings({ ...settings, popupTitle: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Popup Text</label>
-                      <textarea rows="2" value={settings.popupText || ''} onChange={(e) => setSettings({ ...settings, popupText: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner"></textarea>
+                      <textarea rows="2" value={settings.popupText || ''} onChange={(e) => setSettings({ ...settings, popupText: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner"></textarea>
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Image URL (optional)</label>
-                      <input type="text" value={settings.popupImage || ''} onChange={(e) => setSettings({ ...settings, popupImage: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                      <input type="text" value={settings.popupImage || ''} onChange={(e) => setSettings({ ...settings, popupImage: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Link (optional)</label>
-                      <input type="text" placeholder="/shop" value={settings.popupLink || ''} onChange={(e) => setSettings({ ...settings, popupLink: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                      <input type="text" placeholder="/shop" value={settings.popupLink || ''} onChange={(e) => setSettings({ ...settings, popupLink: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Delay (seconds)</label>
-                      <input type="number" min="0" max="30" value={settings.popupDelay || 3} onChange={(e) => setSettings({ ...settings, popupDelay: Number(e.target.value) })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                      <input type="number" min="0" max="30" value={settings.popupDelay || 3} onChange={(e) => setSettings({ ...settings, popupDelay: Number(e.target.value) })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                     </div>
                   </div>
                   <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md space-y-3">
                     <div className="flex items-center gap-2">
                       <input type="checkbox" id="recent-sale-enabled" checked={settings.recentSaleEnabled !== false} onChange={(e) => setSettings({ ...settings, recentSaleEnabled: e.target.checked })} className="accent-blue-600 rounded-sm cursor-pointer" />
-                      <label htmlFor="recent-sale-enabled" className="font-bold text-gray-900 text-sm cursor-pointer">Enable Recent Sale Popup</label>
+                      <label htmlFor="recent-sale-enabled" className="font-bold text-gray-900 text-xs cursor-pointer">Enable Recent Sale Popup</label>
                     </div>
                     <p className="text-[10px] text-gray-500">Shows a random "someone purchased something" notification every N seconds.</p>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Interval (seconds)</label>
-                      <input type="number" min="10" max="300" value={settings.recentSaleInterval || 30} onChange={(e) => setSettings({ ...settings, recentSaleInterval: Number(e.target.value) })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                      <input type="number" min="10" max="300" value={settings.recentSaleInterval || 30} onChange={(e) => setSettings({ ...settings, recentSaleInterval: Number(e.target.value) })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" />
                     </div>
                   </div>
                 </div>
@@ -9890,7 +9540,7 @@ export default function AdminDashboard({ onTabChange }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-8 py-3 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl shadow-lg transition flex items-center gap-2 text-sm"
+                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl shadow-lg transition flex items-center gap-2 text-xs"
                 >
                   {loading ? 'Saving...' : 'Save Configuration Parameters'}
                 </button>
@@ -9898,17 +9548,17 @@ export default function AdminDashboard({ onTabChange }) {
 
             </form>
 
-            {/* ── Admin Profile (Password & Email) ── */}
+            {/* ΓöÇΓöÇ Admin Profile (Password & Email) ΓöÇΓöÇ */}
             <div className="border-b border-slate-200 pb-5">
               <h2 className="text-xl font-bold text-gray-900">Admin Profile</h2>
-              <p className="text-sm text-gray-400 mt-1">Change your login password or email address.</p>
+              <p className="text-xs text-gray-400 mt-1">Change your login password or email address.</p>
             </div>
 
             <div className="flex flex-wrap gap-3 mb-4">
               <button onClick={() => setShowOwnPasswordForm(!showOwnPasswordForm)}
-                className="text-sm px-4 py-2 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-xl transition-all duration-200">Change Password</button>
+                className="text-xs px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all duration-200">Change Password</button>
               <button onClick={() => setShowOwnEmailForm(!showOwnEmailForm)}
-                className="text-sm px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all duration-200">Change Email</button>
+                className="text-xs px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all duration-200">Change Email</button>
             </div>
 
             {showOwnPasswordForm && (
@@ -9918,16 +9568,16 @@ export default function AdminDashboard({ onTabChange }) {
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Current Password</label>
                   <input type="password" required value={ownPasswordData.currentPassword}
                     onChange={(e) => setOwnPasswordData({ ...ownPasswordData, currentPassword: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">New Password</label>
                   <input type="password" required value={ownPasswordData.newPassword}
                     onChange={(e) => setOwnPasswordData({ ...ownPasswordData, newPassword: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                 </div>
                 <div className="flex gap-2">
-                  <button type="submit" className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl text-sm">Update Password</button>
+                  <button type="submit" className="flex-1 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl text-sm">Update Password</button>
                   <button type="button" onClick={() => { setShowOwnPasswordForm(false); setOwnPasswordData({ currentPassword: '', newPassword: '' }); }}
                     className="py-2 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-sm">Cancel</button>
                 </div>
@@ -9941,16 +9591,16 @@ export default function AdminDashboard({ onTabChange }) {
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Current Password</label>
                   <input type="password" required value={ownEmailData.password}
                     onChange={(e) => setOwnEmailData({ ...ownEmailData, password: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">New Email</label>
                   <input type="email" required value={ownEmailData.newEmail}
                     onChange={(e) => setOwnEmailData({ ...ownEmailData, newEmail: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
+                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
                 </div>
                 <div className="flex gap-2">
-                  <button type="submit" className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl text-sm">Update Email</button>
+                  <button type="submit" className="flex-1 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl text-sm">Update Email</button>
                   <button type="button" onClick={() => { setShowOwnEmailForm(false); setOwnEmailData({ password: '', newEmail: '' }); }}
                     className="py-2 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-sm">Cancel</button>
                 </div>
@@ -9964,7 +9614,7 @@ export default function AdminDashboard({ onTabChange }) {
           <div className="space-y-8 max-w-4xl">
             <div className="border-b border-slate-200 pb-5">
               <h1 className="text-xl font-bold text-gray-900">Video Manager</h1>
-              <p className="text-sm text-gray-400 mt-1">Upload and manage TikTok/Reels shoppable videos and link them to products.</p>
+              <p className="text-xs text-gray-400 mt-1">Upload and manage TikTok/Reels shoppable videos and link them to products.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -9975,7 +9625,7 @@ export default function AdminDashboard({ onTabChange }) {
                 </div>
                 <div className="divide-y divide-slate-100">
                   {videosList.map((vid) => (
-                    <div key={vid._id} className="p-4 flex items-center justify-between text-sm hover:bg-slate-50 transition">
+                    <div key={vid._id} className="p-4 flex items-center justify-between text-xs hover:bg-slate-50 transition">
                       <div className="flex gap-3 items-center">
                         <div className="w-12 h-16 bg-slate-100 rounded-lg flex items-center justify-center relative overflow-hidden border border-slate-200 flex-shrink-0">
                           <Play size={16} className="text-slate-400 z-10" />
@@ -9985,20 +9635,20 @@ export default function AdminDashboard({ onTabChange }) {
                           <h4 className="font-bold text-gray-950 line-clamp-1">{vid.title}</h4>
                           <p className="text-slate-400 text-[10px] line-clamp-1 mt-0.5">{vid.description || 'No description'}</p>
                           {vid.product && (
-                            <span className="inline-block mt-1 text-[9px] bg-orange-50 text-[#FF6600] font-extrabold px-1.5 py-0.5 rounded-md">
+                            <span className="inline-block mt-1 text-[9px] bg-blue-50 text-blue-600 font-extrabold px-1.5 py-0.5 rounded-md">
                               Tagged: {vid.product.name || 'Product'}
                             </span>
                           )}
                         </div>
                       </div>
                       <div className="flex gap-2 flex-shrink-0 ml-4">
-                        <button onClick={() => startEditVideo(vid)} className="text-[#FF6600] hover:text-blue-400 font-bold">Edit</button>
+                        <button onClick={() => startEditVideo(vid)} className="text-blue-500 hover:text-blue-400 font-bold">Edit</button>
                         <button onClick={() => handleDeleteVideo(vid._id)} className="text-orange-500 hover:text-orange-400 font-bold">Delete</button>
                       </div>
                     </div>
                   ))}
                   {videosList.length === 0 && (
-                    <p className="text-center text-gray-500 text-sm py-8">No videos yet. Add your first shoppable video!</p>
+                    <p className="text-center text-gray-500 text-xs py-8">No videos yet. Add your first shoppable video!</p>
                   )}
                 </div>
               </div>
@@ -10016,7 +9666,7 @@ export default function AdminDashboard({ onTabChange }) {
                     Cancel Edit
                   </button>
                 )}
-                <form onSubmit={editingVideo ? handleUpdateVideo : handleCreateVideo} className="space-y-4 text-sm">
+                <form onSubmit={editingVideo ? handleUpdateVideo : handleCreateVideo} className="space-y-4 text-xs">
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Video Title</label>
                     <input 
@@ -10025,7 +9675,7 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="e.g. Smart Watch Active Demo" 
                       value={videoForm.title}
                       onChange={(e) => setVideoForm({ ...videoForm, title: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" 
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner" 
                     />
                   </div>
                   <div>
@@ -10036,7 +9686,7 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="e.g. https://assets.mixkit.co/.../video.mp4" 
                       value={videoForm.videoUrl}
                       onChange={(e) => setVideoForm({ ...videoForm, videoUrl: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-mono" 
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner font-mono" 
                     />
                   </div>
                   <div>
@@ -10046,7 +9696,7 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="Describe this video..." 
                       value={videoForm.description}
                       onChange={(e) => setVideoForm({ ...videoForm, description: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner leading-relaxed"
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner leading-relaxed"
                     ></textarea>
                   </div>
                   <div>
@@ -10054,7 +9704,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <select
                       value={videoForm.product}
                       onChange={(e) => setVideoForm({ ...videoForm, product: e.target.value })}
-                      className="w-full mt-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                      className="w-full mt-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-all duration-300 shadow-inner text-xs"
                     >
                       <option value="">Select a product to link...</option>
                       {productsList.map((p) => (
@@ -10062,7 +9712,7 @@ export default function AdminDashboard({ onTabChange }) {
                       ))}
                     </select>
                   </div>
-                  <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition text-sm uppercase tracking-wider">
+                  <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition text-xs uppercase tracking-wider">
                     {editingVideo ? 'Update Video' : 'Add Video'}
                   </button>
                 </form>
@@ -10078,7 +9728,7 @@ export default function AdminDashboard({ onTabChange }) {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-3">
                 <span className="w-1.5 h-6 bg-amber-500 rounded-full"></span>
-                <h3 className="font-bold text-gray-900 text-sm">Edit Product: {editForm.name || 'Product'}</h3>
+                <h3 className="font-bold text-gray-900 text-base">Edit Product: {editForm.name || 'Product'}</h3>
               </div>
               <button onClick={() => setEditingProduct(null)} className="p-1.5 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition">
                 <X size={18} />
@@ -10100,7 +9750,7 @@ export default function AdminDashboard({ onTabChange }) {
                   key={tab.id}
                   type="button"
                   onClick={() => setEditFormActiveTab(tab.id)}
-                  className={`px-4 py-2 text-sm font-bold rounded-xl transition cursor-pointer border ${
+                  className={`px-4 py-2 text-xs font-bold rounded-xl transition cursor-pointer border ${
                     editFormActiveTab === tab.id
                       ? 'bg-amber-500 border-amber-500 text-white shadow-md'
                       : 'bg-white border-slate-200 text-gray-500 hover:bg-slate-50'
@@ -10111,7 +9761,7 @@ export default function AdminDashboard({ onTabChange }) {
               ))}
             </div>
 
-            <form onSubmit={handleUpdateProduct} className="space-y-6 text-sm text-gray-700">
+            <form onSubmit={handleUpdateProduct} className="space-y-6 text-xs text-gray-700">
               
               {/* TAB 1: PRODUCT INFORMATION */}
               {editFormActiveTab === 'info' && (
@@ -10133,60 +9783,26 @@ export default function AdminDashboard({ onTabChange }) {
                         const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
                         setEditForm({ ...editForm, name, slug });
                       }}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
                     />
                   </div>
 
                   {/* Category & Brand */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Category (Parent) *</label>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Category *</label>
                       <select
-                        value={editForm.parentCategory || ''}
+                        value={editForm.category}
                         required
-                        onChange={(e) => {
-                          const parentName = e.target.value;
-                          const parentCat = categoryList.find(c => c.name === parentName);
-                          const subs = parentCat && parentCat.subcategories
-                            ? (Array.isArray(parentCat.subcategories) ? parentCat.subcategories : (typeof parentCat.subcategories === 'string' ? parentCat.subcategories.split(',').map(s => s.trim()).filter(Boolean) : []))
-                            : [];
-                          setEditForm({
-                            ...editForm,
-                            parentCategory: parentName,
-                            category: subs.length > 0 ? '' : parentName
-                          });
-                        }}
+                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
                         className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 font-semibold"
                       >
                         <option value="">Select Category</option>
-                        {categoryList.filter(c => !c.rootCategory || c.rootCategory === '--' || !categoryList.some(p => p.name === c.rootCategory)).map((cat) => (
+                        {categoryList.map((cat) => (
                           <option key={cat._id} value={cat.name}>{cat.name}</option>
                         ))}
                       </select>
                     </div>
-                    {(() => {
-                      const parentCat = categoryList.find(c => c.name === editForm.parentCategory);
-                      const subs = parentCat && parentCat.subcategories
-                        ? (Array.isArray(parentCat.subcategories) ? parentCat.subcategories : (typeof parentCat.subcategories === 'string' ? parentCat.subcategories.split(',').map(s => s.trim()).filter(Boolean) : []))
-                        : [];
-                      if (subs.length === 0) return null;
-                      return (
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Subcategory *</label>
-                          <select
-                            value={editForm.category}
-                            required
-                            onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                            className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 font-semibold"
-                          >
-                            <option value="">Select Subcategory</option>
-                            {subs.map((sub, idx) => (
-                              <option key={idx} value={sub}>{sub}</option>
-                            ))}
-                          </select>
-                        </div>
-                      );
-                    })()}
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Brand</label>
                       <select
@@ -10212,7 +9828,7 @@ export default function AdminDashboard({ onTabChange }) {
                         placeholder="Unit ( e.g kg. pc. etc )"
                         value={editForm.unit || 'pc'}
                         onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
                       />
                     </div>
                     <div>
@@ -10223,7 +9839,7 @@ export default function AdminDashboard({ onTabChange }) {
                         min="1"
                         value={editForm.minOrderQty || 1}
                         onChange={(e) => setEditForm({ ...editForm, minOrderQty: e.target.value })}
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
                       />
                     </div>
                   </div>
@@ -10237,7 +9853,7 @@ export default function AdminDashboard({ onTabChange }) {
                         placeholder="Enter product barcode"
                         value={editForm.barcode || ''}
                         onChange={(e) => setEditForm({ ...editForm, barcode: e.target.value })}
-                        className="flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition"
+                        className="flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
                       />
                       <button
                         type="button"
@@ -10261,7 +9877,7 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="Write & hit enter"
                       value={editForm.tags}
                       onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
                     />
                   </div>
 
@@ -10273,7 +9889,7 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="Product Slug"
                       value={editForm.slug || ''}
                       onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
                     />
                   </div>
 
@@ -10303,7 +9919,7 @@ export default function AdminDashboard({ onTabChange }) {
                         placeholder="e.g. https://drive.google.com/file/d/xxxxx/view"
                         value={editForm.digitalFileUrl}
                         onChange={(e) => setEditForm({ ...editForm, digitalFileUrl: e.target.value })}
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
                       />
                     </div>
                   )}
@@ -10331,7 +9947,7 @@ export default function AdminDashboard({ onTabChange }) {
                             setEditImagePreview(URL.createObjectURL(file));
                           }
                         }}
-                        className="flex-1 text-sm text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#FF6600] file:text-white file:text-sm file:font-bold hover:file:bg-blue-700 file:cursor-pointer"
+                        className="flex-1 text-xs text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:text-xs file:font-bold hover:file:bg-blue-700 file:cursor-pointer"
                       />
                     </div>
                     {(editImagePreview || editForm.image) && (
@@ -10378,7 +9994,7 @@ export default function AdminDashboard({ onTabChange }) {
                       <button
                         type="button"
                         onClick={() => setEditAdditionalImageFiles([...editAdditionalImageFiles, null])}
-                        className="px-2.5 py-1 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md text-[10px] font-bold rounded-xl transition cursor-pointer"
+                        className="px-2.5 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md text-[10px] font-bold rounded-xl transition cursor-pointer"
                       >
                         + Add Image
                       </button>
@@ -10399,7 +10015,7 @@ export default function AdminDashboard({ onTabChange }) {
                               setEditAdditionalImageFiles(updated);
                             }
                           }}
-                          className="flex-1 text-sm text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#FF6600] file:text-white file:text-[10px] file:font-bold hover:file:bg-blue-700 file:cursor-pointer"
+                          className="flex-1 text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:text-[10px] file:font-bold hover:file:bg-blue-700 file:cursor-pointer"
                         />
                         {file && (
                           <img
@@ -10430,7 +10046,7 @@ export default function AdminDashboard({ onTabChange }) {
                       placeholder="e.g. https://www.youtube.com/watch?v=..."
                       value={editForm.youtubeUrl || ''}
                       onChange={(e) => setEditForm({ ...editForm, youtubeUrl: e.target.value })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
                     />
                   </div>
                 </div>
@@ -10452,7 +10068,7 @@ export default function AdminDashboard({ onTabChange }) {
                         placeholder="0.00"
                         value={editForm.price}
                         onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
                       />
                     </div>
                     <div>
@@ -10465,18 +10081,18 @@ export default function AdminDashboard({ onTabChange }) {
                             onClick={() => setEditForm({ ...editForm, discountType: 'flat' })}
                             className={`px-3 py-2 text-[11px] font-extrabold transition-all cursor-pointer ${
                               editForm.discountType === 'flat'
-                                ? 'bg-[#FF6600] text-white'
+                                ? 'bg-blue-600 text-white'
                                 : 'bg-white text-slate-500 hover:bg-slate-50'
                             }`}
                           >
-                            Flat ৳
+                            Flat αº│
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditForm({ ...editForm, discountType: 'percent' })}
                             className={`px-3 py-2 text-[11px] font-extrabold transition-all cursor-pointer ${
                               editForm.discountType === 'percent'
-                                ? 'bg-[#FF6600] text-white'
+                                ? 'bg-blue-600 text-white'
                                 : 'bg-white text-slate-500 hover:bg-slate-50'
                             }`}
                           >
@@ -10490,10 +10106,10 @@ export default function AdminDashboard({ onTabChange }) {
                           max={editForm.discountType === 'percent' ? '100' : undefined}
                           value={editForm.discountPercent}
                           onChange={(e) => setEditForm({ ...editForm, discountPercent: e.target.value })}
-                          className="flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition"
+                          className="flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
                         />
                         <span className="flex items-center px-2 text-[12px] font-bold text-slate-400">
-                          {editForm.discountType === 'flat' ? '৳' : '%'}
+                          {editForm.discountType === 'flat' ? 'αº│' : '%'}
                         </span>
                       </div>
                     </div>
@@ -10510,7 +10126,7 @@ export default function AdminDashboard({ onTabChange }) {
                         placeholder={editForm.isDigital ? 'Unlimited' : 'e.g. 25'}
                         value={editForm.isDigital ? '' : editForm.countInStock}
                         onChange={(e) => setEditForm({ ...editForm, countInStock: e.target.value })}
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition disabled:opacity-50"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition disabled:opacity-50"
                       />
                     </div>
                   </div>
@@ -10539,14 +10155,14 @@ export default function AdminDashboard({ onTabChange }) {
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Flash Sale Start</label>
                           <input type="datetime-local" value={editForm.flashSaleStart ? editForm.flashSaleStart.slice(0,16) : ''}
                             onChange={(e) => setEditForm({ ...editForm, flashSaleStart: e.target.value })}
-                            className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 text-sm"
+                            className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 text-xs"
                           />
                         </div>
                         <div>
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Flash Sale End</label>
                           <input type="datetime-local" value={editForm.flashSaleEnd ? editForm.flashSaleEnd.slice(0,16) : ''}
                             onChange={(e) => setEditForm({ ...editForm, flashSaleEnd: e.target.value })}
-                            className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 text-sm"
+                            className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 text-xs"
                           />
                         </div>
                       </div>
@@ -10570,7 +10186,7 @@ export default function AdminDashboard({ onTabChange }) {
                       rows="6"
                       value={editForm.description}
                       onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition"
+                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition"
                     ></textarea>
                   </div>
                 </div>
@@ -10582,7 +10198,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <div className="border-b border-slate-100 pb-3">
                     <h3 className="font-bold text-gray-900 text-sm">Shipping Information</h3>
                   </div>
-                  <p className="text-sm text-gray-500 italic">Shipping parameters use global courier configuration rates.</p>
+                  <p className="text-xs text-gray-500 italic">Shipping parameters use global courier configuration rates.</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Package Weight (kg)</label>
@@ -10701,22 +10317,22 @@ export default function AdminDashboard({ onTabChange }) {
       )}
 
 
-      {/* ───────────────── REWARDS: USER REWARDS ───────────────── */}
+      {/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ REWARDS: USER REWARDS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
       {activeTab === 'rewards_users' && (
         <div className="space-y-6 max-w-7xl w-full animate-fade-in">
           <div className="border-b border-slate-200 pb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-xl font-bold text-gray-900">User Rewards</h1>
-              <p className="text-sm text-gray-400 mt-1">View all customer point balances and adjust points manually.</p>
+              <p className="text-xs text-gray-400 mt-1">View all customer point balances and adjust points manually.</p>
             </div>
             <div className="relative w-full sm:w-72">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search by name or email…"
+                placeholder="Search by name or emailΓÇª"
                 value={rewardSearch}
                 onChange={(e) => setRewardSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 shadow-sm"
+                className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 shadow-sm"
               />
             </div>
           </div>
@@ -10734,7 +10350,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <th className="py-3 px-5 border-b border-slate-100 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="text-sm divide-y divide-slate-50">
+                <tbody className="text-xs divide-y divide-slate-50">
                   {(userPoints || [])
                     .filter(up => {
                       const term = rewardSearch.toLowerCase();
@@ -10756,7 +10372,7 @@ export default function AdminDashboard({ onTabChange }) {
                         <td className="py-3.5 px-5 text-gray-500">{up.email || '-'}</td>
                         <td className="py-3.5 px-5 text-right">
                           <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 font-bold px-2.5 py-1 rounded-lg text-[11px]">
-                            ★ {(up.total_points || 0).toLocaleString()} pts
+                            Γÿà {(up.total_points || 0).toLocaleString()} pts
                           </span>
                         </td>
                         <td className="py-3.5 px-5 text-center">
@@ -10766,7 +10382,7 @@ export default function AdminDashboard({ onTabChange }) {
                               setAdjustPointsValue(100);
                               setAdjustDescription('Manual bonus');
                             }}
-                            className="text-[11px] font-bold text-[#FF6600] hover:text-blue-800 bg-orange-50 hover:bg-blue-100 border border-orange-200 px-3 py-1.5 rounded-lg transition-colors"
+                            className="text-[11px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition-colors"
                           >
                             Adjust Points
                           </button>
@@ -10778,7 +10394,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <tr>
                       <td colSpan="5" className="py-12 text-center text-gray-400 text-sm">
                         <div className="flex flex-col items-center gap-2">
-                          <span className="text-3xl">★</span>
+                          <span className="text-3xl">Γÿà</span>
                           <span>No user points data found.</span>
                         </div>
                       </td>
@@ -10804,7 +10420,7 @@ export default function AdminDashboard({ onTabChange }) {
                       <th className="py-3 px-5 border-b border-slate-100 text-right">Points</th>
                     </tr>
                   </thead>
-                  <tbody className="text-sm divide-y divide-slate-50">
+                  <tbody className="text-xs divide-y divide-slate-50">
                     {(pointLogs || []).slice(0, 50).map((log, idx) => (
                       <tr key={log._id || idx} className="hover:bg-slate-50/60 transition-colors">
                         <td className="py-3 px-5 text-gray-400 whitespace-nowrap">
@@ -10812,7 +10428,7 @@ export default function AdminDashboard({ onTabChange }) {
                         </td>
                         <td className="py-3 px-5 font-medium text-gray-800">{log.name || log.user_name || '-'}</td>
                         <td className="py-3 px-5">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${log.type === 'earn' ? 'bg-green-100 text-green-700' : log.type === 'redeem' ? 'bg-blue-100 text-orange-700' : 'bg-slate-100 text-slate-600'}`}>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${log.type === 'earn' ? 'bg-green-100 text-green-700' : log.type === 'redeem' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
                             {(log.type || 'manual').toUpperCase()}
                           </span>
                         </td>
@@ -10843,19 +10459,19 @@ export default function AdminDashboard({ onTabChange }) {
           <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-gray-900 text-sm">Adjust Points</h3>
+                <h3 className="font-bold text-gray-900 text-base">Adjust Points</h3>
                 <p className="text-[11px] text-gray-400 mt-0.5">For: <span className="font-semibold text-gray-700">{adjustModalUser.name || adjustModalUser.email}</span></p>
               </div>
               <button onClick={() => setAdjustModalUser(null)} className="p-1.5 hover:bg-gray-100 rounded-lg transition"><X size={16} /></button>
             </div>
-            <form onSubmit={handleAdjustPointsSubmit} className="space-y-4 text-sm">
+            <form onSubmit={handleAdjustPointsSubmit} className="space-y-4 text-xs">
               <div>
                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Points (use negative to deduct)</label>
                 <input
                   type="number"
                   value={adjustPointsValue}
                   onChange={(e) => setAdjustPointsValue(Number(e.target.value))}
-                  className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
+                  className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
                   placeholder="e.g. 100 or -50"
                 />
               </div>
@@ -10865,8 +10481,8 @@ export default function AdminDashboard({ onTabChange }) {
                   type="text"
                   value={adjustDescription}
                   onChange={(e) => setAdjustDescription(e.target.value)}
-                  className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
-                  placeholder="e.g. Manual bonus, correction…"
+                  className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
+                  placeholder="e.g. Manual bonus, correctionΓÇª"
                 />
               </div>
               <div className="flex gap-3 pt-2">
@@ -10875,8 +10491,8 @@ export default function AdminDashboard({ onTabChange }) {
                   Cancel
                 </button>
                 <button type="submit" disabled={loading}
-                  className="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl transition shadow-md disabled:opacity-50">
-                  {loading ? 'Saving…' : 'Save Adjustment'}
+                  className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl transition shadow-md disabled:opacity-50">
+                  {loading ? 'SavingΓÇª' : 'Save Adjustment'}
                 </button>
               </div>
             </form>
@@ -10884,12 +10500,12 @@ export default function AdminDashboard({ onTabChange }) {
         </div>
       )}
 
-      {/* ───────────────── REWARDS: CONFIGURATION ───────────────── */}
+      {/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ REWARDS: CONFIGURATION ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
       {activeTab === 'rewards_config' && (
         <div className="space-y-6 max-w-2xl animate-fade-in">
           <div className="border-b border-slate-200 pb-5">
             <h1 className="text-xl font-bold text-gray-900">Reward Configuration</h1>
-            <p className="text-sm text-gray-400 mt-1">Configure earn rates, redeem rates, and system-wide reward settings.</p>
+            <p className="text-xs text-gray-400 mt-1">Configure earn rates, redeem rates, and system-wide reward settings.</p>
           </div>
 
           <form onSubmit={handleSaveRewardSettings} className="space-y-5">
@@ -10910,7 +10526,7 @@ export default function AdminDashboard({ onTabChange }) {
               </div>
               <div className="mt-3">
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${localRewardSettings.is_enabled ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                  {localRewardSettings.is_enabled ? '● ACTIVE' : '○ DISABLED'}
+                  {localRewardSettings.is_enabled ? 'ΓùÅ ACTIVE' : 'Γùï DISABLED'}
                 </span>
               </div>
             </div>
@@ -10918,7 +10534,7 @@ export default function AdminDashboard({ onTabChange }) {
             {/* Rates */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all space-y-4">
               <h3 className="font-bold text-gray-900 text-sm border-b border-slate-100 pb-2">Rate Configuration</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Earn Rate</label>
                   <p className="text-[10px] text-gray-400 mb-1.5">Points earned per 1 unit of currency spent.</p>
@@ -10928,9 +10544,9 @@ export default function AdminDashboard({ onTabChange }) {
                     min="0"
                     value={localRewardSettings.earn_rate}
                     onChange={(e) => setLocalRewardSettings(prev => ({ ...prev, earn_rate: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
                   />
-                  <p className="text-[10px] text-gray-400 mt-1">e.g. <strong>1.00</strong> = 1 pt per ৳1 spent</p>
+                  <p className="text-[10px] text-gray-400 mt-1">e.g. <strong>1.00</strong> = 1 pt per αº│1 spent</p>
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Redeem Rate</label>
@@ -10941,9 +10557,9 @@ export default function AdminDashboard({ onTabChange }) {
                     min="0"
                     value={localRewardSettings.redeem_rate}
                     onChange={(e) => setLocalRewardSettings(prev => ({ ...prev, redeem_rate: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
                   />
-                  <p className="text-[10px] text-gray-400 mt-1">e.g. <strong>0.10</strong> = 1 pt = ৳0.10</p>
+                  <p className="text-[10px] text-gray-400 mt-1">e.g. <strong>0.10</strong> = 1 pt = αº│0.10</p>
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Min Redeem Points</label>
@@ -10953,7 +10569,7 @@ export default function AdminDashboard({ onTabChange }) {
                     min="0"
                     value={localRewardSettings.min_redeem_points}
                     onChange={(e) => setLocalRewardSettings(prev => ({ ...prev, min_redeem_points: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
                   />
                   <p className="text-[10px] text-gray-400 mt-1">e.g. <strong>100</strong> pts minimum</p>
                 </div>
@@ -10961,15 +10577,15 @@ export default function AdminDashboard({ onTabChange }) {
             </div>
 
             {/* Summary Card */}
-            <div className="bg-gradient-to-br from-orange-500 to-[#FF6600] rounded-2xl p-5 text-white space-y-2 shadow-lg">
+            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white space-y-2 shadow-lg">
               <h3 className="font-bold text-sm">Current Configuration Summary</h3>
               <div className="grid grid-cols-3 gap-4 mt-3">
                 <div className="bg-white/10 rounded-xl p-3 text-center">
                   <div className="text-xl font-black">{localRewardSettings.earn_rate}</div>
-                  <div className="text-[10px] text-blue-200 font-medium mt-0.5">pts / ৳1</div>
+                  <div className="text-[10px] text-blue-200 font-medium mt-0.5">pts / αº│1</div>
                 </div>
                 <div className="bg-white/10 rounded-xl p-3 text-center">
-                  <div className="text-xl font-black">৳{localRewardSettings.redeem_rate}</div>
+                  <div className="text-xl font-black">αº│{localRewardSettings.redeem_rate}</div>
                   <div className="text-[10px] text-blue-200 font-medium mt-0.5">per 1 pt</div>
                 </div>
                 <div className="bg-white/10 rounded-xl p-3 text-center">
@@ -10983,32 +10599,32 @@ export default function AdminDashboard({ onTabChange }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-sm disabled:opacity-50"
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-xs disabled:opacity-50"
               >
-                {loading ? 'Saving…' : '✓ Save Reward Configuration'}
+                {loading ? 'SavingΓÇª' : 'Γ£ô Save Reward Configuration'}
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* ───────────────── REWARDS: SET REWARD ───────────────── */}
+      {/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ REWARDS: SET REWARD ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
       {activeTab === 'rewards_set' && (
         <div className="space-y-6 max-w-xl animate-fade-in">
           <div className="border-b border-slate-200 pb-5">
             <h1 className="text-xl font-bold text-gray-900">Set Reward</h1>
-            <p className="text-sm text-gray-400 mt-1">Manually add or deduct loyalty points for any customer.</p>
+            <p className="text-xs text-gray-400 mt-1">Manually add or deduct loyalty points for any customer.</p>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
             <h3 className="font-bold text-gray-900 text-sm border-b border-slate-100 pb-2">Manual Point Adjustment</h3>
 
-            <form onSubmit={handleSetPointsSubmit} className="space-y-5 text-sm">
+            <form onSubmit={handleSetPointsSubmit} className="space-y-5 text-xs">
               {/* Customer Selector */}
               <div>
                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Select Customer</label>
                 {selectedSetUser ? (
-                  <div className="mt-1.5 flex items-center justify-between px-3 py-2.5 bg-orange-50 border border-orange-200 rounded-xl">
+                  <div className="mt-1.5 flex items-center justify-between px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-xl">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-[10px] font-bold">
                         {(selectedSetUser.name || 'U')[0].toUpperCase()}
@@ -11026,11 +10642,11 @@ export default function AdminDashboard({ onTabChange }) {
                     <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     <input
                       type="text"
-                      placeholder="Search customer by name or email…"
+                      placeholder="Search customer by name or emailΓÇª"
                       value={customerSearchTerm}
                       onChange={(e) => { setCustomerSearchTerm(e.target.value); setShowCustomerDropdown(true); }}
                       onFocus={() => setShowCustomerDropdown(true)}
-                      className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
+                      className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
                     />
                     {showCustomerDropdown && customerSearchTerm && (
                       <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto">
@@ -11046,7 +10662,7 @@ export default function AdminDashboard({ onTabChange }) {
                               key={u._id}
                               type="button"
                               onClick={() => { setSelectedSetUser(u); setCustomerSearchTerm(''); setShowCustomerDropdown(false); }}
-                              className="w-full text-left px-4 py-2.5 hover:bg-orange-50 transition flex items-center gap-2.5"
+                              className="w-full text-left px-4 py-2.5 hover:bg-blue-50 transition flex items-center gap-2.5"
                             >
                               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
                                 {(u.name || 'U')[0].toUpperCase()}
@@ -11075,7 +10691,7 @@ export default function AdminDashboard({ onTabChange }) {
                   type="number"
                   value={setPointsValue}
                   onChange={(e) => setSetPointsValue(Number(e.target.value))}
-                  className="w-full mt-0.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
+                  className="w-full mt-0.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
                   placeholder="e.g. 200 or -50"
                 />
               </div>
@@ -11087,15 +10703,15 @@ export default function AdminDashboard({ onTabChange }) {
                   type="text"
                   value={setPointsDesc}
                   onChange={(e) => setSetPointsDesc(e.target.value)}
-                  className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
-                  placeholder="e.g. Loyalty bonus, birthday gift…"
+                  className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 hover:bg-white transition text-gray-900"
+                  placeholder="e.g. Loyalty bonus, birthday giftΓÇª"
                 />
               </div>
 
               {/* Preview */}
               {selectedSetUser && (
                 <div className={`rounded-xl p-4 border text-[11px] font-medium ${setPointsValue >= 0 ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
-                  {setPointsValue >= 0 ? '✓ Adding' : '⚠ Deducting'} <strong>{Math.abs(setPointsValue)} points</strong> {setPointsValue >= 0 ? 'to' : 'from'} <strong>{selectedSetUser.name}</strong>
+                  {setPointsValue >= 0 ? 'Γ£ô Adding' : 'ΓÜá Deducting'} <strong>{Math.abs(setPointsValue)} points</strong> {setPointsValue >= 0 ? 'to' : 'from'} <strong>{selectedSetUser.name}</strong>
                   {setPointsDesc && <span className="block text-[10px] mt-0.5 opacity-75">Reason: {setPointsDesc}</span>}
                 </div>
               )}
@@ -11103,9 +10719,9 @@ export default function AdminDashboard({ onTabChange }) {
               <button
                 type="submit"
                 disabled={loading || !selectedSetUser}
-                className="w-full py-3 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-xs disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
               >
-                {loading ? 'Processing…' : `Apply Point Adjustment`}
+                {loading ? 'ProcessingΓÇª' : `Apply Point Adjustment`}
               </button>
             </form>
           </div>
@@ -11117,7 +10733,7 @@ export default function AdminDashboard({ onTabChange }) {
           <div className="border-b border-slate-200 pb-5 flex justify-between items-center">
             <div>
               <h1 className="text-xl font-bold text-gray-900">My Payouts</h1>
-              <p className="text-sm text-gray-400 mt-1">Request payouts and view history.</p>
+              <p className="text-xs text-gray-400 mt-1">Request payouts and view history.</p>
             </div>
             <button
               onClick={() => {
@@ -11127,7 +10743,7 @@ export default function AdminDashboard({ onTabChange }) {
                 setPayoutError('');
                 setShowPayoutModal(true);
               }}
-              className="bg-gradient-to-r from-[#FF6600] to-orange-600 hover:from-orange-600 hover:to-[#FF6600] text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm flex items-center gap-2"
+              className="bg-gradient-to-r from-[#FF6600] to-orange-600 hover:from-orange-600 hover:to-[#FF6600] text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-2"
             >
               <DollarSign size={14} /> REQUEST PAYOUT
             </button>
@@ -11144,7 +10760,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <th className="py-3 px-4 border-b border-slate-100">Status</th>
                   </tr>
                 </thead>
-                <tbody className="text-sm">
+                <tbody className="text-xs">
                   {(payouts || []).map((p) => (
                     <tr key={p.id} className="border-b border-gray-50 hover:bg-slate-50">
                       <td className="py-4 px-4 text-gray-500 whitespace-nowrap">
@@ -11191,15 +10807,15 @@ export default function AdminDashboard({ onTabChange }) {
                 onClick={() => setShowPayoutModal(false)}
                 className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-350 hover:text-white hover:bg-white/20 transition cursor-pointer"
               >
-                ✕
+                Γ£ò
               </button>
             </div>
 
             {/* Content */}
             <form onSubmit={handleSubmitPayout} className="p-6 space-y-5">
               {payoutError && (
-                <div className="bg-red-50 border border-red-100 rounded-xl p-3.5 text-sm text-red-600 font-semibold flex items-start gap-2">
-                  <span className="text-red-500">⚠</span>
+                <div className="bg-red-50 border border-red-100 rounded-xl p-3.5 text-xs text-red-600 font-semibold flex items-start gap-2">
+                  <span className="text-red-500">ΓÜá</span>
                   <div>{payoutError}</div>
                 </div>
               )}
@@ -11222,12 +10838,12 @@ export default function AdminDashboard({ onTabChange }) {
                     }`}
                   >
                     {/* bKash Accent Circle */}
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm ${
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${
                       payoutMethod === 'bKash' ? 'bg-[#E2125B] text-white' : 'bg-pink-50 text-[#E2125B]'
                     }`}>
                       b
                     </div>
-                    <span className={`text-sm font-black mt-2 tracking-tight ${payoutMethod === 'bKash' ? 'text-[#E2125B]' : 'text-slate-700'}`}>bKash</span>
+                    <span className={`text-xs font-black mt-2 tracking-tight ${payoutMethod === 'bKash' ? 'text-[#E2125B]' : 'text-slate-700'}`}>bKash</span>
                   </button>
 
                   {/* Nagad Selection Card */}
@@ -11244,12 +10860,12 @@ export default function AdminDashboard({ onTabChange }) {
                     }`}
                   >
                     {/* Nagad Accent Circle */}
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm ${
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${
                       payoutMethod === 'Nagad' ? 'bg-[#F86212] text-white' : 'bg-orange-50 text-[#F86212]'
                     }`}>
                       N
                     </div>
-                    <span className={`text-sm font-black mt-2 tracking-tight ${payoutMethod === 'Nagad' ? 'text-[#F86212]' : 'text-slate-700'}`}>Nagad</span>
+                    <span className={`text-xs font-black mt-2 tracking-tight ${payoutMethod === 'Nagad' ? 'text-[#F86212]' : 'text-slate-700'}`}>Nagad</span>
                   </button>
                 </div>
               </div>
@@ -11259,7 +10875,7 @@ export default function AdminDashboard({ onTabChange }) {
                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Withdrawal Amount</label>
                 <div className="relative rounded-xl shadow-xs">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-extrabold text-sm">
-                    ৳
+                    αº│
                   </div>
                   <input
                     type="number"
@@ -11298,14 +10914,14 @@ export default function AdminDashboard({ onTabChange }) {
                 <button
                   type="button"
                   onClick={() => setShowPayoutModal(false)}
-                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all duration-200 text-sm text-center cursor-pointer"
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all duration-200 text-xs text-center cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-3 bg-gradient-to-r from-[#FF6600] to-orange-600 hover:from-orange-600 hover:to-[#FF6600] text-white font-bold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="flex-1 py-3 bg-gradient-to-r from-[#FF6600] to-orange-600 hover:from-orange-600 hover:to-[#FF6600] text-white font-bold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-xs disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {loading ? 'Submitting...' : 'Request Withdrawal'}
                 </button>
@@ -11319,7 +10935,7 @@ export default function AdminDashboard({ onTabChange }) {
         <div className="space-y-6 max-w-4xl w-full animate-fade-in">
           <div className="border-b border-slate-200 pb-5">
             <h1 className="text-xl font-bold text-gray-900">{activeTab === 'seller_api_integrations' ? 'API Integrations' : 'SteadFast Integration'}</h1>
-            <p className="text-sm text-gray-400 mt-1">Connect SteadFast, Twilio, ElevenLabs, and OpenAI for automatic order handling.</p>
+            <p className="text-xs text-gray-400 mt-1">Connect SteadFast, Twilio, ElevenLabs, and OpenAI for automatic order handling.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -11328,15 +10944,15 @@ export default function AdminDashboard({ onTabChange }) {
                 <CheckCircle2 size={18} />
               </div>
               <h3 className="font-black text-slate-900 text-sm">Auto Booking</h3>
-              <p className="text-sm text-slate-500 mt-2 leading-relaxed">New physical orders are sent to SteadFast automatically when admin API keys are configured.</p>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">New physical orders are sent to SteadFast automatically when admin API keys are configured.</p>
             </div>
 
             <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
-              <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF6600] flex items-center justify-center mb-4">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
                 <Truck size={18} />
               </div>
               <h3 className="font-black text-slate-900 text-sm">Tracking Sync</h3>
-              <p className="text-sm text-slate-500 mt-2 leading-relaxed">Tracking code and courier status appear directly inside your order list after booking.</p>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">Tracking code and courier status appear directly inside your order list after booking.</p>
             </div>
 
             <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
@@ -11344,15 +10960,15 @@ export default function AdminDashboard({ onTabChange }) {
                 <AlertCircle size={18} />
               </div>
               <h3 className="font-black text-slate-900 text-sm">Seller Credentials</h3>
-              <p className="text-sm text-slate-500 mt-2 leading-relaxed">Add your own API key and secret key. The secret key is never shown again after saving.</p>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">Add your own API key and secret key. The secret key is never shown again after saving.</p>
             </div>
           </div>
 
           <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4 mb-5 pb-5 border-b border-slate-100">
               <div>
-                <h2 className="font-black text-gray-900 text-sm">API Key & Secret Key</h2>
-                <p className="text-sm text-gray-500 mt-1">Save your SteadFast merchant credentials for automatic parcel creation.</p>
+                <h2 className="font-black text-gray-900 text-base">API Key & Secret Key</h2>
+                <p className="text-xs text-gray-500 mt-1">Save your SteadFast merchant credentials for automatic parcel creation.</p>
               </div>
               <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black ${user?.hasSteadfastIntegration ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
                 {user?.hasSteadfastIntegration ? 'Configured' : 'Not Configured'}
@@ -11360,12 +10976,12 @@ export default function AdminDashboard({ onTabChange }) {
             </div>
 
             {steadfastError && (
-              <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+              <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
                 <AlertCircle size={14} /> {steadfastError}
               </div>
             )}
             {steadfastMessage && (
-              <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+              <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
                 <CheckCircle2 size={14} /> {steadfastMessage}
               </div>
             )}
@@ -11405,7 +11021,7 @@ export default function AdminDashboard({ onTabChange }) {
                   value={steadfastForm.apiKey}
                   onChange={(e) => setSteadfastForm((p) => ({ ...p, apiKey: e.target.value }))}
                   placeholder={user?.hasSteadfastIntegration ? 'Leave blank to keep current API key' : 'Enter SteadFast API key'}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                 />
               </div>
               <div>
@@ -11415,12 +11031,12 @@ export default function AdminDashboard({ onTabChange }) {
                   value={steadfastForm.secretKey}
                   onChange={(e) => setSteadfastForm((p) => ({ ...p, secretKey: e.target.value }))}
                   placeholder={user?.hasSteadfastIntegration ? 'Leave blank to keep current secret key' : 'Enter SteadFast secret key'}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                 />
               </div>
               <label className="md:col-span-2 flex items-center justify-between gap-4 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 cursor-pointer">
                 <span>
-                  <span className="block text-sm font-black text-slate-800">Enable SteadFast auto parcel booking</span>
+                  <span className="block text-xs font-black text-slate-800">Enable SteadFast auto parcel booking</span>
                   <span className="block text-[10px] font-semibold text-slate-400 mt-0.5">Orders for your products will use these credentials first.</span>
                 </span>
                 <input
@@ -11434,7 +11050,7 @@ export default function AdminDashboard({ onTabChange }) {
                 <button
                   type="submit"
                   disabled={steadfastSaving}
-                  className="px-5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-xl text-sm transition disabled:opacity-50"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition disabled:opacity-50"
                 >
                   {steadfastSaving ? 'Saving...' : 'Save Integration'}
                 </button>
@@ -11444,8 +11060,8 @@ export default function AdminDashboard({ onTabChange }) {
             <div className="mt-6 pt-6 border-t border-slate-100">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
                 <div>
-                  <h2 className="font-black text-gray-900 text-sm">AI Call, SMS & Voice Automation</h2>
-                  <p className="text-sm text-gray-500 mt-1">Connect Twilio, ElevenLabs, and OpenAI so every new order gets an automatic confirmation.</p>
+                  <h2 className="font-black text-gray-900 text-base">AI Call, SMS & Voice Automation</h2>
+                  <p className="text-xs text-gray-500 mt-1">Connect Twilio, ElevenLabs, and OpenAI so every new order gets an automatic confirmation.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black ${user?.hasOrderAutomationIntegration ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
@@ -11462,7 +11078,7 @@ export default function AdminDashboard({ onTabChange }) {
               </div>
 
               {showAutomationGuide && (
-                <div className="mb-5 bg-orange-50 border border-orange-100 rounded-2xl p-4 text-sm text-blue-900 leading-relaxed">
+                <div className="mb-5 bg-blue-50 border border-blue-100 rounded-2xl p-4 text-xs text-blue-900 leading-relaxed">
                   <div className="font-black mb-2">How it works</div>
                   <div>1. Customer places an order for your product.</div>
                   <div>2. Backend creates a SteadFast parcel using your SteadFast keys.</div>
@@ -11473,12 +11089,12 @@ export default function AdminDashboard({ onTabChange }) {
               )}
 
               {automationError && (
-                <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+                <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
                   <AlertCircle size={14} /> {automationError}
                 </div>
               )}
               {automationMessage && (
-                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
                   <CheckCircle2 size={14} /> {automationMessage}
                 </div>
               )}
@@ -11518,41 +11134,41 @@ export default function AdminDashboard({ onTabChange }) {
               >
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Twilio Account SID</label>
-                  <input value={automationForm.twilioAccountSid} onChange={(e) => setAutomationForm((p) => ({ ...p, twilioAccountSid: e.target.value }))} placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm" />
+                  <input value={automationForm.twilioAccountSid} onChange={(e) => setAutomationForm((p) => ({ ...p, twilioAccountSid: e.target.value }))} placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Twilio Auth Token</label>
-                  <input type="password" value={automationForm.twilioAuthToken} onChange={(e) => setAutomationForm((p) => ({ ...p, twilioAuthToken: e.target.value }))} placeholder={user?.hasOrderAutomationIntegration ? 'Leave blank to keep current token' : 'Enter Twilio auth token'} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm" />
+                  <input type="password" value={automationForm.twilioAuthToken} onChange={(e) => setAutomationForm((p) => ({ ...p, twilioAuthToken: e.target.value }))} placeholder={user?.hasOrderAutomationIntegration ? 'Leave blank to keep current token' : 'Enter Twilio auth token'} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Twilio From Number</label>
-                  <input value={automationForm.twilioFromNumber} onChange={(e) => setAutomationForm((p) => ({ ...p, twilioFromNumber: e.target.value }))} placeholder="+1234567890" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm" />
+                  <input value={automationForm.twilioFromNumber} onChange={(e) => setAutomationForm((p) => ({ ...p, twilioFromNumber: e.target.value }))} placeholder="+1234567890" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">ElevenLabs Voice ID</label>
-                  <input value={automationForm.elevenlabsVoiceId} onChange={(e) => setAutomationForm((p) => ({ ...p, elevenlabsVoiceId: e.target.value }))} placeholder="Voice ID" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm" />
+                  <input value={automationForm.elevenlabsVoiceId} onChange={(e) => setAutomationForm((p) => ({ ...p, elevenlabsVoiceId: e.target.value }))} placeholder="Voice ID" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">ElevenLabs API Key</label>
-                  <input type="password" value={automationForm.elevenlabsApiKey} onChange={(e) => setAutomationForm((p) => ({ ...p, elevenlabsApiKey: e.target.value }))} placeholder={user?.hasElevenLabsIntegration ? 'Leave blank to keep current key' : 'Enter ElevenLabs API key'} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm" />
+                  <input type="password" value={automationForm.elevenlabsApiKey} onChange={(e) => setAutomationForm((p) => ({ ...p, elevenlabsApiKey: e.target.value }))} placeholder={user?.hasElevenLabsIntegration ? 'Leave blank to keep current key' : 'Enter ElevenLabs API key'} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">OpenAI Model</label>
-                  <input value={automationForm.openaiModel} onChange={(e) => setAutomationForm((p) => ({ ...p, openaiModel: e.target.value }))} placeholder="gpt-5.2" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm" />
+                  <input value={automationForm.openaiModel} onChange={(e) => setAutomationForm((p) => ({ ...p, openaiModel: e.target.value }))} placeholder="gpt-5.2" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">OpenAI API Key</label>
-                  <input type="password" value={automationForm.openaiApiKey} onChange={(e) => setAutomationForm((p) => ({ ...p, openaiApiKey: e.target.value }))} placeholder={user?.hasOpenAIIntegration ? 'Leave blank to keep current key' : 'Enter OpenAI API key'} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm" />
+                  <input type="password" value={automationForm.openaiApiKey} onChange={(e) => setAutomationForm((p) => ({ ...p, openaiApiKey: e.target.value }))} placeholder={user?.hasOpenAIIntegration ? 'Leave blank to keep current key' : 'Enter OpenAI API key'} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm" />
                 </div>
                 <label className="md:col-span-2 flex items-center justify-between gap-4 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 cursor-pointer">
                   <span>
-                    <span className="block text-sm font-black text-slate-800">Enable full order automation</span>
+                    <span className="block text-xs font-black text-slate-800">Enable full order automation</span>
                     <span className="block text-[10px] font-semibold text-slate-400 mt-0.5">Auto SMS, AI call script, ElevenLabs voice, and Twilio call.</span>
                   </span>
                   <input type="checkbox" checked={automationForm.enabled} onChange={(e) => setAutomationForm((p) => ({ ...p, enabled: e.target.checked }))} className="w-4 h-4 accent-blue-600" />
                 </label>
                 <div className="md:col-span-2 flex justify-end">
-                  <button type="submit" disabled={automationSaving} className="px-5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-xl text-sm transition disabled:opacity-50">
+                  <button type="submit" disabled={automationSaving} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition disabled:opacity-50">
                     {automationSaving ? 'Saving...' : 'Save Automation'}
                   </button>
                 </div>
@@ -11561,12 +11177,12 @@ export default function AdminDashboard({ onTabChange }) {
 
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h2 className="font-black text-gray-900 text-sm">Seller Order Automation</h2>
-                <p className="text-sm text-gray-500 mt-1">When customers order your products, those orders will appear in your seller dashboard and can be processed with SteadFast.</p>
+                <h2 className="font-black text-gray-900 text-base">Seller Order Automation</h2>
+                <p className="text-xs text-gray-500 mt-1">When customers order your products, those orders will appear in your seller dashboard and can be processed with SteadFast.</p>
               </div>
               <button
                 onClick={() => setActiveTab('orders')}
-                className="px-5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2"
               >
                 <ShoppingBag size={14} /> Manage Orders
               </button>
@@ -11575,248 +11191,11 @@ export default function AdminDashboard({ onTabChange }) {
         </div>
       )}
 
-      
-      {activeTab === 'seller_custom_domain' && (
-        <div className="space-y-6 max-w-3xl w-full animate-fade-in">
-          <div className="border-b border-slate-200 pb-5 flex justify-between items-start flex-wrap gap-3">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <Globe size={22} className="text-[#FF6600]" /> কাস্টম ডোমেইন সেটআপ
-              </h1>
-              <p className="text-sm text-gray-400 mt-1">
-                আপনার স্টোরের সাথে নিজের ডোমেইন কানেক্ট করুন (যেমন: <span className="font-semibold text-gray-600">shop.yourbrand.com</span>)।
-              </p>
-            </div>
-            <a
-              href="https://www.youtube.com/results?search_query=custom+domain+CNAME+bangla+tutorial"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 font-bold text-sm rounded-xl hover:bg-red-100 transition border border-red-100 whitespace-nowrap"
-            >
-              <Play size={14} /> ভিডিও টিউটোরিয়াল দেখুন
-            </a>
-          </div>
-
-          {/* Tutorial Steps */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-5">
-            <h3 className="font-black text-blue-900 text-sm mb-4 flex items-center gap-2">
-              📋 ধাপে ধাপে ডোমেইন কানেক্ট করার গাইড
-            </h3>
-            <div className="space-y-4">
-              {[
-                {
-                  num: '১',
-                  title: 'ডোমেইন প্রোভাইডারে লগইন করুন',
-                  desc: 'আপনি যেখান থেকে ডোমেইন কিনেছেন (Namecheap, GoDaddy, Hostinger বা Cloudflare) সেখানে আপনার একাউন্টে লগইন করুন।',
-                  badge: 'Step 1'
-                },
-                {
-                  num: '২',
-                  title: 'DNS Management খুলুন',
-                  desc: '"My Domains" → আপনার ডোমেইনটি সিলেক্ট করুন → "Advanced DNS" বা "DNS Zone Editor" এ যান।',
-                  badge: 'Step 2'
-                },
-                {
-                  num: '৩',
-                  title: 'CNAME রেকর্ড যোগ করুন (সাব-ডোমেইন)',
-                  desc: 'নতুন রেকর্ড যোগ করুন: Type = CNAME, Host = shop (বা www), Value = gorolyshop.com, TTL = Automatic',
-                  badge: 'Step 3'
-                },
-                {
-                  num: '৪',
-                  title: 'A রেকর্ড যোগ করুন (মেইন ডোমেইন, যদি লাগে)',
-                  desc: 'মূল ডোমেইনের জন্য: Type = A Record, Host = @, Value = আপনার সার্ভার IP। এরপর Save করুন।',
-                  badge: 'Step 4'
-                },
-                {
-                  num: '৫',
-                  title: 'নিচে ডোমেইন সেভ করুন ও অপেক্ষা করুন',
-                  desc: 'নিচের বক্সে ডোমেইন নাম দিয়ে "সেভ করুন" চাপুন। DNS প্রোপাগেশনে ১ থেকে ২৪ ঘণ্টা লাগতে পারে।',
-                  badge: 'Step 5'
-                },
-              ].map(({ num, title, desc, badge }) => (
-                <div key={num} className="flex gap-3 items-start bg-white rounded-xl p-4 border border-blue-100 shadow-sm">
-                  <div className="w-7 h-7 rounded-full bg-[#FF6600] text-white text-xs font-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                    {num}
-                  </div>
-                  <div>
-                    <p className="font-bold text-slate-900 text-sm">{title}</p>
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* DNS Table */}
-          <div className="bg-slate-900 rounded-2xl p-5 text-sm">
-            <h3 className="text-white font-black mb-3 flex items-center gap-2">
-              <span className="text-[#FF6600]">DNS</span> কনফিগারেশন রেফারেন্স
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="text-slate-400 text-xs font-bold border-b border-slate-700">
-                    <th className="pb-2 pr-6">Type</th>
-                    <th className="pb-2 pr-6">Host / Name</th>
-                    <th className="pb-2">Value / Points To</th>
-                  </tr>
-                </thead>
-                <tbody className="text-slate-300 text-xs font-mono">
-                  <tr className="border-b border-slate-800">
-                    <td className="py-2 pr-6 text-[#FF6600] font-bold">CNAME</td>
-                    <td className="py-2 pr-6">shop <span className="text-slate-500">(বা www)</span></td>
-                    <td className="py-2 text-emerald-400">gorolyshop.com</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-6 text-blue-400 font-bold">A</td>
-                    <td className="py-2 pr-6">@ <span className="text-slate-500">(root)</span></td>
-                    <td className="py-2 text-emerald-400">আপনার সার্ভার IP</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Domain Save Form */}
-          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
-            <h2 className="font-black text-gray-900 text-sm mb-4 pb-4 border-b border-slate-100 flex items-center justify-between">
-              আপনার কাস্টম ডোমেইন
-              <span className={`px-3 py-1 rounded-xl text-[10px] font-black ${user?.customDomain ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
-                {user?.customDomain ? '✅ Connected' : '❌ Not Connected'}
-              </span>
-            </h2>
-
-            {user?.customDomain && (
-              <div className="mb-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-3">
-                <Globe size={16} className="text-emerald-600 flex-shrink-0" />
-                <div>
-                  <p className="text-xs text-slate-500 font-semibold">বর্তমান ডোমেইন</p>
-                  <a href={`https://${user.customDomain}`} target="_blank" rel="noreferrer" className="text-sm font-black text-blue-600 hover:underline">{user.customDomain}</a>
-                </div>
-              </div>
-            )}
-
-            {customDomainErr && (
-              <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
-                <AlertCircle size={14} /> {customDomainErr}
-              </div>
-            )}
-            {customDomainMsg && (
-              <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
-                <CheckCircle2 size={14} /> {customDomainMsg}
-              </div>
-            )}
-
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setCustomDomainErr('');
-                setCustomDomainMsg('');
-                const domain = customDomainValue.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
-                if (!domain) return setCustomDomainErr('অনুগ্রহ করে সঠিক ডোমেইন নাম দিন।');
-                if (!/^[a-zA-Z0-9][a-zA-Z0-9-_.]+\.[a-zA-Z]{2,}$/.test(domain)) {
-                  return setCustomDomainErr('ডোমেইনের ফরমেট ভুল! যেমন: shop.yourbrand.com');
-                }
-                setCustomDomainSaving(true);
-                try {
-                  const res = await fetch(`${API_URL}/users/profile`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
-                    body: JSON.stringify({ customDomain: domain }),
-                  });
-                  const data = await res.json();
-                  if (!res.ok) throw new Error(data.message || 'ডোমেইন সেভ করতে সমস্যা হয়েছে।');
-                  const updatedUser = { ...user, customDomain: domain };
-                  localStorage.setItem('shop_admin_user', JSON.stringify(updatedUser));
-                  localStorage.setItem('shop_user', JSON.stringify(updatedUser));
-                  setUser(updatedUser);
-                  setCustomDomainMsg('✅ কাস্টম ডোমেইন সেভ হয়েছে! এখন DNS-এ CNAME রেকর্ড যোগ করুন।');
-                } catch (err) {
-                  setCustomDomainErr(err.message || 'ডোমেইন সেভ করতে সমস্যা হয়েছে।');
-                } finally {
-                  setCustomDomainSaving(false);
-                }
-              }}
-              className="space-y-4"
-            >
-              <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">ডোমেইনের নাম লিখুন</label>
-                <div className="flex gap-3">
-                  <div className="flex-1 flex items-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-[#FF6600] focus-within:ring-2 focus-within:ring-[#FF6600]/20 transition">
-                    <span className="px-3 text-slate-400 text-sm font-semibold border-r border-slate-200 h-full flex items-center bg-slate-100 select-none">https://</span>
-                    <input
-                      type="text"
-                      value={customDomainValue}
-                      onChange={(e) => setCustomDomainValue(e.target.value)}
-                      placeholder="shop.yourbrand.com"
-                      className="flex-1 px-3 py-2.5 bg-transparent focus:outline-none text-gray-900 text-sm"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={customDomainSaving}
-                    className="px-5 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-xl text-sm transition disabled:opacity-50 whitespace-nowrap"
-                  >
-                    {customDomainSaving ? 'সেভ হচ্ছে...' : 'সেভ করুন'}
-                  </button>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-2 font-medium">https:// ছাড়া ডোমেইন দিন। যেমন: <span className="font-semibold">shop.mybrand.com</span></p>
-              </div>
-
-              {customDomainValue && (
-                <div className="p-3 bg-orange-50 border border-orange-100 rounded-xl text-xs text-orange-800 font-semibold flex items-start gap-2">
-                  <span className="mt-0.5">⚠️</span>
-                  <span>সেভ করার পর, আপনার DNS প্রোভাইডারে <strong>{customDomainValue.replace(/^https?:\/\//, '').split('/')[0]}</strong> এর জন্য <strong>gorolyshop.com</strong> পয়েন্ট করে একটি <strong>CNAME</strong> রেকর্ড যোগ করুন।</span>
-                </div>
-              )}
-            </form>
-          </div>
-
-          {/* Remove Domain */}
-          {user?.customDomain && (
-            <div className="bg-white border border-red-100 rounded-2xl p-5 shadow-sm">
-              <h3 className="font-black text-red-600 text-sm mb-2">Remove Custom Domain</h3>
-              <p className="text-sm text-slate-500 mb-4">This will disconnect your custom domain. Your store will revert to the default URL.</p>
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!confirm('Remove your custom domain?')) return;
-                  setCustomDomainSaving(true);
-                  try {
-                    const res = await fetch(`${API_URL}/users/profile`, {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
-                      body: JSON.stringify({ customDomain: '' }),
-                    });
-                    if (res.ok) {
-                      const updatedUser = { ...user, customDomain: '' };
-                      localStorage.setItem('shop_admin_user', JSON.stringify(updatedUser));
-                      localStorage.setItem('shop_user', JSON.stringify(updatedUser));
-                      setUser(updatedUser);
-                      setCustomDomainValue('');
-                      setCustomDomainMsg('Custom domain removed successfully.');
-                    }
-                  } catch (err) {
-                    setCustomDomainErr(err.message);
-                  } finally {
-                    setCustomDomainSaving(false);
-                  }
-                }}
-                className="px-5 py-2.5 border border-red-200 text-red-600 hover:bg-red-50 font-bold rounded-xl text-sm transition"
-              >
-                Remove Domain
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
       {activeTab === 'seller_own_profile' && (
         <div className="space-y-6 max-w-3xl w-full animate-fade-in">
           <div className="border-b border-slate-200 pb-5">
             <h1 className="text-xl font-bold text-gray-900">My Profile</h1>
-            <p className="text-sm text-gray-400 mt-1">Manage your seller profile, NID verification, and account security.</p>
+            <p className="text-xs text-gray-400 mt-1">Manage your seller profile, NID verification, and account security.</p>
           </div>
 
           {/* Sub-tabs */}
@@ -11829,9 +11208,9 @@ export default function AdminDashboard({ onTabChange }) {
               <button
                 key={tab.id}
                 onClick={() => setSellerProfileSubTab(tab.id)}
-                className={`px-4 py-2 text-sm font-bold rounded-xl transition ${
+                className={`px-4 py-2 text-xs font-bold rounded-xl transition ${
                   sellerProfileSubTab === tab.id
-                    ? 'bg-[#FF6600] text-white shadow-md'
+                    ? 'bg-blue-600 text-white shadow-md'
                     : 'bg-white border border-slate-200 hover:text-gray-900'
                 }`}
               >
@@ -11845,12 +11224,12 @@ export default function AdminDashboard({ onTabChange }) {
             <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-6">
               <h2 className="text-sm font-bold text-gray-800 mb-4">Store & Personal Information</h2>
               {sellerProfileError && (
-                <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+                <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
                   <AlertCircle size={14} /> {sellerProfileError}
                 </div>
               )}
               {sellerProfileSaved && (
-                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
                   <CheckCircle2 size={14} /> Profile updated successfully!
                 </div>
               )}
@@ -11890,7 +11269,7 @@ export default function AdminDashboard({ onTabChange }) {
                       type="text" value={sellerProfileForm.name}
                       onChange={e => setSellerProfileForm(p => ({ ...p, name: e.target.value }))}
                       placeholder="Your full name"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                     />
                   </div>
                   <div>
@@ -11899,7 +11278,7 @@ export default function AdminDashboard({ onTabChange }) {
                       type="text" value={sellerProfileForm.phone}
                       onChange={e => setSellerProfileForm(p => ({ ...p, phone: e.target.value }))}
                       placeholder="e.g. 01XXXXXXXXX"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                     />
                   </div>
                   <div>
@@ -11908,7 +11287,7 @@ export default function AdminDashboard({ onTabChange }) {
                       type="text" value={sellerProfileForm.owner_name}
                       onChange={e => setSellerProfileForm(p => ({ ...p, owner_name: e.target.value }))}
                       placeholder="Store or owner name"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                     />
                   </div>
                   <div>
@@ -11917,7 +11296,7 @@ export default function AdminDashboard({ onTabChange }) {
                       type="text" value={sellerProfileForm.facebook}
                       onChange={e => setSellerProfileForm(p => ({ ...p, facebook: e.target.value }))}
                       placeholder="https://facebook.com/yourpage"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                     />
                   </div>
                   <div>
@@ -11926,7 +11305,7 @@ export default function AdminDashboard({ onTabChange }) {
                       type="text" value={sellerProfileForm.instagram}
                       onChange={e => setSellerProfileForm(p => ({ ...p, instagram: e.target.value }))}
                       placeholder="https://instagram.com/yourpage"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                     />
                   </div>
                   <div>
@@ -11935,7 +11314,7 @@ export default function AdminDashboard({ onTabChange }) {
                       type="text" value={sellerProfileForm.division}
                       onChange={e => setSellerProfileForm(p => ({ ...p, division: e.target.value }))}
                       placeholder="e.g. Dhaka"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                     />
                   </div>
                   <div>
@@ -11944,7 +11323,7 @@ export default function AdminDashboard({ onTabChange }) {
                       type="text" value={sellerProfileForm.district}
                       onChange={e => setSellerProfileForm(p => ({ ...p, district: e.target.value }))}
                       placeholder="e.g. Gazipur"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                     />
                   </div>
                   <div>
@@ -11953,7 +11332,7 @@ export default function AdminDashboard({ onTabChange }) {
                       type="text" value={sellerProfileForm.upazila}
                       onChange={e => setSellerProfileForm(p => ({ ...p, upazila: e.target.value }))}
                       placeholder="e.g. Tongi"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                     />
                   </div>
                 </div>
@@ -11963,14 +11342,14 @@ export default function AdminDashboard({ onTabChange }) {
                     rows={2} value={sellerProfileForm.address_details}
                     onChange={e => setSellerProfileForm(p => ({ ...p, address_details: e.target.value }))}
                     placeholder="House/Road/Area details"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm resize-none"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm resize-none"
                   />
                 </div>
                 <div className="flex justify-end pt-2">
                   <button
                     type="submit"
                     disabled={sellerProfileLoading}
-                    className="px-6 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-xl text-sm transition disabled:opacity-50"
+                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition disabled:opacity-50"
                   >
                     {sellerProfileLoading ? 'Saving...' : 'Save Changes'}
                   </button>
@@ -11985,7 +11364,7 @@ export default function AdminDashboard({ onTabChange }) {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h2 className="text-sm font-bold text-gray-800">NID Verification</h2>
-                  <p className="text-sm text-gray-500 mt-0.5">Upload your National ID card for account verification.</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Upload your National ID card for account verification.</p>
                 </div>
                 <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
                   user?.verification_status === 'Verified' ? 'bg-green-100 text-green-700' :
@@ -11996,17 +11375,17 @@ export default function AdminDashboard({ onTabChange }) {
                 </span>
               </div>
               {user?.verification_status === 'Verified' && (
-                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
                   <CheckCircle2 size={14} /> Your account is verified. Thank you!
                 </div>
               )}
               {sellerProfileError && (
-                <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+                <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
                   <AlertCircle size={14} /> {sellerProfileError}
                 </div>
               )}
               {sellerProfileSaved && (
-                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
                   <CheckCircle2 size={14} /> NID details submitted for review!
                 </div>
               )}
@@ -12049,7 +11428,7 @@ export default function AdminDashboard({ onTabChange }) {
                     type="text" value={sellerProfileForm.nid_number}
                     onChange={e => setSellerProfileForm(p => ({ ...p, nid_number: e.target.value }))}
                     placeholder="Enter your National ID number"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -12064,9 +11443,9 @@ export default function AdminDashboard({ onTabChange }) {
                       {(nidFrontPreview || user?.nid_image_front) ? (
                         <img src={nidFrontPreview || user?.nid_image_front} alt="NID Front" className="w-full h-36 object-cover" />
                       ) : (
-                        <div className="flex flex-col items-center justify-center h-36 text-slate-400 group-hover:text-[#FF6600] transition">
+                        <div className="flex flex-col items-center justify-center h-36 text-slate-400 group-hover:text-blue-500 transition">
                           <Upload size={24} className="mb-2" />
-                          <span className="text-sm font-semibold">Click to upload front</span>
+                          <span className="text-xs font-semibold">Click to upload front</span>
                         </div>
                       )}
                       <input
@@ -12094,9 +11473,9 @@ export default function AdminDashboard({ onTabChange }) {
                       {(nidBackPreview || user?.nid_image_back) ? (
                         <img src={nidBackPreview || user?.nid_image_back} alt="NID Back" className="w-full h-36 object-cover" />
                       ) : (
-                        <div className="flex flex-col items-center justify-center h-36 text-slate-400 group-hover:text-[#FF6600] transition">
+                        <div className="flex flex-col items-center justify-center h-36 text-slate-400 group-hover:text-blue-500 transition">
                           <Upload size={24} className="mb-2" />
-                          <span className="text-sm font-semibold">Click to upload back</span>
+                          <span className="text-xs font-semibold">Click to upload back</span>
                         </div>
                       )}
                       <input
@@ -12118,7 +11497,7 @@ export default function AdminDashboard({ onTabChange }) {
                   <button
                     type="submit"
                     disabled={sellerProfileLoading || user?.verification_status === 'Verified'}
-                    className="px-6 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-xl text-sm transition disabled:opacity-50"
+                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition disabled:opacity-50"
                   >
                     {sellerProfileLoading ? 'Submitting...' : 'Submit for Verification'}
                   </button>
@@ -12132,12 +11511,12 @@ export default function AdminDashboard({ onTabChange }) {
             <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-6 max-w-md">
               <h2 className="text-sm font-bold text-gray-800 mb-4">Change Password</h2>
               {sellerPwError && (
-                <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+                <div className="mb-4 bg-red-50 border border-red-100 text-red-600 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
                   <AlertCircle size={14} /> {sellerPwError}
                 </div>
               )}
               {sellerPwSuccess && (
-                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-sm font-semibold p-3 rounded-xl flex items-center gap-2">
+                <div className="mb-4 bg-green-50 border border-green-100 text-green-700 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
                   <CheckCircle2 size={14} /> Password changed successfully!
                 </div>
               )}
@@ -12182,7 +11561,7 @@ export default function AdminDashboard({ onTabChange }) {
                     type="password" value={sellerPwForm.currentPassword}
                     onChange={e => setSellerPwForm(p => ({ ...p, currentPassword: e.target.value }))}
                     required placeholder="Enter current password"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                   />
                 </div>
                 <div>
@@ -12191,7 +11570,7 @@ export default function AdminDashboard({ onTabChange }) {
                     type="password" value={sellerPwForm.newPassword}
                     onChange={e => setSellerPwForm(p => ({ ...p, newPassword: e.target.value }))}
                     required placeholder="Min. 6 characters"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                   />
                 </div>
                 <div>
@@ -12200,14 +11579,14 @@ export default function AdminDashboard({ onTabChange }) {
                     type="password" value={sellerPwForm.confirmPassword}
                     onChange={e => setSellerPwForm(p => ({ ...p, confirmPassword: e.target.value }))}
                     required placeholder="Repeat new password"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                   />
                 </div>
                 <div className="flex justify-end pt-2">
                   <button
                     type="submit"
                     disabled={sellerPwLoading}
-                    className="px-6 py-2.5 bg-[#FF6600] hover:bg-[#e05a00] text-white font-bold rounded-xl text-sm transition disabled:opacity-50"
+                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition disabled:opacity-50"
                   >
                     {sellerPwLoading ? 'Updating...' : 'Update Password'}
                   </button>
@@ -12220,118 +11599,6 @@ export default function AdminDashboard({ onTabChange }) {
 
       </main>
       </div>
-
-      {/* Order Details Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 relative">
-            <button 
-              onClick={() => setSelectedOrder(null)}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
-            >
-              <X size={16} />
-            </button>
-            
-            <h3 className="font-bold text-gray-900 text-xl pb-4 border-b border-slate-100 mb-6 flex items-center gap-3">
-              <ShoppingBag className="text-amber-500" size={24} />
-              Order Details <span className="text-sm font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded-md">#{selectedOrder._id}</span>
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-bold text-sm uppercase tracking-wider text-slate-400 mb-3">Customer Information</h4>
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <p className="text-sm font-bold text-gray-900 mb-1">{selectedOrder.shippingAddress?.name || 'Customer'}</p>
-                    <p className="text-sm text-gray-600 mb-1 flex items-center gap-2"><span className="text-slate-400 w-16">Phone:</span> {selectedOrder.shippingAddress?.phone}</p>
-                    <p className="text-sm text-gray-600 flex items-center gap-2"><span className="text-slate-400 w-16">Address:</span> {selectedOrder.shippingAddress?.address}, {selectedOrder.shippingAddress?.city}</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-bold text-sm uppercase tracking-wider text-slate-400 mb-3">Order Status</h4>
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[10px] text-slate-500 mb-1 uppercase tracking-wider font-bold">Status</p>
-                      <span className={`px-2.5 py-1 text-sm font-bold rounded-md ${selectedOrder.status === 'Delivered' ? 'bg-emerald-100 text-emerald-700' : selectedOrder.status === 'Cancelled' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-orange-700'}`}>
-                        {selectedOrder.status}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-500 mb-1 uppercase tracking-wider font-bold">Payment</p>
-                      <span className={`px-2.5 py-1 text-sm font-bold rounded-md ${selectedOrder.isPaid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                        {selectedOrder.isPaid ? 'Paid' : 'Unpaid'}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-500 mb-1 uppercase tracking-wider font-bold">Method</p>
-                      <p className="text-sm font-bold text-slate-700">{selectedOrder.paymentMethod}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-500 mb-1 uppercase tracking-wider font-bold">Date</p>
-                      <p className="text-sm font-bold text-slate-700">{new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-bold text-sm uppercase tracking-wider text-slate-400 mb-3">Order Items</h4>
-                <div className="bg-white border border-slate-100 rounded-xl overflow-hidden max-h-[300px] overflow-y-auto shadow-sm">
-                  <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50 sticky top-0">
-                      <tr>
-                        <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Item</th>
-                        <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center">Qty</th>
-                        <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Price</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {(selectedOrder.orderItems || []).map((item, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50">
-                          <td className="py-3 px-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-md bg-slate-100 overflow-hidden flex-shrink-0">
-                                <img src={item.image ? getImageUrl(item.image) : "https://via.placeholder.com/40"} alt={item.name} className="w-full h-full object-cover" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-bold text-slate-800 line-clamp-2">{item.name}</p>
-                                {item.color && <p className="text-[10px] text-slate-500 mt-0.5">Color: {item.color}</p>}
-                                {item.size && <p className="text-[10px] text-slate-500">Size: {item.size}</p>}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 text-center text-sm font-bold text-slate-700">{item.qty}</td>
-                          <td className="py-3 px-3 text-right text-sm font-bold text-slate-900">{formatPrice(item.price, currencySymbol)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                
-                <div className="mt-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <div className="flex justify-between items-center mb-2 text-sm text-slate-600">
-                    <span>Subtotal</span>
-                    <span className="font-bold">{formatPrice((selectedOrder.totalPrice || 0) - (selectedOrder.shippingPrice || 0) + (selectedOrder.discountPrice || 0), currencySymbol)}</span>
-                  </div>
-                  <div className="flex justify-between items-center mb-2 text-sm text-slate-600">
-                    <span>Shipping</span>
-                    <span className="font-bold">{formatPrice(selectedOrder.shippingPrice || 0, currencySymbol)}</span>
-                  </div>
-                  <div className="flex justify-between items-center mb-3 text-sm text-slate-600">
-                    <span>Discount</span>
-                    <span className="font-bold text-emerald-600">-{formatPrice(selectedOrder.discountPrice || 0, currencySymbol)}</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-3 border-t border-slate-200">
-                    <span className="font-black text-slate-900 text-sm uppercase tracking-wider">Total</span>
-                    <span className="font-black text-amber-500 text-sm">{formatPrice(selectedOrder.totalPrice, currencySymbol)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <style>{`
         .scrollbar-hide::-webkit-scrollbar {

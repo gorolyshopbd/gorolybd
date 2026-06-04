@@ -74,11 +74,11 @@ export default function AdminLoginForm({ onSuccess }) {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-slate-50 font-sans selection:bg-indigo-200/60">
+    <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-slate-50 font-sans selection:bg-orange-200/60">
       {/* Animated gradient orbs */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[15%] -left-[10%] w-[55%] h-[55%] bg-gradient-to-br from-indigo-300/25 via-purple-300/15 to-transparent rounded-full blur-[130px] animate-[floatSlow_8s_ease-in-out_infinite]" />
-        <div className="absolute -bottom-[15%] -right-[10%] w-[55%] h-[55%] bg-gradient-to-br from-violet-300/25 via-indigo-300/15 to-transparent rounded-full blur-[130px] animate-[floatSlow_8s_ease-in-out_infinite_2s]" />
+        <div className="absolute -top-[15%] -left-[10%] w-[55%] h-[55%] bg-gradient-to-br from-orange-300/25 via-yellow-300/15 to-transparent rounded-full blur-[130px] animate-[floatSlow_8s_ease-in-out_infinite]" />
+        <div className="absolute -bottom-[15%] -right-[10%] w-[55%] h-[55%] bg-gradient-to-br from-amber-300/25 via-orange-300/15 to-transparent rounded-full blur-[130px] animate-[floatSlow_8s_ease-in-out_infinite_2s]" />
         <div className="absolute top-[20%] right-[25%] w-[25%] h-[25%] bg-cyan-300/10 rounded-full blur-[100px] animate-[floatSlow_10s_ease-in-out_infinite_4s]" />
         <div className="absolute bottom-[30%] left-[20%] w-[20%] h-[20%] bg-orange-300/10 rounded-full blur-[90px] animate-[floatSlow_10s_ease-in-out_infinite_1s]" />
         <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:32px_32px] opacity-30" />
@@ -97,10 +97,10 @@ export default function AdminLoginForm({ onSuccess }) {
           {/* Logo Area */}
           <div className="flex flex-col items-center mb-8">
             <div className={[
-              'w-16 h-16 bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600',
+              'w-16 h-16 bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600',
               'rounded-2xl flex items-center justify-center',
-              'shadow-xl shadow-indigo-500/25',
-              'ring-4 ring-indigo-100/50',
+              'shadow-xl shadow-orange-500/25',
+              'ring-4 ring-orange-100/50',
               'mb-4',
               'transition-transform duration-500 hover:scale-105 hover:-rotate-2',
             ].join(' ')}>
@@ -121,7 +121,7 @@ export default function AdminLoginForm({ onSuccess }) {
                 Email Address
               </label>
               <div className="relative group">
-                <span className="absolute inset-y-0 left-0 pl-4 flex items-center justify-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-300">
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center justify-center pointer-events-none text-slate-400 group-focus-within:text-orange-500 transition-colors duration-300">
                   <Mail size={17} />
                 </span>
                 <input
@@ -134,7 +134,7 @@ export default function AdminLoginForm({ onSuccess }) {
                   onKeyDown={handleKeyDown}
                   onKeyUp={handleKeyUp}
                   placeholder="admin@gorolyshop.com"
-                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50/90 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400/70 placeholder:font-medium focus:outline-none focus:ring-4 focus:ring-indigo-500/12 focus:border-indigo-500 focus:bg-white transition-all duration-300 shadow-sm"
+                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50/90 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400/70 placeholder:font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/12 focus:border-orange-500 focus:bg-white transition-all duration-300 shadow-sm"
                 />
               </div>
             </div>
@@ -147,13 +147,13 @@ export default function AdminLoginForm({ onSuccess }) {
                 </label>
                 <button
                   type="button"
-                  className="text-[0.6rem] font-bold text-indigo-500 hover:text-indigo-700 transition-colors tracking-wide"
+                  className="text-[0.6rem] font-bold text-orange-500 hover:text-orange-700 transition-colors tracking-wide"
                 >
                   Forgot?
                 </button>
               </div>
               <div className="relative group">
-                <span className="absolute inset-y-0 left-0 pl-4 flex items-center justify-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-300">
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center justify-center pointer-events-none text-slate-400 group-focus-within:text-orange-500 transition-colors duration-300">
                   <Lock size={17} />
                 </span>
                 <input
@@ -165,7 +165,7 @@ export default function AdminLoginForm({ onSuccess }) {
                   onKeyDown={handleKeyDown}
                   onKeyUp={handleKeyUp}
                   placeholder="Enter your password"
-                  className="w-full pl-11 pr-12 py-3.5 bg-slate-50/90 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400/70 placeholder:font-medium focus:outline-none focus:ring-4 focus:ring-indigo-500/12 focus:border-indigo-500 focus:bg-white transition-all duration-300 shadow-sm"
+                  className="w-full pl-11 pr-12 py-3.5 bg-slate-50/90 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400/70 placeholder:font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/12 focus:border-orange-500 focus:bg-white transition-all duration-300 shadow-sm"
                 />
                 <button
                   type="button"
@@ -195,7 +195,7 @@ export default function AdminLoginForm({ onSuccess }) {
                   'w-4 h-4 rounded-[5px] border-2 flex items-center justify-center',
                   'transition-all duration-200 flex-shrink-0',
                   remember
-                    ? 'bg-indigo-500 border-indigo-500 shadow-sm shadow-indigo-300/40'
+                    ? 'bg-orange-500 border-orange-500 shadow-sm shadow-orange-300/40'
                     : 'border-slate-300 bg-white hover:border-slate-400',
                 ].join(' ')}
               >
@@ -220,10 +220,10 @@ export default function AdminLoginForm({ onSuccess }) {
               disabled={loading}
               className={[
                 'relative w-full py-3.5 mt-1',
-                'bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600',
-                'hover:from-indigo-600 hover:via-indigo-700 hover:to-violet-700',
+                'bg-gradient-to-r from-orange-500 via-orange-600 to-amber-600',
+                'hover:from-orange-600 hover:via-orange-700 hover:to-amber-700',
                 'text-white font-bold rounded-2xl',
-                'shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/25',
+                'shadow-lg shadow-orange-500/20 hover:shadow-xl hover:shadow-orange-500/25',
                 'transform hover:-translate-y-0.5 active:translate-y-0',
                 'transition-all duration-250',
                 'flex justify-center items-center gap-2',
@@ -247,9 +247,9 @@ export default function AdminLoginForm({ onSuccess }) {
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-7 p-4 bg-indigo-50/70 border border-indigo-100/60 rounded-xl">
+          <div className="mt-7 p-4 bg-orange-50/70 border border-orange-100/60 rounded-xl">
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5 text-[0.6rem] font-bold text-indigo-500 uppercase tracking-wider">
+              <div className="flex items-center gap-1.5 text-[0.6rem] font-bold text-orange-500 uppercase tracking-wider">
                 <Info size={11} />
                 Demo Credentials
               </div>
@@ -260,7 +260,7 @@ export default function AdminLoginForm({ onSuccess }) {
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}
-                className="flex items-center gap-1 text-[0.55rem] font-bold text-slate-400 hover:text-indigo-500 transition-colors"
+                className="flex items-center gap-1 text-[0.55rem] font-bold text-slate-400 hover:text-orange-500 transition-colors"
               >
                 {copied ? <CopyCheck size={11} /> : <Copy size={11} />}
                 {copied ? 'Copied' : 'Copy'}
@@ -270,18 +270,18 @@ export default function AdminLoginForm({ onSuccess }) {
               <button
                 type="button"
                 onClick={() => { setEmail(DEMO_EMAIL); setPassword(DEMO_PASS); }}
-                className="flex-1 flex items-center gap-2 px-3 py-2 bg-white border border-indigo-100 rounded-lg hover:border-indigo-300 hover:shadow-sm transition-all text-xs group"
+                className="flex-1 flex items-center gap-2 px-3 py-2 bg-white border border-orange-100 rounded-lg hover:border-orange-300 hover:shadow-sm transition-all text-xs group"
               >
                 <div className="flex flex-col items-start">
                   <span className="text-[0.55rem] font-bold text-slate-400 uppercase tracking-wider">Email</span>
-                  <span className="text-[0.7rem] font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">{DEMO_EMAIL}</span>
+                  <span className="text-[0.7rem] font-semibold text-slate-700 group-hover:text-orange-600 transition-colors">{DEMO_EMAIL}</span>
                 </div>
-                <div className="w-px h-6 bg-indigo-100 mx-1" />
+                <div className="w-px h-6 bg-orange-100 mx-1" />
                 <div className="flex flex-col items-start">
                   <span className="text-[0.55rem] font-bold text-slate-400 uppercase tracking-wider">Password</span>
-                  <span className="text-[0.7rem] font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">{DEMO_PASS}</span>
+                  <span className="text-[0.7rem] font-semibold text-slate-700 group-hover:text-orange-600 transition-colors">{DEMO_PASS}</span>
                 </div>
-                <div className="ml-auto text-indigo-400 group-hover:text-indigo-600 transition-colors">
+                <div className="ml-auto text-indigo-400 group-hover:text-orange-600 transition-colors">
                   <ArrowLeft size={12} className="rotate-180" />
                 </div>
               </button>
@@ -292,7 +292,7 @@ export default function AdminLoginForm({ onSuccess }) {
           <div className="mt-6 text-center">
             <button
               onClick={() => router.push('/')}
-              className="inline-flex items-center gap-1.5 text-[0.65rem] font-bold text-slate-400 hover:text-indigo-600 transition-colors group"
+              className="inline-flex items-center gap-1.5 text-[0.65rem] font-bold text-slate-400 hover:text-orange-600 transition-colors group"
             >
               <ArrowLeft size={12} className="group-hover:-translate-x-0.5 transition-transform" />
               Return to Storefront

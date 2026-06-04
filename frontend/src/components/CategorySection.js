@@ -48,8 +48,11 @@ export default function CategorySection({ onCategoryClick }) {
   // Realtime: refetch whenever an admin adds/edits/removes a category
   useRealtime('dashboard', { category_updated: loadCats });
 
-  const displayCats = cats;
-  const scrollingCats = displayCats.length > 1 ? [...displayCats, ...displayCats] : displayCats;
+  // Only show root-level categories (those not listed as subcategory of another category)
+  const displayCats = cats.filter(c => !c.rootCategory || c.rootCategory === '--' || !cats.some(p => p.name === c.rootCategory));
+  // Only duplicate for marquee if we have enough items to scroll (e.g., > 6)
+  const isMarquee = displayCats.length > 6;
+  const scrollingCats = isMarquee ? [...displayCats, ...displayCats] : displayCats;
 
   if (displayCats.length === 0) return null;
 
@@ -82,8 +85,8 @@ export default function CategorySection({ onCategoryClick }) {
           </button>
         </div>
 
-        <div className="category-marquee-shell overflow-hidden bg-white py-3">
-          <div className="category-marquee-track gap-6 pr-6 sm:gap-9 sm:pr-9 lg:gap-12 lg:pr-12">
+        <div className={`category-marquee-shell overflow-hidden bg-white py-3 ${!isMarquee ? 'flex justify-center sm:justify-start overflow-x-auto' : ''}`}>
+          <div className={`${isMarquee ? 'category-marquee-track' : 'flex'} gap-6 pr-6 sm:gap-9 sm:pr-9 lg:gap-12 lg:pr-12`}>
           {scrollingCats.map((cat, idx) => {
             const Icon = iconMap[cat.name] || LayoutGrid;
             const fallbackBg = bgMap[cat.name] || 'from-slate-500 to-slate-600';

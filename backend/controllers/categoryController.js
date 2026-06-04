@@ -10,7 +10,11 @@ export const getCategories = async (req, res) => {
       _id: c.id,
       order: c.sort_order,
       image: c.image_url,
-      banner: c.banner_url || ''  // Safely access banner_url with fallback to empty string
+      banner: c.banner_url || '',
+      subcategories: c.subcategories || [],
+      rootCategory: c.root_category || '',
+      featured: c.featured || false,
+      status: c.status !== undefined ? c.status : true,
     }));
     res.json(formatted);
   } catch (error) {
@@ -20,7 +24,7 @@ export const getCategories = async (req, res) => {
 
 export const createCategory = async (req, res) => {
   try {
-    const { name, image, banner, order } = req.body;
+    const { name, image, banner, order, subcategories, rootCategory, featured, status } = req.body;
     
     const { data: existing } = await db.database.from('categories').select('id').eq('name', name).single();
     if (existing) return res.status(400).json({ message: 'Category already exists' });
@@ -28,10 +32,13 @@ export const createCategory = async (req, res) => {
     const insertData = {
       name,
       image_url: image || '',
-      sort_order: order || 0
+      sort_order: order || 0,
+      subcategories: subcategories || [],
+      root_category: rootCategory || '',
+      featured: featured || false,
+      status: status !== undefined ? status : true,
     };
     
-    // Only include banner_url if provided or if schema supports it
     if (banner !== undefined) {
       insertData.banner_url = banner;
     }
@@ -39,9 +46,7 @@ export const createCategory = async (req, res) => {
     let result = await db.database.from('categories').insert(insertData).select().single();
     let { data: category, error } = result;
     
-    // If error is about banner_url column not existing, retry without it
     if (error && error.message && error.message.includes('banner_url')) {
-      console.warn('banner_url column not found in schema, retrying without it');
       delete insertData.banner_url;
       result = await db.database.from('categories').insert(insertData).select().single();
       category = result.data;
@@ -49,7 +54,7 @@ export const createCategory = async (req, res) => {
     }
     
     if (error) throw error;
-    res.status(201).json({ ...category, _id: category.id, banner: category.banner_url || '' });
+    res.status(201).json({ ...category, _id: category.id, banner: category.banner_url || '', subcategories: category.subcategories || [], rootCategory: category.root_category || '' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -57,7 +62,7 @@ export const createCategory = async (req, res) => {
 
 export const updateCategory = async (req, res) => {
   try {
-    const { name, image, banner, order } = req.body;
+    const { name, image, banner, order, subcategories, rootCategory, featured, status } = req.body;
     
     if (name) {
       const { data: existing } = await db.database.from('categories').select('id').eq('name', name).neq('id', req.params.id).single();
@@ -69,13 +74,15 @@ export const updateCategory = async (req, res) => {
     if (image !== undefined) updateData.image_url = image;
     if (banner !== undefined) updateData.banner_url = banner;
     if (order !== undefined) updateData.sort_order = order;
+    if (subcategories !== undefined) updateData.subcategories = subcategories;
+    if (rootCategory !== undefined) updateData.root_category = rootCategory;
+    if (featured !== undefined) updateData.featured = featured;
+    if (status !== undefined) updateData.status = status;
     
     let result = await db.database.from('categories').update(updateData).eq('id', req.params.id).select().single();
     let { data: category, error } = result;
     
-    // If error is about banner_url column not existing, retry without it
     if (error && error.message && error.message.includes('banner_url')) {
-      console.warn('banner_url column not found in schema, retrying without it');
       delete updateData.banner_url;
       result = await db.database.from('categories').update(updateData).eq('id', req.params.id).select().single();
       category = result.data;
@@ -83,7 +90,7 @@ export const updateCategory = async (req, res) => {
     }
     
     if (error || !category) return res.status(404).json({ message: 'Category not found' });
-    res.json({ message: 'Category updated successfully', ...category, _id: category.id });
+    res.json({ message: 'Category updated successfully', ...category, _id: category.id, rootCategory: category.root_category || '', featured: category.featured || false, status: category.status !== undefined ? category.status : true });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

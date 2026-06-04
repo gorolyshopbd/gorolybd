@@ -440,7 +440,10 @@ const handleVoiceConfirmation = async (req, res) => {
 const deleteOrder = async (req, res) => {
   try {
     if (req.user.role === 'seller') {
-      return res.status(403).json({ message: 'Sellers cannot delete orders' });
+      const allowed = await canSellerManageOrder(req.user._id, req.params.id);
+      if (!allowed) {
+        return res.status(403).json({ message: 'Not authorized to delete this order' });
+      }
     }
 
     const { data: order, error: findError } = await db.database

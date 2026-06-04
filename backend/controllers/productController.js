@@ -1,4 +1,5 @@
 import { db } from '../config/db.js';
+import { generateImageAlt, injectInternalLinks, generateProductMeta } from '../services/aiSeoService.js';
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -21,7 +22,32 @@ const getProducts = async (req, res) => {
       query = query.ilike('name', `%${keyword}%`);
     }
     if (category) {
-      query = query.ilike('category', category);
+      try {
+        const { data: categoriesFound } = await db.database
+          .from('categories')
+          .select('name, subcategories')
+          .ilike('name', category)
+          .limit(1);
+        
+        const catData = categoriesFound && categoriesFound[0];
+        if (catData) {
+          const categoriesToMatch = [catData.name];
+          const subs = catData.subcategories
+            ? (Array.isArray(catData.subcategories)
+              ? catData.subcategories
+              : (typeof catData.subcategories === 'string'
+                ? catData.subcategories.split(',').map(s => s.trim()).filter(Boolean)
+                : []))
+            : [];
+          categoriesToMatch.push(...subs);
+          query = query.in('category', categoriesToMatch);
+        } else {
+          query = query.ilike('category', category);
+        }
+      } catch (err) {
+        console.error('Failed to resolve nested categories:', err);
+        query = query.ilike('category', category);
+      }
     }
     if (isFlashSale) {
       query = query.eq('is_flash_sale', true);
@@ -150,7 +176,7 @@ const deleteProduct = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
   try {
-    const { data: product, error } = await db.database.from('products').insert({
+    const insertData = {
       user_id: req.user._id,
       name: 'Sample Name',
       price: 0,
@@ -178,7 +204,23 @@ const createProduct = async (req, res) => {
       is_catalog: true,
       is_todays_deal: false,
       is_featured: false,
-    }).select().single();
+    };
+
+    let result = await db.database.from('products').insert(insertData).select().single();
+
+    // Auto-remove missing columns
+    while (result.error && result.error.message && result.error.message.includes('Could not find the') && result.error.message.includes('column')) {
+      const match = result.error.message.match(/'([^']+)' column/);
+      if (match && match[1]) {
+        console.warn(`Column ${match[1]} not found, retrying insert without it`);
+        delete insertData[match[1]];
+        result = await db.database.from('products').insert(insertData).select().single();
+      } else {
+        break;
+      }
+    }
+
+    let { data: product, error } = result;
 
     if (error) throw error;
     res.status(201).json({ ...product, _id: product.id });
@@ -240,7 +282,63 @@ const updateProduct = async (req, res) => {
     if (isTodaysDeal !== undefined) updateData.is_todays_deal = isTodaysDeal;
     if (isFeatured !== undefined) updateData.is_featured = isFeatured;
 
-    const { data: product, error } = await db.database.from('products').update(updateData).eq('id', req.params.id).select().single();
+    // ── AI SEO: Auto-generate Image ALT text ────────────────────────────────
+    if (image && !updateData.image_alt) {
+      try {
+        updateData.image_alt = await generateImageAlt({
+          name: updateData.name || name,
+          category: updateData.category || category,
+          brand: updateData.brand || brand,
+        });
+      } catch (e) { /* non-blocking */ }
+    }
+
+    // ── AI SEO: Auto-generate missing meta title/description ────────────────
+    if (!metaTitle || !metaDescription) {
+      try {
+        const aiMeta = await generateProductMeta({
+          name: updateData.name || name,
+          category: updateData.category || category,
+          brand: updateData.brand || brand,
+          description: updateData.description || description || '',
+        });
+        if (!metaTitle) updateData.meta_title = aiMeta.title;
+        if (!metaDescription) updateData.meta_description = aiMeta.description;
+      } catch (e) { /* non-blocking */ }
+    }
+
+    // ── AI SEO: Inject internal links into description ───────────────────────
+    if (description !== undefined) {
+      try {
+        const [{ data: allCats }, { data: topProds }] = await Promise.all([
+          db.database.from('categories').select('id, name').limit(50),
+          db.database.from('products').select('id, name').limit(50),
+        ]);
+        updateData.description = await injectInternalLinks(
+          updateData.description,
+          (allCats || []).map(c => ({ ...c, _id: c.id })),
+          (topProds || []).map(p => ({ ...p, _id: p.id })),
+          req.params.id
+        );
+      } catch (e) { /* non-blocking */ }
+    }
+    // ───────────────────────────────────────────────────────────────────────
+
+    let result = await db.database.from('products').update(updateData).eq('id', req.params.id).select().single();
+    
+    // Auto-remove missing columns
+    while (result.error && result.error.message && result.error.message.includes('Could not find the') && result.error.message.includes('column')) {
+      const match = result.error.message.match(/'([^']+)' column/);
+      if (match && match[1]) {
+        console.warn(`Column ${match[1]} not found, retrying update without it`);
+        delete updateData[match[1]];
+        result = await db.database.from('products').update(updateData).eq('id', req.params.id).select().single();
+      } else {
+        break;
+      }
+    }
+
+    let { data: product, error } = result;
     if (error) throw error;
 
     if (images !== undefined) {

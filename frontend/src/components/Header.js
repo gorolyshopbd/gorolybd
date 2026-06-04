@@ -9,7 +9,7 @@ import CompareModal from './CompareModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export default function Header({ onCartClick, onAuthClick, onSearchChange, currentSearch, onTabChange, activeTab }) {
+export default function Header({ onCartClick, onAuthClick, onSearchChange, currentSearch, onTabChange, activeTab, onCategoryClick }) {
   const { user, logout, cartItems, compareList = [] } = useContext(ShopContext);
   const { lang, t, setLang } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -109,6 +109,65 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
     });
   }, [categories]);
 
+  const getMegaMenuStructure = (cat) => {
+    // Find Level 2 subcategories (rows where rootCategory === cat.name)
+    const level2Rows = uniqueCategories.filter(
+      (c) => c.rootCategory && String(c.rootCategory).trim().toLowerCase() === String(cat.name).trim().toLowerCase()
+    );
+
+    // Combine with explicit subcategories stored in cat.subcategories array
+    const explicitLevel2Names = cat.subcategories
+      ? (Array.isArray(cat.subcategories)
+        ? cat.subcategories
+        : (typeof cat.subcategories === 'string'
+          ? cat.subcategories.split(',').map((s) => s.trim()).filter(Boolean)
+          : []))
+      : [];
+
+    const columns = [...level2Rows];
+    explicitLevel2Names.forEach((name) => {
+      const exists = level2Rows.some(
+        (r) => String(r.name).trim().toLowerCase() === String(name).trim().toLowerCase()
+      );
+      if (!exists) {
+        columns.push({
+          name,
+          _id: `explicit-${name}`,
+          subcategories: []
+        });
+      }
+    });
+
+    // For each subcategory column, resolve Level 3 children
+    return columns.map((col) => {
+      const explicitChildren = col.subcategories
+        ? (Array.isArray(col.subcategories)
+          ? col.subcategories
+          : (typeof col.subcategories === 'string'
+            ? col.subcategories.split(',').map((s) => s.trim()).filter(Boolean)
+            : []))
+        : [];
+
+      // Find implicit children: category rows where rootCategory matches col.name
+      const implicitChildren = uniqueCategories
+        .filter((c) => c.rootCategory && String(c.rootCategory).trim().toLowerCase() === String(col.name).trim().toLowerCase())
+        .map((c) => c.name);
+
+      const mergedChildren = [...implicitChildren];
+      explicitChildren.forEach((childName) => {
+        if (!mergedChildren.map((n) => n.toLowerCase()).includes(childName.toLowerCase())) {
+          mergedChildren.push(childName);
+        }
+      });
+
+      return {
+        _id: col._id || col.id || col.name,
+        name: col.name,
+        items: mergedChildren
+      };
+    });
+  };
+
   const scrollToTop = () => {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -133,7 +192,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
   const headerTextColor = headerSettings.headerTextColor || '#FFFFFF';
   const headerAccentColor = headerSettings.headerAccentColor || '#FF6600';
 
-  return (<div className="rounded-2xl overflow-visible shadow-lg border border-slate-200 bg-white/95 backdrop-blur-lg transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/95">
+  return (<div className="relative z-[999] rounded-2xl overflow-visible shadow-lg border border-slate-200 bg-white/95 backdrop-blur-lg transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/95">
     
       <style>{`
         @keyframes bannerSlide {
@@ -179,6 +238,20 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
           opacity: 1;
           transform: translateY(0) scale(1);
           pointer-events: auto;
+        }
+        .mega-menu-item {
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .mega-menu-item:hover {
+          transform: translateX(4px);
+          color: #FF6600 !important;
+        }
+        .mega-menu-item span {
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .mega-menu-item:hover span {
+          background-color: #FF6600 !important;
+          transform: scale(1.4);
         }
       `}</style>
 
@@ -465,54 +538,131 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                     e.stopPropagation();
                     setDesktopCategoryMenuOpen((open) => !open);
                   }}
-                  className="flex items-center gap-2 font-bold text-xs transition-all duration-200 bg-white/10 hover:bg-white/20 px-3.5 py-2 rounded-xl border border-white/15 cursor-pointer shadow-sm backdrop-blur"
-                  style={{ color: headerTextColor }}
+                  className="flex items-center justify-between gap-3 font-extrabold text-sm cursor-pointer w-[280px] px-5 py-3.5 transition-all duration-300 text-white rounded-xl hover:scale-[1.01] active:scale-95 border-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${headerAccentColor}, ${headerBgColor})`,
+                    boxShadow: desktopCategoryMenuOpen 
+                      ? 'none' 
+                      : '0 8px 25px -4px rgba(255, 102, 0, 0.35)',
+                  }}
                 >
-                  <Menu size={13} style={{ color: headerTextColor, opacity: 0.85 }} />
-                  <span>{t('shopByCategories')}</span>
-                  <ChevronDown size={11} className={`transition-transform duration-200 ${desktopCategoryMenuOpen ? 'rotate-180' : ''}`} style={{ color: headerTextColor, opacity: 0.75 }} />
+                  <div className="flex items-center gap-3">
+                    <Menu size={18} className="text-white" />
+                    <span>{t('shopByCategories')}</span>
+                  </div>
+                  <ChevronDown size={16} className={`transition-transform duration-300 ${desktopCategoryMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 <div
                   ref={desktopCategoryMenuRef}
-                  className={`absolute left-0 top-full mt-3 w-[32rem] rounded-[32px] border border-slate-100 bg-white/95 p-4 shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl transition-all duration-200 dark:border-slate-800/80 dark:bg-slate-900/95 z-[99999] ${
-                    desktopCategoryMenuOpen ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 translate-y-2 scale-95 pointer-events-none'
+                  className={`absolute left-0 top-full mt-2 w-[280px] rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all duration-300 transform origin-top z-[99999] p-1.5 ${
+                    desktopCategoryMenuOpen ? 'opacity-100 scale-y-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-y-95 -translate-y-2 pointer-events-none'
                   }`}
                 >
-                  <div className="mb-4 flex items-center justify-between gap-4 rounded-3xl bg-slate-50 px-4 py-3 dark:bg-slate-800/70">
-                    <div>
-                      <div className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">All Categories</div>
-                      <div className="text-sm font-bold text-slate-900 dark:text-slate-100">Explore our best-selling departments</div>
-                    </div>
-                    <div className="inline-flex items-center gap-2 rounded-2xl bg-[#FFFBF5] px-3 py-2 text-[11px] font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                      <LayoutGrid size={15} className="text-[#FF6600]" />
-                      {uniqueCategories.length} items
-                    </div>
-                  </div>
-                  <div className="grid gap-2 max-h-[24rem] overflow-y-auto pr-1 scrollbar-thin">
-                    {uniqueCategories.map((cat) => (
-                      <button
-                        key={cat._id || cat.name}
-                        onClick={() => { onSearchChange(cat.name); onTabChange('shop'); setDesktopCategoryMenuOpen(false); }}
-                        className="group flex items-center justify-between rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 transition duration-200 hover:border-[#FF6600] hover:bg-[#FFF4E6] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-[#FF6600]/50 dark:hover:bg-slate-800"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white shadow-sm overflow-hidden dark:bg-slate-900">
-                            {cat.image ? (
-                              <img src={getImageUrl(cat.image)} alt={cat.name} className="h-full w-full object-cover" />
-                            ) : (
-                              <LayoutGrid size={22} className="text-slate-500 dark:text-slate-400" />
+                  <div className="flex flex-col">
+                    <button
+                      onClick={() => { onSearchChange(''); onTabChange('shop'); setDesktopCategoryMenuOpen(false); }}
+                      className="group flex items-center justify-between border-b border-slate-100/50 dark:border-slate-800/50 px-4.5 py-3 hover:bg-orange-50/80 dark:hover:bg-slate-800/70 rounded-xl transition duration-200 border-0 bg-transparent cursor-pointer w-full text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <LayoutGrid size={16} className="text-slate-400 group-hover:text-[#FF6600] transition-colors" />
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-[#FF6600] transition-colors">All Categories</span>
+                      </div>
+                      <ChevronRight size={14} className="text-slate-300 group-hover:text-[#FF6600] group-hover:translate-x-0.5 transition" />
+                    </button>
+                    {uniqueCategories.filter(c => !c.rootCategory || c.rootCategory === '--' || !uniqueCategories.some(p => p.name === c.rootCategory)).map((cat) => {
+                      const columns = getMegaMenuStructure(cat);
+                      const hasSubcategories = columns.length > 0;
+                      
+                      return (
+                        <div
+                          key={cat._id || cat.name}
+                          className="group relative"
+                        >
+                          <button
+                            onClick={() => { onCategoryClick ? onCategoryClick(cat.name) : (onSearchChange(cat.name), onTabChange('shop')); setDesktopCategoryMenuOpen(false); }}
+                            className="w-full flex items-center justify-between border-b border-slate-100/50 dark:border-slate-800/50 px-4.5 py-3.5 hover:bg-orange-50/80 dark:hover:bg-slate-800/70 rounded-xl transition duration-200 border-0 bg-transparent cursor-pointer text-left"
+                          >
+                            <div className="flex items-center gap-3">
+                              {cat.image ? (
+                                <div className="w-5.5 h-5.5 overflow-hidden rounded-lg opacity-85 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                  <img src={getImageUrl(cat.image)} alt={cat.name} className="w-full h-full object-cover" />
+                                </div>
+                              ) : (
+                                <LayoutGrid size={16} className="text-slate-400 group-hover:text-[#FF6600] transition-colors" />
+                              )}
+                              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-[#FF6600] transition-colors">{cat.name}</span>
+                            </div>
+                            {hasSubcategories && (
+                              <ChevronRight size={14} className="text-slate-350 group-hover:text-[#FF6600] group-hover:translate-x-0.5 transition" />
                             )}
-                          </div>
-                          <div className="text-left">
-                            <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{cat.name}</div>
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400">{cat.description || (lang === 'bn' ? 'ব্রাউজ করুন' : 'Browse products')}</div>
-                          </div>
+                          </button>
+                          
+                          {/* Mega Menu Flyout */}
+                          {hasSubcategories && (
+                            <div
+                              className="absolute left-[calc(100%+8px)] top-0 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white/98 dark:bg-slate-900/98 backdrop-blur-2xl p-7 shadow-[0_20px_50px_rgba(0,0,0,0.18)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0 z-[999999] min-h-[340px] flex flex-col justify-start"
+                              style={{
+                                width: columns.length === 1 ? '250px' :
+                                       columns.length === 2 ? '500px' :
+                                       columns.length === 3 ? '720px' : '920px',
+                              }}
+                            >
+                              <div className={`grid gap-6 ${
+                                columns.length === 1 ? 'grid-cols-1' :
+                                columns.length === 2 ? 'grid-cols-2' :
+                                columns.length === 3 ? 'grid-cols-3' : 'grid-cols-4'
+                              }`}>
+                                {columns.map((col) => (
+                                  <div key={col._id} className="flex flex-col min-w-[145px]">
+                                    {/* Column Header (Level 2 Category) */}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (onCategoryClick) onCategoryClick(col.name); else { onSearchChange(col.name); onTabChange('shop'); }
+                                        setDesktopCategoryMenuOpen(false);
+                                      }}
+                                      className="text-left font-black text-xs text-slate-800 dark:text-slate-100 border-b border-orange-100 dark:border-orange-950 pb-2.5 mb-3.5 hover:text-[#FF6600] dark:hover:text-orange-400 transition duration-200 bg-transparent border-0 cursor-pointer uppercase tracking-wider flex items-center gap-1.5"
+                                    >
+                                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF6600]" />
+                                      {col.name}
+                                    </button>
+                                    
+                                    {/* Column Items (Level 3 sub-subcategories) */}
+                                    {col.items && col.items.length > 0 && (
+                                      <div className="flex flex-col gap-2">
+                                        {col.items.map((sub, sIdx) => (
+                                          <button
+                                            key={sIdx}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (onCategoryClick) onCategoryClick(sub); else { onSearchChange(sub); onTabChange('shop'); }
+                                              setDesktopCategoryMenuOpen(false);
+                                            }}
+                                            className="mega-menu-item text-left text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-[#FF6600] dark:hover:text-orange-400 transition-all duration-200 bg-transparent border-0 cursor-pointer p-0 flex items-center gap-1.5"
+                                          >
+                                            <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-750 transition-all duration-200 flex-shrink-0" />
+                                            {sub}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <ChevronRight size={18} className="text-slate-400 transition group-hover:text-[#FF6600]" />
-                      </button>
-                    ))}
+                      );
+                    })}
                   </div>
+                  <button
+                    onClick={() => { onSearchChange(''); onTabChange('shop'); setDesktopCategoryMenuOpen(false); }}
+                    className="w-[calc(100%-16px)] mx-2 my-2 flex items-center justify-between bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-[#e05a00] text-white font-extrabold px-4.5 py-3.5 transition-all duration-300 rounded-xl shadow-lg shadow-orange-500/15 cursor-pointer border-0"
+                  >
+                    <span className="text-sm font-bold text-white">View All Categories</span>
+                    <ChevronRight size={14} className="text-white font-bold" />
+                  </button>
                 </div>
               </div>
 
@@ -720,7 +870,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
             className="absolute inset-0 h-full w-full cursor-default bg-slate-950/20 backdrop-blur-sm"
           />
           <div className="absolute left-3 right-3 top-6 mx-auto max-w-3xl overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_32px_120px_rgba(15,23,42,0.25)] dark:border-slate-800/80 dark:bg-slate-950 sm:left-6 sm:right-auto sm:top-8 lg:top-10 sm:w-[92%] xl:w-[78%]">
-            <div className="flex h-14 items-center justify-between bg-[#FF005C] px-4 text-white">
+            <div className="flex h-14 items-center justify-between px-4 text-white" style={{ background: `linear-gradient(135deg, ${headerBgColor}, ${headerAccentColor})` }}>
               <div className="flex items-center gap-2">
                 <SlidersHorizontal size={17} />
                 <span className="text-base font-bold">All Categories</span>
@@ -749,8 +899,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 <button
                   key={cat._id || cat.name}
                   onClick={() => {
-                    onSearchChange(cat.name);
-                    onTabChange('shop');
+                    if (onCategoryClick) onCategoryClick(cat.name); else { onSearchChange(cat.name); onTabChange('shop'); }
                     setCategoryPanelOpen(false);
                     setMobileMenuOpen(false);
                     scrollToTop();
