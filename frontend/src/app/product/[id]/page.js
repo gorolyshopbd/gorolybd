@@ -313,11 +313,20 @@ export default function ProductDetailPage() {
                       )}
                     </div>
 
+                    {product.shortDescription && (
+                      <div className="pt-2 border-b border-slate-100 pb-2">
+                        <p className="text-[15px] text-slate-800 font-bold leading-relaxed">
+                          {product.shortDescription}
+                        </p>
+                      </div>
+                    )}
+
                     <div className="pt-2">
                       <h3 className="text-sm font-bold text-slate-800 mb-1">Description & Specification</h3>
-                      <div className="text-[14px] text-slate-500 leading-relaxed whitespace-pre-wrap">
-                        {product.description}
-                      </div>
+                      <div 
+                        className="text-[15px] text-slate-800 font-bold leading-relaxed whitespace-pre-wrap [&_b]:font-black [&_strong]:font-black [&_i]:italic [&_em]:italic [&_ul]:list-disc [&_ul]:ml-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:ml-5 [&_ol]:my-2 [&_h1]:text-xl [&_h1]:font-black [&_h2]:text-lg [&_h2]:font-black [&_p]:mb-2"
+                        dangerouslySetInnerHTML={{ __html: product.description }}
+                      />
                     </div>
 
                     {product.brand && (

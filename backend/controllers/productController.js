@@ -74,9 +74,10 @@ const getProducts = async (req, res) => {
       isFlashSale: p.is_flash_sale,
       flashSaleEnd: p.flash_sale_end,
       digitalFileUrl: p.digital_file_url,
+      shortDescription: (p.tags || []).find(t => typeof t === 'string' && t.startsWith('SHORT_DESC:'))?.replace('SHORT_DESC:', '') || '',
       metaTitle: p.meta_title,
       metaDescription: p.meta_description,
-      metaKeywords: p.meta_keywords,
+      metaKeywords: '',
       metaImage: p.meta_image_url,
       youtubeUrl: p.youtube_url,
       image: p.image_url,
@@ -89,7 +90,8 @@ const getProducts = async (req, res) => {
       isPublished: p.is_published,
       isCatalog: p.is_catalog,
       isTodaysDeal: p.is_todays_deal,
-      isFeatured: p.is_featured
+      isFeatured: p.is_featured,
+      tags: (p.tags || []).filter(t => typeof t === 'string' && !t.startsWith('SHORT_DESC:'))
     }));
 
     res.json({ products: formattedProducts, page, pages: Math.ceil(count / pageSize) });
@@ -126,9 +128,10 @@ const getProductById = async (req, res) => {
       isFlashSale: product.is_flash_sale,
       flashSaleEnd: product.flash_sale_end,
       digitalFileUrl: product.digital_file_url,
+      shortDescription: (product.tags || []).find(t => typeof t === 'string' && t.startsWith('SHORT_DESC:'))?.replace('SHORT_DESC:', '') || '',
       metaTitle: product.meta_title,
       metaDescription: product.meta_description,
-      metaKeywords: product.meta_keywords,
+      metaKeywords: '',
       metaImage: product.meta_image_url,
       youtubeUrl: product.youtube_url,
       image: product.image_url,
@@ -143,6 +146,7 @@ const getProductById = async (req, res) => {
       isCatalog: product.is_catalog,
       isTodaysDeal: product.is_todays_deal,
       isFeatured: product.is_featured,
+      tags: (product.tags || []).filter(t => typeof t === 'string' && !t.startsWith('SHORT_DESC:')),
       reviews: reviews || []
     });
   } catch (error) {
@@ -204,6 +208,7 @@ const createProduct = async (req, res) => {
       is_catalog: true,
       is_todays_deal: false,
       is_featured: false,
+      tags: ['SHORT_DESC:Sample Short Description'],
     };
 
     let result = await db.database.from('products').insert([insertData]).select().single();
@@ -234,11 +239,12 @@ const createProduct = async (req, res) => {
 // @route   PUT /api/products/:id
 // @access  Private/Admin
 const updateProduct = async (req, res) => {
+  console.log("UPDATE PRODUCT CALLED WITH:", req.body.shortDescription);
   const {
     name, price, description, image, images, brand, category, countInStock, discountPercent, discountType,
     isFlashSale, isDigital, digitalFileUrl, metaTitle, metaDescription, metaKeywords, metaImage, tags, youtubeUrl, flashSaleStart, flashSaleEnd,
     unit, minOrderQty, barcode, slug, shippingDays, cashOnDelivery,
-    isPublished, isCatalog, isTodaysDeal, isFeatured
+    isPublished, isCatalog, isTodaysDeal, isFeatured, shortDescription
   } = req.body;
 
   try {
@@ -265,9 +271,14 @@ const updateProduct = async (req, res) => {
     if (digitalFileUrl !== undefined) updateData.digital_file_url = digitalFileUrl;
     if (metaTitle !== undefined) updateData.meta_title = metaTitle;
     if (metaDescription !== undefined) updateData.meta_description = metaDescription;
-    if (metaKeywords !== undefined) updateData.meta_keywords = metaKeywords;
+    // if (metaKeywords !== undefined) updateData.meta_keywords = metaKeywords;
     if (metaImage !== undefined) updateData.meta_image_url = metaImage;
-    if (tags !== undefined) updateData.tags = tags;
+    if (tags !== undefined || shortDescription !== undefined) {
+      updateData.tags = (tags || []).filter(t => typeof t === 'string' && !t.startsWith('SHORT_DESC:'));
+      if (shortDescription) {
+        updateData.tags.push('SHORT_DESC:' + shortDescription);
+      }
+    }
     if (youtubeUrl !== undefined) updateData.youtube_url = youtubeUrl;
     if (flashSaleStart !== undefined) updateData.flash_sale_start = flashSaleStart || null;
     if (flashSaleEnd !== undefined) updateData.flash_sale_end = flashSaleEnd || null;
