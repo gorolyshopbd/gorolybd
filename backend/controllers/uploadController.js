@@ -18,9 +18,9 @@ const uploadToInsForge = async (file, folder = 'products') => {
   const filePath = path.join(uploadsDir, filename);
   fs.writeFileSync(filePath, file.buffer);
 
-  // Use the backend server's URL, fallback to localhost:5000
-  // Since the frontend runs on localhost:3000 and hits localhost:5000 for local dev
-  const publicUrl = `http://localhost:5000/uploads/${filename}`;
+  // Use the backend server's public URL, fallback to localhost:5000
+  const baseUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+  const publicUrl = `${baseUrl}/uploads/${filename}`;
   const storageKey = key;
 
   return { url: publicUrl, key: storageKey };
