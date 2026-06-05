@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS products (
   name               TEXT NOT NULL,
   image_url          TEXT NOT NULL DEFAULT '',
   image_id           UUID REFERENCES images(id) ON DELETE SET NULL,
+  image_alt          TEXT DEFAULT '',
   brand              TEXT NOT NULL DEFAULT '',
   category           TEXT NOT NULL DEFAULT '',
   description        TEXT NOT NULL DEFAULT '',
@@ -297,7 +298,7 @@ CREATE TABLE IF NOT EXISTS settings (
   id                           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   -- OTP
   otp_gateway                  TEXT DEFAULT 'Simulated'
-                                 CHECK (otp_gateway IN ('Simulated','Twilio','Firebase','GreenwebSMS','SAS_BULK_SMS')),
+                                 CHECK (otp_gateway IN ('Simulated','Twilio','Firebase','GreenwebSMS','SAS_BULK_SMS','Custom','SMS','Email')),
   otp_length                   INT DEFAULT 6,
   otp_expiry                   INT DEFAULT 5,
   checkout_otp_enabled         BOOLEAN DEFAULT false,
@@ -387,6 +388,11 @@ CREATE TABLE IF NOT EXISTS settings (
   notice_bar_text              TEXT DEFAULT 'Summer Sale - All Swim Suits OFF 50%! Free delivery on orders over ৳999.',
   notice_bar_bg_color          TEXT DEFAULT '#6F1BE4',
   notice_bar_text_color        TEXT DEFAULT '#FFFFFF',
+  -- Top Bar
+  top_bar_helpline             TEXT DEFAULT '',
+  top_bar_store_link           TEXT DEFAULT '',
+  top_bar_play_store_link      TEXT DEFAULT '',
+  top_bar_app_store_link       TEXT DEFAULT '',
   -- Hero Settings
   hero_badge                   TEXT DEFAULT 'Summer Sale',
   hero_title                   TEXT DEFAULT '50% OFF',
