@@ -294,11 +294,11 @@ export const updateSettings = async (req, res) => {
       sas_sms_api_key: sasSmsApiKey ? sasSmsApiKey.trim() : sasSmsApiKey,
       sas_sms_secret_key: sasSmsSecretKey ? sasSmsSecretKey.trim() : sasSmsSecretKey,
       sas_sms_sender_id: sasSmsSenderId ? sasSmsSenderId.trim() : sasSmsSenderId,
-      smtp_host: smtpHost,
+      smtp_host: smtpHost ? smtpHost.trim() : smtpHost,
       smtp_port: smtpPort,
-      smtp_user: smtpUser,
-      smtp_pass: smtpPass,
-      smtp_from_email: smtpFromEmail,
+      smtp_user: smtpUser ? smtpUser.trim() : smtpUser,
+      smtp_pass: smtpPass ? smtpPass.replace(/\s+/g, '') : smtpPass,
+      smtp_from_email: smtpFromEmail ? smtpFromEmail.trim() : smtpFromEmail,
       smtp_enabled: smtpEnabled
     };
 
