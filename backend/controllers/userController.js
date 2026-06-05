@@ -472,16 +472,13 @@ const sendOTP = async (req, res) => {
       }
     } catch (smsError) {
       console.error('[OTP Send Failed]', smsError.message);
-      console.log('[OTP Send Failed] Falling back to simulated mode');
+      return res.status(500).json({ message: `Failed to send SMS: ${smsError.message}` });
     }
+  } else {
+    // Simulated Mode
+    console.log(`[OTP Simulated] to ${target}. Code: ${otp}`);
+    return res.json({ message: `OTP sent successfully to ${target}` });
   }
-
-  console.log(`[OTP Simulated] to ${target}. Code: ${otp}`);
-
-  res.json({
-    message: `OTP simulated sent successfully to ${target}`,
-    otp,
-  });
 };
 
 // @desc    Verify OTP code and authenticate
