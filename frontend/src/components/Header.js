@@ -486,7 +486,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 {/* Wishlist */}
                 <button
                   onClick={() => onTabChange('wishlist')}
-                  className="p-2 text-slate-500 hover:text-[#FF6600] hover:bg-orange-50 rounded-xl transition relative dark:text-slate-300 dark:hover:bg-orange-950/30"
+                  className="hidden sm:block p-2 text-slate-500 hover:text-[#FF6600] hover:bg-orange-50 rounded-xl transition relative dark:text-slate-300 dark:hover:bg-orange-950/30"
                 >
                   <Heart size={17} />
                 </button>
@@ -494,7 +494,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 {/* Cart */}
                 <button
                   onClick={onCartClick}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF6600] hover:bg-[#e05a00] text-white rounded-xl transition shadow-md shadow-[#FF6600]/25 hover:shadow-[#FF6600]/40 relative"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FF6600] hover:bg-[#e05a00] text-white rounded-xl transition shadow-md shadow-[#FF6600]/25 hover:shadow-[#FF6600]/40 relative"
                 >
                   <ShoppingBag size={16} />
                   {cartCount > 0 ? (
