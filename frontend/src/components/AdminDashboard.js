@@ -9369,47 +9369,121 @@ export default function AdminDashboard({ onTabChange }) {
                 </div>
 
                 {/* SAS Bulk SMS Credentials */}
-                <div className="border-t border-slate-100 pt-4 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gateway URL</label>
-                    <input
-                      value={settings.sasSmsGatewayUrl || ''}
-                      onChange={(e) => setSettings({ ...settings, sasSmsGatewayUrl: e.target.value })}
-                      placeholder="http://sms.sasbulksms.com"
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                    />
+                {settings.otpGateway === 'SMS' && (
+                  <div className="border-t border-slate-100 pt-4 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gateway URL</label>
+                      <input
+                        value={settings.sasSmsGatewayUrl || ''}
+                        onChange={(e) => setSettings({ ...settings, sasSmsGatewayUrl: e.target.value })}
+                        placeholder="http://sms.sasbulksms.com"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">API Token</label>
+                      <input
+                        type="text"
+                        value={settings.sasSmsApiKey || ''}
+                        onChange={(e) => setSettings({ ...settings, sasSmsApiKey: e.target.value })}
+                        placeholder="API Token (e.g. 7639814fe75b2cbd)"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Secret Key</label>
+                      <input
+                        type="text"
+                        value={settings.sasSmsSecretKey || ''}
+                        onChange={(e) => setSettings({ ...settings, sasSmsSecretKey: e.target.value })}
+                        placeholder="Secret Key (e.g. 13382300000000)"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Sender ID</label>
+                      <input
+                        type="text"
+                        value={settings.sasSmsSenderId || ''}
+                        onChange={(e) => setSettings({ ...settings, sasSmsSenderId: e.target.value })}
+                        placeholder="Sender ID (e.g. 8809617633299)"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">API Token</label>
-                    <input
-                      type="text"
-                      value={settings.sasSmsApiKey || ''}
-                      onChange={(e) => setSettings({ ...settings, sasSmsApiKey: e.target.value })}
-                      placeholder="API Token (e.g. 7639814fe75b2cbd)"
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                    />
+                )}
+
+                {/* Email (Gmail SMTP) Credentials */}
+                {settings.otpGateway === 'Email' && (
+                  <div className="border-t border-slate-100 pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
+                    <div className="col-span-full mb-1">
+                      <p className="text-xs text-blue-600 bg-blue-50 p-2 rounded-lg border border-blue-100">
+                        <strong>Note:</strong> To use Gmail, you must generate an <strong>App Password</strong> in your Google Account Settings &gt; Security &gt; 2-Step Verification. Do NOT use your real Gmail password.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">SMTP Host</label>
+                      <input
+                        type="text"
+                        value={settings.smtpHost || 'smtp.gmail.com'}
+                        onChange={(e) => setSettings({ ...settings, smtpHost: e.target.value })}
+                        placeholder="smtp.gmail.com"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">SMTP Port</label>
+                      <input
+                        type="number"
+                        value={settings.smtpPort || 587}
+                        onChange={(e) => setSettings({ ...settings, smtpPort: Number(e.target.value) })}
+                        placeholder="587"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Sender Name / Email</label>
+                      <input
+                        type="text"
+                        value={settings.smtpFromEmail || ''}
+                        onChange={(e) => setSettings({ ...settings, smtpFromEmail: e.target.value })}
+                        placeholder="noreply@goroly.com"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gmail Address (SMTP User)</label>
+                      <input
+                        type="email"
+                        value={settings.smtpUser || ''}
+                        onChange={(e) => setSettings({ ...settings, smtpUser: e.target.value })}
+                        placeholder="your-email@gmail.com"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gmail App Password</label>
+                      <input
+                        type="password"
+                        value={settings.smtpPass || ''}
+                        onChange={(e) => setSettings({ ...settings, smtpPass: e.target.value })}
+                        placeholder="16-letter App Password"
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                      />
+                    </div>
+                    <div className="flex items-end pb-1">
+                      <label className="flex items-center gap-2 cursor-pointer group w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl hover:bg-white transition-all duration-300">
+                        <input
+                          type="checkbox"
+                          checked={settings.smtpEnabled || false}
+                          onChange={(e) => setSettings({ ...settings, smtpEnabled: e.target.checked })}
+                          className="w-5 h-5 accent-orange-600 rounded cursor-pointer"
+                        />
+                        <span className="text-sm font-bold text-gray-700 group-hover:text-gray-900">Enable SMTP Delivery</span>
+                      </label>
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Secret Key</label>
-                    <input
-                      type="text"
-                      value={settings.sasSmsSecretKey || ''}
-                      onChange={(e) => setSettings({ ...settings, sasSmsSecretKey: e.target.value })}
-                      placeholder="Secret Key (e.g. 13382300000000)"
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Sender ID</label>
-                    <input
-                      type="text"
-                      value={settings.sasSmsSenderId || ''}
-                      onChange={(e) => setSettings({ ...settings, sasSmsSenderId: e.target.value })}
-                      placeholder="Sender ID (e.g. 8809617633299)"
-                      className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                    />
-                  </div>
-                </div>
+                )}
                 <div className="flex justify-end pt-4 mt-2 border-t border-slate-100">
                   <button
                     type="submit"
