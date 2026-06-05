@@ -569,34 +569,24 @@ export default function Storefront() {
                           const finalPrice = calculateFinalPrice(product);
                           const isWish = wishlist.some((x) => x._id === product._id);
                           return (
-                            <div key={product._id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden group shadow-sm hover:shadow-xl hover:border-slate-200 transition duration-300 flex flex-col">
-                              <div className="relative pt-[80%] bg-slate-50 overflow-hidden">
+                            <div key={product._id} onClick={() => router.push(`/product/${product._id}`)} className="bg-white rounded-xl border border-slate-100 overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer">
+                              <div className="relative aspect-[4/3] bg-[#f3f4f6] p-4 flex items-center justify-center overflow-hidden">
                                 {product.discountPercent > 0 && (
                                   <span className="absolute top-2 left-2 bg-red-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md z-10">{formatDiscountLabel(product, currencySymbol)}</span>
                                 )}
-                                <button onClick={() => handleAddToWishlist(product)} className={`absolute top-2 right-2 p-1.5 rounded-full shadow-xs transition z-10 ${isWish ? 'bg-red-50 text-red-500' : 'bg-white/80 text-slate-400 hover:text-red-500'}`}>
+                                <button onClick={(e) => { e.stopPropagation(); handleAddToWishlist(product); }} className={`absolute top-2 right-2 p-1.5 rounded-full shadow-xs transition z-10 opacity-0 group-hover:opacity-100 ${isWish ? 'bg-red-50 text-red-500' : 'bg-white/80 text-slate-400 hover:text-red-500'}`}>
                                   <Heart size={14} fill={isWish ? 'currentColor' : 'none'} />
                                 </button>
-                                <img src={getImageUrl(product.image)} alt={product.name} onClick={() => router.push(`/product/${product._id}`)} className="absolute inset-0 w-full h-full object-contain p-3 group-hover:scale-105 transition duration-500 cursor-pointer" />
-                                <button onClick={() => setSelectedProduct(product)} className="absolute bottom-2 right-2 p-1.5 bg-white/90 rounded-lg shadow-xs hover:bg-white transition z-10 text-slate-500 hover:text-[#FF6600]" title={t('quickView')}>
-                                  <Eye size={13} />
-                                </button>
+                                <img src={getImageUrl(product.image)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition duration-500" />
                               </div>
-                              <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
-                                <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">{product.category}</span>
-                                  <h3 onClick={() => router.push(`/product/${product._id}`)} className="font-bold text-slate-800 text-sm hover:text-[#FF6600] cursor-pointer transition line-clamp-2 leading-snug mt-0.5 min-h-[40px]">{product.name}</h3>
-                                  <div className="flex items-center gap-1 mt-1">
-                                    <div className="flex text-amber-400">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={10} fill={i < Math.floor(product.rating || 5) ? 'currentColor' : 'none'} />)}</div>
-                                    <span className="text-slate-400 text-[10px]">({product.numReviews || 12})</span>
-                                  </div>
+                              <div className="p-4 flex-1 flex flex-col">
+                                <div className="mb-2 flex items-center justify-between text-[11px] font-semibold">
+                                  <span className="text-slate-500 truncate max-w-[60%]">{product.brand || 'Goroly'}</span>
+                                  <span className="text-emerald-500 whitespace-nowrap">Sold {product.soldCount || Math.floor(Math.random() * 50) + 10}</span>
                                 </div>
-                                <div className="flex flex-col gap-2 pt-2 border-t border-slate-50 sm:flex-row sm:items-center sm:justify-between">
-                                  <div className="flex flex-wrap items-baseline gap-1">
-                                    <span className="text-sm font-extrabold text-slate-900">{formatPrice(finalPrice, currencySymbol)}</span>
-                                    {product.discountPercent > 0 && <span className="text-xs text-slate-400 line-through">{formatPrice(product.price, currencySymbol)}</span>}
-                                  </div>
-                                  <button onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }} className="h-7 w-full px-2 bg-[#FF6600] hover:bg-orange-600 text-white text-[10px] font-bold rounded-md transition sm:w-auto">{t('add')}</button>
+                                <h3 className="line-clamp-2 min-h-[40px] text-left text-[14px] font-medium leading-snug text-slate-800 transition group-hover:text-[#FF6600]">{product.name}</h3>
+                                <div className="mt-auto pt-3">
+                                  <div className="text-[15px] font-black text-slate-900">{formatPrice(finalPrice, currencySymbol)}</div>
                                 </div>
                               </div>
                             </div>
