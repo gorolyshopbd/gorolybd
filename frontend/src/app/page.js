@@ -580,10 +580,10 @@ export default function Storefront() {
                                 <img src={getImageUrl(product.image)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition duration-500" />
                                 <button
                                   onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }}
-                                  className="absolute bottom-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-all duration-300 hover:bg-[#FF6600] hover:scale-110 active:scale-95 z-10"
+                                  className="absolute bottom-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-all duration-300 hover:bg-[#FF6600] hover:scale-110 active:scale-95 z-10"
                                   title={t('addToCart')}
                                 >
-                                  <ShoppingCart size={15} />
+                                  <ShoppingCart size={20} />
                                 </button>
                               </div>
                               <div className="p-4 flex-1 flex flex-col">

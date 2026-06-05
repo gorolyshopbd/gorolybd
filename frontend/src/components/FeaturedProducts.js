@@ -26,10 +26,10 @@ function ProductCard({ product, onProductClick }) {
         {/* Modern Hover Quick Add */}
         <button
           onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }}
-          className="absolute bottom-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-all duration-300 hover:bg-[#FF6600] hover:scale-110 active:scale-95"
+          className="absolute bottom-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-all duration-300 hover:bg-[#FF6600] hover:scale-110 active:scale-95"
           title="Add to cart"
         >
-          <ShoppingBag size={15} />
+          <ShoppingBag size={20} />
         </button>
       </div>
 
