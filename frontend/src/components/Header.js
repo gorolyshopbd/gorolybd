@@ -423,7 +423,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 <button
                   onClick={toggleDarkMode}
                   title={darkMode ? 'Light Mode' : 'Dark Mode'}
-                  className="relative h-9 w-16 rounded-full border border-slate-200 bg-slate-100 p-1 text-slate-600 transition-all duration-300 hover:border-[#FF6600]/40 hover:bg-orange-50 active:scale-95 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="hidden sm:block relative h-9 w-16 rounded-full border border-slate-200 bg-slate-100 p-1 text-slate-600 transition-all duration-300 hover:border-[#FF6600]/40 hover:bg-orange-50 active:scale-95 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   <span
                     className={`absolute top-1 grid h-7 w-7 place-items-center rounded-full bg-white shadow-sm transition-all duration-300 dark:bg-slate-700 ${
