@@ -73,6 +73,10 @@ CREATE TABLE IF NOT EXISTS categories (
   banner_url TEXT DEFAULT '',
   image_id   UUID REFERENCES images(id) ON DELETE SET NULL,
   sort_order INT DEFAULT 0,
+  subcategories TEXT[] DEFAULT '{}',
+  root_category TEXT DEFAULT '',
+  featured   BOOLEAN DEFAULT false,
+  status     BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
