@@ -393,89 +393,101 @@ const sendOTP = async (req, res) => {
     console.warn('[sendOTP] Settings query timed out or failed, falling back to Simulated:', err.message);
   }
 
-  if (gateway === 'Email') {
-    try {
-      const emailSent = await sendEmail(target, 'Your OTP Code', `Your OTP code is ${otp}`);
-      if (emailSent) {
-        return res.json({ message: `OTP sent successfully to ${target} via Email` });
-      } else {
+  if (type === 'email') {
+    // If it's an email, try SMTP if enabled, otherwise simulate
+    if (settings && settings.smtp_enabled) {
+      try {
+        const emailSent = await sendEmail(target, 'Your OTP Code', `Your OTP code is ${otp}`);
+        if (emailSent) {
+          return res.json({ message: `OTP sent successfully to ${target} via Email` });
+        } else {
+          return res.status(500).json({ message: 'Failed to send OTP via Email. Check SMTP settings.' });
+        }
+      } catch (emailError) {
+        console.error('[Email OTP Send Failed]', emailError.message);
         return res.status(500).json({ message: 'Failed to send OTP via Email. Check SMTP settings.' });
       }
-    } catch (emailError) {
-      console.error('[Email OTP Send Failed]', emailError.message);
-      console.log('[Email OTP Send Failed] Falling back to simulated mode');
+    } else {
+      console.log(`[OTP Simulated for Email] to ${target}. Code: ${otp}`);
+      return res.json({ message: `OTP sent successfully to ${target}` });
     }
-  } else if (type === 'phone' && gateway !== 'Simulated') {
-    try {
-      if (gateway === 'Custom') {
-        if (settings?.custom_sms_api_url && settings.custom_sms_api_url.length > 5) {
-          let reqUrl = settings.custom_sms_api_url
-            .replace('[NUMBER]', target)
-            .replace('[MESSAGE]', encodeURIComponent(`Your OTP code is ${otp}`));
-          
-          const resp = await fetch(reqUrl);
-          const result = await resp.text();
-          console.log(`[OTP Sent via Custom SMS] to ${target}: ${result}`);
-          
-          if (!resp.ok) {
-            throw new Error(`Custom SMS API Error: ${result}`);
-          }
-          return res.json({ message: `OTP sent successfully to ${target}` });
-        } else {
-          return res.status(500).json({ message: 'Custom SMS Gateway URL is not configured properly' });
-        }
-      } else if (gateway === 'SAS_BULK_SMS' || !gateway || gateway === 'SMS') {
-        if (settings?.sas_sms_api_key && settings?.sas_sms_sender_id) {
-          let baseUrl = (settings.sas_sms_gateway_url || 'http://sms.sasbulksms.com:3040').trim();
-          if (baseUrl === 'https://sms.sasbulksms.com/') baseUrl = 'http://sms.sasbulksms.com:3040';
-          const url = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-          
-          let toUser = target.replace(/\D/g, '');
-          if (toUser.startsWith('01') && toUser.length === 11) {
-            toUser = '88' + toUser;
-          } else if (toUser.startsWith('1') && toUser.length === 10) {
-            toUser = '880' + toUser;
-          }
-
-          const params = new URLSearchParams({
-            apikey: settings.sas_sms_api_key ? settings.sas_sms_api_key.trim() : '',
-            secretkey: settings.sas_sms_secret_key ? settings.sas_sms_secret_key.trim() : '',
-            callerID: settings.sas_sms_sender_id ? settings.sas_sms_sender_id.trim() : '',
-            toUser: toUser,
-            messageContent: `Your OTP code is ${otp}`
-          });
-          
-          const reqUrl = `${url}/sendtext?${params.toString()}`;
-          const resp = await fetch(reqUrl, { method: 'GET' });
-          const result = await resp.text();
-          console.log(`[OTP Sent via SAS Bulk SMS] to ${target}: ${result}`);
-          
-          let isError = false;
-          if (!resp.ok) isError = true;
-          try {
-            const jsonResult = JSON.parse(result);
-            if (jsonResult.Status === "-1" || jsonResult.Text === "REJECTD") {
-              isError = true;
+  } else if (type === 'phone') {
+    // If it's a phone, try SMS if not Simulated
+    if (gateway !== 'Simulated' && gateway !== 'Email') {
+      try {
+        if (gateway === 'Custom') {
+          if (settings?.custom_sms_api_url && settings.custom_sms_api_url.length > 5) {
+            let reqUrl = settings.custom_sms_api_url
+              .replace('[NUMBER]', target)
+              .replace('[MESSAGE]', encodeURIComponent(`Your OTP code is ${otp}`));
+            
+            const resp = await fetch(reqUrl);
+            const result = await resp.text();
+            console.log(`[OTP Sent via Custom SMS] to ${target}: ${result}`);
+            
+            if (!resp.ok) {
+              throw new Error(`Custom SMS API Error: ${result}`);
             }
-          } catch (e) {
-            if (result.toLowerCase().includes('error')) isError = true;
+            return res.json({ message: `OTP sent successfully to ${target}` });
+          } else {
+            return res.status(500).json({ message: 'Custom SMS Gateway URL is not configured properly' });
           }
+        } else if (gateway === 'SAS_BULK_SMS' || !gateway || gateway === 'SMS') {
+          if (settings?.sas_sms_api_key && settings?.sas_sms_sender_id) {
+            let baseUrl = (settings.sas_sms_gateway_url || 'http://sms.sasbulksms.com:3040').trim();
+            if (baseUrl === 'https://sms.sasbulksms.com/') baseUrl = 'http://sms.sasbulksms.com:3040';
+            const url = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+            
+            let toUser = target.replace(/\D/g, '');
+            if (toUser.startsWith('01') && toUser.length === 11) {
+              toUser = '88' + toUser;
+            } else if (toUser.startsWith('1') && toUser.length === 10) {
+              toUser = '880' + toUser;
+            }
 
-          if (isError) {
-            throw new Error(`SAS Bulk SMS API Error: ${result}`);
+            const params = new URLSearchParams({
+              apikey: settings.sas_sms_api_key ? settings.sas_sms_api_key.trim() : '',
+              secretkey: settings.sas_sms_secret_key ? settings.sas_sms_secret_key.trim() : '',
+              callerID: settings.sas_sms_sender_id ? settings.sas_sms_sender_id.trim() : '',
+              toUser: toUser,
+              messageContent: `Your OTP code is ${otp}`
+            });
+            
+            const reqUrl = `${url}/sendtext?${params.toString()}`;
+            const resp = await fetch(reqUrl, { method: 'GET' });
+            const result = await resp.text();
+            console.log(`[OTP Sent via SAS Bulk SMS] to ${target}: ${result}`);
+            
+            let isError = false;
+            if (!resp.ok) isError = true;
+            try {
+              const jsonResult = JSON.parse(result);
+              if (jsonResult.Status === "-1" || jsonResult.Text === "REJECTD") {
+                isError = true;
+              }
+            } catch (e) {
+              if (result.toLowerCase().includes('error')) isError = true;
+            }
+
+            if (isError) {
+              throw new Error(`SAS Bulk SMS API Error: ${result}`);
+            }
+
+            return res.json({ message: `OTP sent successfully to ${target}` });
+          } else {
+            return res.status(500).json({ message: 'SMS Gateway is not configured properly' });
           }
-
-          return res.json({ message: `OTP sent successfully to ${target}` });
-        } else {
-          return res.status(500).json({ message: 'SMS Gateway is not configured properly' });
         }
+      } catch (smsError) {
+        console.error('[OTP Send Failed]', smsError.message);
+        return res.status(500).json({ message: `Failed to send SMS: ${smsError.message}` });
       }
-    } catch (smsError) {
-      console.error('[OTP Send Failed]', smsError.message);
-      return res.status(500).json({ message: `Failed to send SMS: ${smsError.message}` });
+    } else {
+      console.log(`[OTP Simulated for Phone] to ${target}. Code: ${otp}`);
+      return res.json({ message: `OTP sent successfully to ${target}` });
     }
   } else {
-    // Simulated Mode
+    // unknown type
     console.log(`[OTP Simulated] to ${target}. Code: ${otp}`);
     return res.json({ message: `OTP sent successfully to ${target}` });
   }
