@@ -34,6 +34,15 @@ CREATE TABLE IF NOT EXISTS users (
   elevenlabs_voice_id TEXT DEFAULT '',
   openai_api_key TEXT DEFAULT '',
   openai_model TEXT DEFAULT 'gpt-5.2',
+  "customDomain" TEXT DEFAULT '',
+  owner_name    TEXT DEFAULT '',
+  facebook      TEXT DEFAULT '',
+  instagram     TEXT DEFAULT '',
+  division      TEXT DEFAULT '',
+  district      TEXT DEFAULT '',
+  upazila       TEXT DEFAULT '',
+  address_details TEXT DEFAULT '',
+  extra_delivery_time INTEGER DEFAULT 0,
   created_at    TIMESTAMPTZ DEFAULT NOW(),
   updated_at    TIMESTAMPTZ DEFAULT NOW()
 );
@@ -93,6 +102,7 @@ CREATE TABLE IF NOT EXISTS products (
   brand              TEXT NOT NULL DEFAULT '',
   category           TEXT NOT NULL DEFAULT '',
   description        TEXT NOT NULL DEFAULT '',
+  short_description  TEXT DEFAULT '',
   rating             NUMERIC(3,2) NOT NULL DEFAULT 0,
   num_reviews        INT NOT NULL DEFAULT 0,
   price              NUMERIC(10,2) NOT NULL DEFAULT 0,
@@ -365,6 +375,20 @@ CREATE TABLE IF NOT EXISTS settings (
   notice_bar_text              TEXT DEFAULT 'Summer Sale - All Swim Suits OFF 50%! Free delivery on orders over ৳999.',
   notice_bar_bg_color          TEXT DEFAULT '#6F1BE4',
   notice_bar_text_color        TEXT DEFAULT '#FFFFFF',
+  -- Hero Settings
+  hero_badge                   TEXT DEFAULT 'Summer Sale',
+  hero_title                   TEXT DEFAULT '50% OFF',
+  hero_feature1_title          TEXT DEFAULT 'Free',
+  hero_feature1_subtitle       TEXT DEFAULT 'Shipping Over $100',
+  hero_feature2_title          TEXT DEFAULT '30 Days',
+  hero_feature2_subtitle       TEXT DEFAULT 'Return & Money Back',
+  -- SMTP Settings
+  smtp_host                    TEXT DEFAULT 'smtp.gmail.com',
+  smtp_port                    INTEGER DEFAULT 587,
+  smtp_user                    TEXT DEFAULT '',
+  smtp_pass                    TEXT DEFAULT '',
+  smtp_from_email              TEXT DEFAULT '',
+  smtp_enabled                 BOOLEAN DEFAULT false,
   created_at                   TIMESTAMPTZ DEFAULT NOW(),
   updated_at                   TIMESTAMPTZ DEFAULT NOW()
 );
@@ -735,3 +759,13 @@ CREATE TABLE IF NOT EXISTS subscribers (
   email       TEXT NOT NULL UNIQUE,
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- ============================================================
+-- Helper for running raw migrations
+-- ============================================================
+CREATE OR REPLACE FUNCTION run_sql(query text)
+RETURNS void AS $$
+BEGIN
+  EXECUTE query;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
