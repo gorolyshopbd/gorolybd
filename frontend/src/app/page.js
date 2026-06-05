@@ -569,7 +569,7 @@ export default function Storefront() {
                           const finalPrice = calculateFinalPrice(product);
                           const isWish = wishlist.some((x) => x._id === product._id);
                           return (
-                            <div key={product._id} onClick={() => router.push(`/product/${product._id}`)} className="bg-white rounded-xl border border-slate-100 overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer">
+                            <div key={product._id} onClick={() => router.push(`/product/${product._id}`)} className="bg-white rounded-xl border border-slate-100 overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer relative">
                               <div className="relative aspect-[4/3] bg-[#f3f4f6] p-4 flex items-center justify-center overflow-hidden">
                                 {product.discountPercent > 0 && (
                                   <span className="absolute top-2 left-2 bg-red-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md z-10">{formatDiscountLabel(product, currencySymbol)}</span>
@@ -578,6 +578,13 @@ export default function Storefront() {
                                   <Heart size={14} fill={isWish ? 'currentColor' : 'none'} />
                                 </button>
                                 <img src={getImageUrl(product.image)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition duration-500" />
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }}
+                                  className="absolute bottom-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-all duration-300 hover:bg-[#FF6600] hover:scale-110 active:scale-95 z-10"
+                                  title={t('addToCart')}
+                                >
+                                  <ShoppingCart size={15} />
+                                </button>
                               </div>
                               <div className="p-4 flex-1 flex flex-col">
                                 <div className="mb-2 flex items-center justify-between text-[11px] font-semibold">
@@ -585,7 +592,7 @@ export default function Storefront() {
                                   <span className="text-emerald-500 whitespace-nowrap">Sold {product.soldCount || Math.floor(Math.random() * 50) + 10}</span>
                                 </div>
                                 <h3 className="line-clamp-2 min-h-[40px] text-left text-[14px] font-medium leading-snug text-slate-800 transition group-hover:text-[#FF6600]">{product.name}</h3>
-                                <div className="mt-auto pt-3">
+                                <div className="mt-auto pt-3 flex items-center justify-between">
                                   <div className="text-[15px] font-black text-slate-900">{formatPrice(finalPrice, currencySymbol)}</div>
                                 </div>
                               </div>

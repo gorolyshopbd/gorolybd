@@ -4,15 +4,17 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShopContext, getImageUrl, formatPrice, calculateFinalPrice } from '@/context/ShopContext';
 
+import { ShoppingBag } from 'lucide-react';
+
 function ProductCard({ product, onProductClick }) {
   const router = useRouter();
-  const { currencySymbol } = useContext(ShopContext);
+  const { currencySymbol, addToCart } = useContext(ShopContext);
   const finalPrice = calculateFinalPrice(product);
 
   return (
     <article 
       onClick={() => router.push(`/product/${product._id}`)}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-100 bg-white cursor-pointer hover:shadow-lg transition-all duration-300"
+      className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-100 bg-white cursor-pointer hover:shadow-lg transition-all duration-300 relative"
     >
       {/* Image Container */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#f3f4f6] p-4 flex items-center justify-center">
@@ -21,6 +23,14 @@ function ProductCard({ product, onProductClick }) {
           alt={product.name}
           className="h-full w-full object-contain transition duration-500 group-hover:scale-105 mix-blend-multiply"
         />
+        {/* Modern Hover Quick Add */}
+        <button
+          onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }}
+          className="absolute bottom-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-all duration-300 hover:bg-[#FF6600] hover:scale-110 active:scale-95"
+          title="Add to cart"
+        >
+          <ShoppingBag size={15} />
+        </button>
       </div>
 
       {/* Content Container */}
@@ -34,7 +44,7 @@ function ProductCard({ product, onProductClick }) {
           {product.name}
         </h3>
 
-        <div className="mt-auto pt-3">
+        <div className="mt-auto pt-3 flex items-center justify-between">
           <div className="text-[15px] font-black text-slate-900">
             {formatPrice(finalPrice, currencySymbol)}
           </div>
