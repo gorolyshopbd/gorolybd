@@ -354,6 +354,15 @@ export default function AdminDashboard({ onTabChange }) {
     sasSmsApiKey: '',
     sasSmsSecretKey: '',
     sasSmsSenderId: '',
+    socialGoogleClientId: '',
+    socialGoogleClientSecret: '',
+    socialGoogleEnabled: false,
+    socialFacebookClientId: '',
+    socialFacebookClientSecret: '',
+    socialFacebookEnabled: false,
+    socialLinkedinClientId: '',
+    socialLinkedinClientSecret: '',
+    socialLinkedinEnabled: false,
   });
   const [fbConnectionStatus, setFbConnectionStatus] = useState({ loading: false, success: '', error: '' });
   const [trackingReport, setTrackingReport] = useState(null);
@@ -9491,6 +9500,163 @@ export default function AdminDashboard({ onTabChange }) {
                     className="px-6 py-2 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition flex items-center gap-2 text-sm"
                   >
                     {loading ? 'Saving...' : 'Save OTP Settings'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Social Login Configuration */}
+              <div className="bg-white/90 p-6 border border-slate-200 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 space-y-6 shadow-xl mb-6">
+                <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
+                  <User size={16} className="text-blue-500" />
+                  Social Login Configuration
+                </h3>
+
+                <div className="space-y-6">
+                  {/* Google config */}
+                  <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+                    <div className="md:col-span-3 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                        <h4 className="font-bold text-gray-900 text-sm">Google Login</h4>
+                      </div>
+                      <p className="text-[10px] text-gray-500 leading-tight">Enable Google direct login</p>
+                      <div className="pt-2 flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          id="google-enable"
+                          checked={settings.socialGoogleEnabled}
+                          onChange={(e) => setSettings({ ...settings, socialGoogleEnabled: e.target.checked })}
+                          className="accent-blue-600 rounded-sm cursor-pointer"
+                        />
+                        <label htmlFor="google-enable" className="text-[10px] font-bold text-gray-400 cursor-pointer">Active</label>
+                      </div>
+                    </div>
+                    <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Client ID</label>
+                        <input
+                          type="text"
+                          disabled={!settings.socialGoogleEnabled}
+                          value={settings.socialGoogleClientId}
+                          onChange={(e) => setSettings({ ...settings, socialGoogleClientId: e.target.value })}
+                          placeholder="Google Client ID"
+                          className="w-full mt-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 disabled:opacity-50"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Client Secret</label>
+                        <input
+                          type="password"
+                          disabled={!settings.socialGoogleEnabled}
+                          value={settings.socialGoogleClientSecret}
+                          onChange={(e) => setSettings({ ...settings, socialGoogleClientSecret: e.target.value })}
+                          placeholder="Google Client Secret"
+                          className="w-full mt-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 disabled:opacity-50"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Facebook config */}
+                  <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+                    <div className="md:col-span-3 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#1877F2]"></span>
+                        <h4 className="font-bold text-gray-900 text-sm">Facebook Login</h4>
+                      </div>
+                      <p className="text-[10px] text-gray-500 leading-tight">Enable Facebook direct login</p>
+                      <div className="pt-2 flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          id="facebook-enable"
+                          checked={settings.socialFacebookEnabled}
+                          onChange={(e) => setSettings({ ...settings, socialFacebookEnabled: e.target.checked })}
+                          className="accent-[#1877F2] rounded-sm cursor-pointer"
+                        />
+                        <label htmlFor="facebook-enable" className="text-[10px] font-bold text-gray-400 cursor-pointer">Active</label>
+                      </div>
+                    </div>
+                    <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">App ID</label>
+                        <input
+                          type="text"
+                          disabled={!settings.socialFacebookEnabled}
+                          value={settings.socialFacebookClientId}
+                          onChange={(e) => setSettings({ ...settings, socialFacebookClientId: e.target.value })}
+                          placeholder="Facebook App ID"
+                          className="w-full mt-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 disabled:opacity-50"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">App Secret</label>
+                        <input
+                          type="password"
+                          disabled={!settings.socialFacebookEnabled}
+                          value={settings.socialFacebookClientSecret}
+                          onChange={(e) => setSettings({ ...settings, socialFacebookClientSecret: e.target.value })}
+                          placeholder="Facebook App Secret"
+                          className="w-full mt-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 disabled:opacity-50"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* LinkedIn config */}
+                  <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+                    <div className="md:col-span-3 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#0A66C2]"></span>
+                        <h4 className="font-bold text-gray-900 text-sm">LinkedIn Login</h4>
+                      </div>
+                      <p className="text-[10px] text-gray-500 leading-tight">Enable LinkedIn direct login</p>
+                      <div className="pt-2 flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          id="linkedin-enable"
+                          checked={settings.socialLinkedinEnabled}
+                          onChange={(e) => setSettings({ ...settings, socialLinkedinEnabled: e.target.checked })}
+                          className="accent-[#0A66C2] rounded-sm cursor-pointer"
+                        />
+                        <label htmlFor="linkedin-enable" className="text-[10px] font-bold text-gray-400 cursor-pointer">Active</label>
+                      </div>
+                    </div>
+                    <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Client ID</label>
+                        <input
+                          type="text"
+                          disabled={!settings.socialLinkedinEnabled}
+                          value={settings.socialLinkedinClientId}
+                          onChange={(e) => setSettings({ ...settings, socialLinkedinClientId: e.target.value })}
+                          placeholder="LinkedIn Client ID"
+                          className="w-full mt-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 disabled:opacity-50"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Client Secret</label>
+                        <input
+                          type="password"
+                          disabled={!settings.socialLinkedinEnabled}
+                          value={settings.socialLinkedinClientSecret}
+                          onChange={(e) => setSettings({ ...settings, socialLinkedinClientSecret: e.target.value })}
+                          placeholder="LinkedIn Client Secret"
+                          className="w-full mt-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 disabled:opacity-50"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end pt-4 mt-2 border-t border-slate-100">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSaveSettings(e);
+                    }}
+                    disabled={loading}
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition flex items-center gap-2 text-sm"
+                  >
+                    {loading ? 'Saving...' : 'Save Social Login'}
                   </button>
                 </div>
               </div>

@@ -70,6 +70,8 @@ export const getSettings = async (req, res) => {
       settings = newSettings;
     }
 
+    const isPublic = req.originalUrl && req.originalUrl.includes('/public');
+
     const formatted = {
       ...settings,
       otpGateway: settings.otp_gateway,
@@ -154,6 +156,15 @@ export const getSettings = async (req, res) => {
       smtpPass: settings.smtp_pass || '',
       smtpFromEmail: settings.smtp_from_email || '',
       smtpEnabled: settings.smtp_enabled || false,
+      socialGoogleClientId: settings.social_google_client_id || '',
+      socialGoogleClientSecret: isPublic ? undefined : (settings.social_google_client_secret || ''),
+      socialGoogleEnabled: settings.social_google_enabled || false,
+      socialFacebookClientId: settings.social_facebook_client_id || '',
+      socialFacebookClientSecret: isPublic ? undefined : (settings.social_facebook_client_secret || ''),
+      socialFacebookEnabled: settings.social_facebook_enabled || false,
+      socialLinkedinClientId: settings.social_linkedin_client_id || '',
+      socialLinkedinClientSecret: isPublic ? undefined : (settings.social_linkedin_client_secret || ''),
+      socialLinkedinEnabled: settings.social_linkedin_enabled || false,
       // Branding - currency
       currency: settings.currency || 'BDT',
       currencySymbol: settings.currency_symbol || '৳',
@@ -213,6 +224,9 @@ export const updateSettings = async (req, res) => {
       advancePaymentPercent, withdraw_min_amount, twilioSid, twilioAuthToken, twilioPhoneNumber, greenwebApiKey,
       greenwebSenderId, customSmsApiUrl, sasSmsGatewayUrl, sasSmsApiKey, sasSmsSecretKey, sasSmsSenderId,
       smtpHost, smtpPort, smtpUser, smtpPass, smtpFromEmail, smtpEnabled,
+      socialGoogleClientId, socialGoogleClientSecret, socialGoogleEnabled,
+      socialFacebookClientId, socialFacebookClientSecret, socialFacebookEnabled,
+      socialLinkedinClientId, socialLinkedinClientSecret, socialLinkedinEnabled,
       footerEmail, footerPhone, footerAddress, footerCopyright, footerNewsletterTitle, footerNewsletterSubtitle,
       footerFacebook, footerTwitter, footerInstagram, footerYoutube, popupEnabled, popupTitle, popupText,
       popupImage, popupLink, popupDelay, recentSaleEnabled, recentSaleInterval, customHeaderCode
@@ -299,7 +313,16 @@ export const updateSettings = async (req, res) => {
       smtp_user: smtpUser ? smtpUser.trim() : smtpUser,
       smtp_pass: smtpPass ? smtpPass.replace(/\s+/g, '') : smtpPass,
       smtp_from_email: smtpFromEmail ? smtpFromEmail.trim() : smtpFromEmail,
-      smtp_enabled: smtpEnabled
+      smtp_enabled: smtpEnabled,
+      social_google_client_id: socialGoogleClientId,
+      social_google_client_secret: socialGoogleClientSecret,
+      social_google_enabled: socialGoogleEnabled,
+      social_facebook_client_id: socialFacebookClientId,
+      social_facebook_client_secret: socialFacebookClientSecret,
+      social_facebook_enabled: socialFacebookEnabled,
+      social_linkedin_client_id: socialLinkedinClientId,
+      social_linkedin_client_secret: socialLinkedinClientSecret,
+      social_linkedin_enabled: socialLinkedinEnabled
     };
 
     // Remove undefined values so only provided fields are updated

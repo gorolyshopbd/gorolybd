@@ -411,6 +411,16 @@ CREATE TABLE IF NOT EXISTS settings (
   smtp_pass                    TEXT DEFAULT '',
   smtp_from_email              TEXT DEFAULT '',
   smtp_enabled                 BOOLEAN DEFAULT false,
+  -- Social Login Settings
+  social_google_client_id      TEXT DEFAULT '',
+  social_google_client_secret  TEXT DEFAULT '',
+  social_google_enabled        BOOLEAN DEFAULT false,
+  social_facebook_client_id    TEXT DEFAULT '',
+  social_facebook_client_secret TEXT DEFAULT '',
+  social_facebook_enabled      BOOLEAN DEFAULT false,
+  social_linkedin_client_id    TEXT DEFAULT '',
+  social_linkedin_client_secret TEXT DEFAULT '',
+  social_linkedin_enabled      BOOLEAN DEFAULT false,
   created_at                   TIMESTAMPTZ DEFAULT NOW(),
   updated_at                   TIMESTAMPTZ DEFAULT NOW()
 );
