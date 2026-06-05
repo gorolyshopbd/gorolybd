@@ -28,7 +28,7 @@ import AboutUsPage from '@/components/AboutUsPage';
 import TermsPage from '@/components/TermsPage';
 import PrivacyPage from '@/components/PrivacyPage';
 import ReturnRefundPage from '@/components/ReturnRefundPage';
-import { ShoppingCart, Star, Heart, ArrowRight, Eye, LayoutGrid, List, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
+import { ShoppingCart, Star, Heart, ArrowRight, Eye, LayoutGrid, List, ChevronDown, ChevronUp, SlidersHorizontal, Scale } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 
@@ -569,31 +569,34 @@ export default function Storefront() {
                           const finalPrice = calculateFinalPrice(product);
                           const isWish = wishlist.some((x) => x._id === product._id);
                           return (
-                            <div key={product._id} onClick={() => router.push(`/product/${product._id}`)} className="bg-white rounded-xl border border-slate-100 overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer relative">
-                              <div className="relative aspect-[4/3] bg-[#f3f4f6] p-4 flex items-center justify-center overflow-hidden">
-                                {product.discountPercent > 0 && (
-                                  <span className="absolute top-2 left-2 bg-red-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md z-10">{formatDiscountLabel(product, currencySymbol)}</span>
-                                )}
-                                <button onClick={(e) => { e.stopPropagation(); handleAddToWishlist(product); }} className={`absolute top-2 right-2 p-1.5 rounded-full shadow-xs transition z-10 opacity-0 group-hover:opacity-100 ${isWish ? 'bg-red-50 text-red-500' : 'bg-white/80 text-slate-400 hover:text-red-500'}`}>
-                                  <Heart size={14} fill={isWish ? 'currentColor' : 'none'} />
-                                </button>
-                                <img src={getImageUrl(product.image)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition duration-500" />
+                            <div key={product._id} onClick={() => router.push(`/product/${product._id}`)} className="bg-white rounded-xl border border-slate-100 overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer relative p-2">
+                              <div className="relative aspect-[4/5] bg-[#f3f4f6] flex flex-col items-center justify-between overflow-hidden rounded-lg">
+                                {/* Scale Icon */}
+                                <div className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-110">
+                                  <Scale size={14} className="text-slate-700" />
+                                </div>
+                                <div className="flex-1 flex items-center justify-center w-full p-4 pb-0">
+                                  <img src={getImageUrl(product.image)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition duration-500" />
+                                </div>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }}
-                                  className="absolute bottom-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-all duration-300 hover:bg-[#FF6600] hover:scale-110 active:scale-95 z-10"
+                                  className="w-full bg-[#ff0000] py-2.5 text-center text-[15px] font-bold text-white transition hover:bg-[#cc0000] z-10 mt-3"
                                   title={t('addToCart')}
                                 >
-                                  <ShoppingCart size={20} />
+                                  Add to cart
                                 </button>
                               </div>
-                              <div className="p-4 flex-1 flex flex-col">
-                                <div className="mb-2 flex items-center justify-between text-[11px] font-semibold">
-                                  <span className="text-slate-500 truncate max-w-[60%]">{product.brand || 'Goroly'}</span>
-                                  <span className="text-emerald-500 whitespace-nowrap">Sold {product.soldCount || Math.floor(Math.random() * 50) + 10}</span>
+                              <div className="flex flex-1 flex-col pt-3 px-1 pb-1">
+                                <div className="flex items-center justify-end text-[12px] font-medium">
+                                  <span className="text-emerald-700">Sold {product.soldCount || Math.floor(Math.random() * 50) + 10}</span>
                                 </div>
-                                <h3 className="line-clamp-2 min-h-[40px] text-left text-[14px] font-medium leading-snug text-slate-800 transition group-hover:text-[#FF6600]">{product.name}</h3>
-                                <div className="mt-auto pt-3 flex items-center justify-between">
-                                  <div className="text-[15px] font-black text-slate-900">{formatPrice(finalPrice, currencySymbol)}</div>
+                                <div className="my-2.5 h-[1px] w-full bg-slate-100"></div>
+                                <h3 className="line-clamp-2 min-h-[40px] text-left text-[14px] font-bold leading-snug text-slate-700 transition group-hover:text-[#FF6600]">{product.name}</h3>
+                                <div className="mt-2 flex items-center justify-between">
+                                  <span className="text-[14px] font-bold text-amber-400 hover:text-amber-500 transition">
+                                    Quick View
+                                  </span>
+                                  <span className="text-[14px] font-black text-slate-900">{formatPrice(finalPrice, currencySymbol)}</span>
                                 </div>
                               </div>
                             </div>

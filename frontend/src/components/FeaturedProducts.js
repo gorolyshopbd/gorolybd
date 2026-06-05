@@ -4,7 +4,7 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShopContext, getImageUrl, formatPrice, calculateFinalPrice } from '@/context/ShopContext';
 
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Scale } from 'lucide-react';
 
 function ProductCard({ product, onProductClick }) {
   const router = useRouter();
@@ -14,40 +14,52 @@ function ProductCard({ product, onProductClick }) {
   return (
     <article 
       onClick={() => router.push(`/product/${product._id}`)}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-100 bg-white cursor-pointer hover:shadow-lg transition-all duration-300 relative"
+      className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-100 bg-white cursor-pointer hover:shadow-lg transition-all duration-300 relative p-2"
     >
       {/* Image Container */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#f3f4f6] p-4 flex items-center justify-center">
-        <img
-          src={getImageUrl(product.image)}
-          alt={product.name}
-          className="h-full w-full object-contain transition duration-500 group-hover:scale-105 mix-blend-multiply"
-        />
-        {/* Modern Hover Quick Add */}
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-[#f3f4f6] flex flex-col items-center justify-between">
+        {/* Scale Icon */}
+        <div className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-110">
+          <Scale size={14} className="text-slate-700" />
+        </div>
+        
+        <div className="flex-1 flex items-center justify-center w-full p-4 pb-0">
+          <img
+            src={getImageUrl(product.image)}
+            alt={product.name}
+            className="h-full w-full object-contain transition duration-500 group-hover:scale-105 mix-blend-multiply"
+          />
+        </div>
+        
+        {/* Red Add to Cart Button */}
         <button
           onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }}
-          className="absolute bottom-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-all duration-300 hover:bg-[#FF6600] hover:scale-110 active:scale-95"
-          title="Add to cart"
+          className="w-full bg-[#ff0000] py-2.5 text-center text-[15px] font-bold text-white transition hover:bg-[#cc0000] z-10 mt-3"
         >
-          <ShoppingBag size={20} />
+          Add to cart
         </button>
       </div>
 
       {/* Content Container */}
-      <div className="flex flex-1 flex-col p-4">
-        <div className="mb-2 flex items-center justify-between text-[11px] font-semibold">
-          <span className="text-slate-500 truncate max-w-[60%]">{product.brand || 'Goroly'}</span>
-          <span className="text-emerald-500 whitespace-nowrap">Sold {product.soldCount || Math.floor(Math.random() * 50) + 10}</span>
+      <div className="flex flex-1 flex-col pt-3 px-1 pb-1">
+        <div className="flex items-center justify-end text-[12px] font-medium">
+          <span className="text-emerald-700">Sold {product.soldCount || Math.floor(Math.random() * 50) + 10}</span>
         </div>
+        
+        <div className="my-2.5 h-[1px] w-full bg-slate-100"></div>
 
-        <h3 className="line-clamp-2 min-h-[40px] text-left text-[14px] font-medium leading-snug text-slate-800 transition group-hover:text-[#FF6600]">
+        <h3 className="line-clamp-2 min-h-[40px] text-left text-[14px] font-bold leading-snug text-slate-700 transition group-hover:text-[#FF6600]">
           {product.name}
         </h3>
 
-        <div className="mt-auto pt-3 flex items-center justify-between">
-          <div className="text-[15px] font-black text-slate-900">
-            {formatPrice(finalPrice, currencySymbol)}
-          </div>
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-[14px] font-bold text-amber-400 hover:text-amber-500 transition">
+            Quick View
+          </span>
+          {/* Retain price on the right just in case, or hide it if it disrupts layout. The user image didn't show price, but typically we want to show it. I will show it minimally. */}
+          <span className="text-[14px] font-black text-slate-900">
+             {formatPrice(finalPrice, currencySymbol)}
+          </span>
         </div>
       </div>
     </article>
