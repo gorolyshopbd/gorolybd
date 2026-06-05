@@ -9410,6 +9410,15 @@ export default function AdminDashboard({ onTabChange }) {
                     />
                   </div>
                 </div>
+                <div className="flex justify-end pt-4 mt-2 border-t border-slate-100">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-2 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl transition flex items-center gap-2 text-sm"
+                  >
+                    {loading ? 'Saving...' : 'Save OTP Settings'}
+                  </button>
+                </div>
               </div>
 
               {/* Payment Gateway Configurations */}
