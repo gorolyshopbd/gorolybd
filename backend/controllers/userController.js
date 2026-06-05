@@ -426,7 +426,7 @@ const sendOTP = async (req, res) => {
         }
       } else if (gateway === 'SAS_BULK_SMS' || !gateway || gateway === 'SMS') {
         if (settings?.sas_sms_api_key && settings?.sas_sms_sender_id) {
-          let baseUrl = settings.sas_sms_gateway_url || 'http://sms.sasbulksms.com:3040';
+          let baseUrl = (settings.sas_sms_gateway_url || 'http://sms.sasbulksms.com:3040').trim();
           if (baseUrl === 'https://sms.sasbulksms.com/') baseUrl = 'http://sms.sasbulksms.com:3040';
           const url = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
           
@@ -438,9 +438,9 @@ const sendOTP = async (req, res) => {
           }
 
           const params = new URLSearchParams({
-            apikey: settings.sas_sms_api_key,
-            secretkey: settings.sas_sms_secret_key || '',
-            callerID: settings.sas_sms_sender_id,
+            apikey: settings.sas_sms_api_key ? settings.sas_sms_api_key.trim() : '',
+            secretkey: settings.sas_sms_secret_key ? settings.sas_sms_secret_key.trim() : '',
+            callerID: settings.sas_sms_sender_id ? settings.sas_sms_sender_id.trim() : '',
             toUser: toUser,
             messageContent: `Your OTP code is ${otp}`
           });
