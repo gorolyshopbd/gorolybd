@@ -1174,6 +1174,7 @@ export default function AdminDashboard({ onTabChange }) {
           shortDescription: newProduct.shortDescription || '',
           image: mainImageUrl,
           images: additionalImageUrls,
+          isPublished: newProduct.isActive,
           discountPercent: Math.max(0, Number(newProduct.discountPercent || 0)),
           discountType: newProduct.discountType || 'percent',
           isFlashSale: newProduct.isFlashSale,
@@ -7970,8 +7971,14 @@ export default function AdminDashboard({ onTabChange }) {
                                 body: formData,
                               });
                               const data = await res.json();
-                              if (res.ok) setBannerForm({ ...bannerForm, image: data.image });
-                            } catch {}
+                              if (res.ok) {
+                                setBannerForm({ ...bannerForm, image: data.image });
+                              } else {
+                                alert(data.message || 'Image upload failed');
+                              }
+                            } catch (error) {
+                              alert('An error occurred during upload.');
+                            }
                           }} />
                       </label>
                     </div>

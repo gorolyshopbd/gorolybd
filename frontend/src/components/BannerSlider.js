@@ -44,21 +44,21 @@ export default function BannerSlider({ onShopClick }) {
       onMouseLeave={() => setIsPaused(false)}
     >
       <div className="pointer-events-none absolute inset-0 z-10 rounded-[28px] ring-1 ring-inset ring-white/20" />
-      <div
-        className="flex h-full transition-transform duration-700 ease-out"
-        style={{ transform: `translateX(-${current * 100}%)` }}
-      >
+      <div className="relative h-full w-full">
         {banners.map((banner, index) => (
-          <article key={banner._id} className="relative h-full min-w-full overflow-hidden">
+          <article 
+            key={banner._id} 
+            className={`absolute inset-0 h-full w-full transition-opacity duration-1000 ease-in-out ${index === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+          >
             <img
               src={getImageUrl(banner.image)}
               alt={banner.title || 'Banner'}
-              className={`h-full w-full object-cover transition duration-[1400ms] ease-out ${
-                index === current ? 'scale-100' : 'scale-105'
+              className={`h-full w-full object-cover transition-transform duration-[6000ms] ease-out ${
+                index === current ? 'scale-105' : 'scale-100'
               }`}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/76 via-slate-950/32 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/70 via-slate-950/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent" />
 
             <div className="absolute inset-y-0 left-0 flex w-full items-center px-5 sm:px-10 lg:px-14">
               <div className="max-w-[82%] text-white sm:max-w-xl">
