@@ -9076,6 +9076,27 @@ export default function AdminDashboard({ onTabChange }) {
                       </div>
                     )}
                   </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">All Products Banner Image</label>
+                    <div className="mt-1.5 flex gap-2">
+                      <input type="text" value={settings.allProductsBannerImage || ''}
+                        onChange={(e) => setSettings({ ...settings, allProductsBannerImage: e.target.value })}
+                        placeholder="Fallback image for All Products shop view"
+                        className="min-w-0 flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm"
+                      />
+                      <label className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#FF6600] hover:bg-[#e05a00] text-white text-[10px] font-black uppercase tracking-wider cursor-pointer transition shadow-sm shadow-orange-500/20">
+                        <Upload size={13} />
+                        Upload
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleBrandingUpload(e.target.files?.[0], 'allProductsBannerImage')} />
+                      </label>
+                    </div>
+                    {settings.allProductsBannerImage && (
+                      <div className="mt-2 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-2">
+                        <img src={getImageUrl(settings.allProductsBannerImage)} alt="all products banner preview" className="h-12 max-w-44 object-contain rounded border border-gray-300 bg-white px-2" />
+                        <span className="text-[10px] font-semibold text-slate-500">All Products banner preview</span>
+                      </div>
+                    )}
+                  </div>
                   <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <div>

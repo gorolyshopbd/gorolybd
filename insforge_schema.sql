@@ -300,11 +300,21 @@ CREATE TABLE IF NOT EXISTS settings (
                                  CHECK (otp_gateway IN ('Simulated','Twilio','Firebase','GreenwebSMS','SAS_BULK_SMS')),
   otp_length                   INT DEFAULT 6,
   otp_expiry                   INT DEFAULT 5,
+  checkout_otp_enabled         BOOLEAN DEFAULT false,
   -- SAS Bulk SMS
   sas_sms_gateway_url          TEXT DEFAULT '',
   sas_sms_api_key              TEXT DEFAULT '',
   sas_sms_secret_key           TEXT DEFAULT '',
   sas_sms_sender_id            TEXT DEFAULT '',
+  -- Twilio
+  twilio_sid                   TEXT DEFAULT '',
+  twilio_auth_token            TEXT DEFAULT '',
+  twilio_phone_number          TEXT DEFAULT '',
+  -- Greenweb
+  greenweb_api_key             TEXT DEFAULT '',
+  greenweb_sender_id           TEXT DEFAULT '',
+  -- Custom SMS
+  custom_sms_api_url           TEXT DEFAULT '',
   -- bKash
   bkash_mode                   TEXT DEFAULT 'Sandbox',
   bkash_enabled                BOOLEAN DEFAULT true,
@@ -363,6 +373,8 @@ CREATE TABLE IF NOT EXISTS settings (
   favicon_url                  TEXT DEFAULT '',
   header_logo                  TEXT DEFAULT '',
   footer_logo                  TEXT DEFAULT '',
+  all_products_banner_image    TEXT DEFAULT '',
+  footer_description           TEXT DEFAULT '',
   header_bg_color              TEXT DEFAULT '#F97316',
   header_text_color            TEXT DEFAULT '#FFFFFF',
   header_accent_color          TEXT DEFAULT '#FF6600',

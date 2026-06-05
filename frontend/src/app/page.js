@@ -498,7 +498,7 @@ export default function Storefront() {
                       : [];
                     return subs.map(s => String(s).trim().toLowerCase()).includes(String(selectedCategory || '').trim().toLowerCase());
                   });
-                  const displayImage = activeCat?.banner || activeCat?.image;
+                  const displayImage = selectedCategory ? (activeCat?.banner || activeCat?.image) : branding?.allProductsBannerImage;
                   const displayName = selectedCategory || t('allProducts');
                   return (
                     <div className="w-full rounded-2xl overflow-hidden mb-4 relative" style={{ height: '200px' }}>
