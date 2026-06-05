@@ -9853,11 +9853,11 @@ export default function AdminDashboard({ onTabChange }) {
                     <textarea rows="3" value={settings.footerDescription || ''} onChange={(e) => setSettings({ ...settings, footerDescription: e.target.value })} className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner leading-relaxed" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Customer Support Email</label>
                     <input type="text" value={settings.footerEmail || ''} onChange={(e) => setSettings({ ...settings, footerEmail: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Customer Support Phone</label>
                     <input type="text" value={settings.footerPhone || ''} onChange={(e) => setSettings({ ...settings, footerPhone: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
                   </div>
                   <div>
