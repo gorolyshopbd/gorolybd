@@ -374,12 +374,24 @@ const sendOTP = async (req, res) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   saveOTP(target, otp);
 
-  // Fetch gateway settings from DB
+  // Fetch gateway settings from DB with a 3-second timeout
   let gateway = 'Simulated';
+  let settings = null;
+  
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Database query timeout')), 3000)
+  );
+
   try {
-    const { data: settings } = await db.database.from('settings').select('*').limit(1).single();
-    if (settings) gateway = settings.otp_gateway || 'Simulated';
-  } catch {}
+    const dbPromise = db.database.from('settings').select('*').limit(1).single();
+    const result = await Promise.race([dbPromise, timeoutPromise]);
+    if (result && result.data) {
+      settings = result.data;
+      gateway = settings.otp_gateway || 'Simulated';
+    }
+  } catch (err) {
+    console.warn('[sendOTP] Settings query timed out or failed, falling back to Simulated:', err.message);
+  }
 
   if (gateway === 'Email') {
     try {
@@ -396,7 +408,6 @@ const sendOTP = async (req, res) => {
   } else if (type === 'phone' && gateway !== 'Simulated') {
     try {
       if (gateway === 'SAS_BULK_SMS' || gateway === 'Simulated' || !gateway || gateway === 'SMS') {
-        const { data: settings } = await db.database.from('settings').select('*').limit(1).single();
         if (settings?.sas_sms_api_key && settings?.sas_sms_sender_id) {
           let baseUrl = settings.sas_sms_gateway_url || 'http://sms.sasbulksms.com:3040';
           if (baseUrl === 'https://sms.sasbulksms.com/') baseUrl = 'http://sms.sasbulksms.com:3040';

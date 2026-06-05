@@ -1097,31 +1097,23 @@ export default function AdminDashboard({ onTabChange }) {
   };
 
   const uploadFile = async (file) => {
-    try {
-      const { data, error } = await insforge.storage
-        .from('product')
-        .uploadAuto(file);
-      if (error) throw new Error(error.message || 'Upload failed');
-      return data.url;
-    } catch (e) {
-      const formData = new FormData();
-      formData.append('image', file);
-      const res = await fetch(`${API_URL}/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${user.token}` },
-        body: formData,
-      });
-      if (!res.ok) {
-        let errMsg = 'Image upload failed';
-        try {
-          const errData = await res.json();
-          errMsg = errData.message || errMsg;
-        } catch (_) {}
-        throw new Error(errMsg);
-      }
-      const responseData = await res.json();
-      return responseData.image;
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch(`${API_URL}/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${user.token}` },
+      body: formData,
+    });
+    if (!res.ok) {
+      let errMsg = 'Image upload failed';
+      try {
+        const errData = await res.json();
+        errMsg = errData.message || errMsg;
+      } catch (_) {}
+      throw new Error(errMsg);
     }
+    const responseData = await res.json();
+    return responseData.image;
   };
 
   const handleBrandingUpload = async (file, field) => {
@@ -1165,19 +1157,9 @@ export default function AdminDashboard({ onTabChange }) {
         }
       }
 
-      // 1. Create product template
-      const templateRes = await fetch(`${API_URL}/products`, {
+      // Create product directly
+      const createRes = await fetch(`${API_URL}/products`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
-      if (!templateRes.ok) throw new Error('Failed to create template');
-      const templateData = await templateRes.json();
-      
-      // 2. Update with user inputs
-      const updateRes = await fetch(`${API_URL}/products/${templateData._id}`, {
-        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${user.token}`,
@@ -1214,7 +1196,7 @@ export default function AdminDashboard({ onTabChange }) {
         }),
       });
       
-      if (updateRes.ok) {
+      if (createRes.ok) {
         alert('Product created successfully!');
         fetchProducts();
         setNewProduct({
@@ -1254,8 +1236,8 @@ export default function AdminDashboard({ onTabChange }) {
         setFormActiveTab('info');
         setProductSubTab('all');
       } else {
-        const errData = await updateRes.json().catch(() => ({}));
-        throw new Error(errData.message || 'Failed to update product data');
+        const errData = await createRes.json().catch(() => ({}));
+        throw new Error(errData.message || 'Failed to create product data');
       }
     } catch (error) {
       alert(error.message);
@@ -2105,15 +2087,8 @@ export default function AdminDashboard({ onTabChange }) {
     if (!confirm('Are you sure you want to duplicate this product?')) return;
     setLoading(true);
     try {
-      const templateRes = await fetch(`${API_URL}/products`, {
+      const createRes = await fetch(`${API_URL}/products`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
-      if (!templateRes.ok) throw new Error('Failed to create template');
-      const templateData = await templateRes.json();
-
-      const updateRes = await fetch(`${API_URL}/products/${templateData._id}`, {
-        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${user.token}`,
@@ -2148,11 +2123,11 @@ export default function AdminDashboard({ onTabChange }) {
           isFeatured: prod.isFeatured,
         }),
       });
-      if (updateRes.ok) {
+      if (createRes.ok) {
         alert('Product duplicated successfully!');
         fetchProducts();
       } else {
-        alert('Failed to update duplicated product');
+        alert('Failed to duplicate product');
       }
     } catch (err) {
       alert(err.message);

@@ -179,37 +179,53 @@ const deleteProduct = async (req, res) => {
 // @route   POST /api/products
 // @access  Private/Admin
 const createProduct = async (req, res) => {
+  const {
+    name, price, description, image, images, brand, category, countInStock, discountPercent, discountType,
+    isFlashSale, isDigital, digitalFileUrl, metaTitle, metaDescription, metaKeywords, metaImage, tags, youtubeUrl, flashSaleStart, flashSaleEnd,
+    unit, minOrderQty, barcode, slug, shippingDays, cashOnDelivery,
+    isPublished, isCatalog, isTodaysDeal, isFeatured, shortDescription
+  } = req.body;
+
   try {
     const insertData = {
       user_id: req.user._id,
-      name: 'Sample Name',
-      price: 0,
-      image_url: '/images/sample.jpg',
-      brand: 'Sample Brand',
-      category: 'Sample Category',
-      count_in_stock: 0,
-      description: 'Sample Description',
-      discount_percent: 0,
-      discount_type: 'percent',
-      is_flash_sale: false,
-      is_digital: false,
-      digital_file_url: '',
-      meta_title: '',
-      meta_description: '',
+      name: name || 'Sample Name',
+      price: price || 0,
+      image_url: image || '/images/sample.jpg',
+      brand: brand || 'Sample Brand',
+      category: category || 'Sample Category',
+      count_in_stock: countInStock || 0,
+      description: description || 'Sample Description',
+      discount_percent: discountPercent || 0,
+      discount_type: discountType === 'flat' ? 'flat' : 'percent',
+      is_flash_sale: isFlashSale || false,
+      is_digital: isDigital || false,
+      digital_file_url: digitalFileUrl || '',
+      meta_title: metaTitle || '',
+      meta_description: metaDescription || '',
+      meta_image_url: metaImage || '',
       tags: [],
-      youtube_url: '',
-      unit: 'pc',
-      min_order_qty: 1,
-      barcode: 'sample-code-' + Date.now(),
-      slug: 'sample-' + Date.now(),
-      shipping_days: 2,
-      cash_on_delivery: true,
-      is_published: true,
-      is_catalog: true,
-      is_todays_deal: false,
-      is_featured: false,
-      tags: ['SHORT_DESC:Sample Short Description'],
+      youtube_url: youtubeUrl || '',
+      unit: unit || 'pc',
+      min_order_qty: minOrderQty || 1,
+      barcode: barcode || ('sample-code-' + Date.now()),
+      slug: slug || ('sample-' + Date.now()),
+      shipping_days: Number(shippingDays || 2),
+      cash_on_delivery: cashOnDelivery !== false,
+      is_published: isPublished !== false,
+      is_catalog: isCatalog !== false,
+      is_todays_deal: isTodaysDeal || false,
+      is_featured: isFeatured || false,
+      flash_sale_start: flashSaleStart || null,
+      flash_sale_end: flashSaleEnd || null,
     };
+
+    if (tags !== undefined || shortDescription !== undefined) {
+      insertData.tags = (tags || []).filter(t => typeof t === 'string' && !t.startsWith('SHORT_DESC:'));
+      if (shortDescription) {
+        insertData.tags.push('SHORT_DESC:' + shortDescription);
+      }
+    }
 
     let result = await db.database.from('products').insert([insertData]).select().single();
 
@@ -228,6 +244,17 @@ const createProduct = async (req, res) => {
     let { data: product, error } = result;
 
     if (error) throw error;
+    
+    if (images && Array.isArray(images) && images.length > 0) {
+        const imgRows = images.filter(Boolean).map((url, i) => ({
+          product_id: product.id,
+          image_url: url,
+          sort_order: i,
+        }));
+        const { error: imgErr } = await db.database.from('product_images').insert(imgRows);
+        if (imgErr) console.error('Failed to save product images:', imgErr);
+    }
+
     res.status(201).json({ ...product, _id: product.id });
   } catch (error) {
     console.error('CREATE PRODUCT ERROR:', error);

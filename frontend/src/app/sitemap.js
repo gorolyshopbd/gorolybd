@@ -7,6 +7,23 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gorolyshop.com';
 
+const fetchWithTimeout = async (url, options = {}) => {
+  const { timeout = 3000 } = options;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+};
+
 export default async function sitemap() {
   const now = new Date().toISOString();
 
@@ -19,7 +36,10 @@ export default async function sitemap() {
   // Dynamic: Products
   let productPages = [];
   try {
-    const res = await fetch(`${API_URL}/products?all=true`, { next: { revalidate: 3600 } });
+    const res = await fetchWithTimeout(`${API_URL}/products?all=true`, { 
+      next: { revalidate: 3600 },
+      timeout: 3000
+    });
     if (res.ok) {
       const data = await res.json();
       const products = Array.isArray(data.products) ? data.products : [];
@@ -37,7 +57,10 @@ export default async function sitemap() {
   // Dynamic: Categories
   let categoryPages = [];
   try {
-    const res = await fetch(`${API_URL}/categories`, { next: { revalidate: 86400 } });
+    const res = await fetchWithTimeout(`${API_URL}/categories`, { 
+      next: { revalidate: 86400 },
+      timeout: 3000
+    });
     if (res.ok) {
       const cats = await res.json();
       const catArr = Array.isArray(cats) ? cats : cats.categories || [];
@@ -54,3 +77,4 @@ export default async function sitemap() {
 
   return [...staticPages, ...productPages, ...categoryPages];
 }
+

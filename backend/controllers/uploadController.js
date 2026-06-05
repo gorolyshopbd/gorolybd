@@ -1,36 +1,27 @@
 import path from 'path';
 import { db } from '../config/db.js';
 
+import fs from 'fs';
+
 const uploadToInsForge = async (file, folder = 'products') => {
   const ext = path.extname(file.originalname);
-  const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+  const key = `${folder}/${filename}`;
 
-  const { data, error } = await db.storage
-    .from('product')
-    .upload(key, file.buffer, {
-      contentType: file.mimetype,
-      upsert: true
-    });
+  // Make sure local uploads folder exists
+  const uploadsDir = path.join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
 
-  if (error) throw error;
+  // Save the file locally instead of InsForge (which is timing out)
+  const filePath = path.join(uploadsDir, filename);
+  fs.writeFileSync(filePath, file.buffer);
 
-  const storageKey = data.key || key;
-
-  // Always use getPublicUrl() for a stable, permanent URL
-  const { data: publicUrlData } = db.storage.from('product').getPublicUrl(storageKey);
-  const publicUrl = publicUrlData?.publicUrl || data?.url || '';
-
-  const { error: imgError } = await db.database.from('images').insert([{
-    filename: storageKey,
-    original_name: file.originalname,
-    storage_path: storageKey,
-    public_url: publicUrl,
-    mime_type: file.mimetype,
-    size_bytes: file.size,
-    bucket: 'product',
-  }]).single();
-
-  if (imgError) console.error('Failed to save image record:', imgError);
+  // Use the backend server's URL, fallback to localhost:5000
+  // Since the frontend runs on localhost:3000 and hits localhost:5000 for local dev
+  const publicUrl = `http://localhost:5000/uploads/${filename}`;
+  const storageKey = key;
 
   return { url: publicUrl, key: storageKey };
 };
