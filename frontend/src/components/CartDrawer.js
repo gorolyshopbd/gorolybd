@@ -393,7 +393,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
 
                     {/* Order summary right side */}
                     <div className="lg:col-span-1">
-                      <div className="bg-white rounded-3xl border border-slate-200/60 p-6 sticky top-[200px] shadow-xs space-y-5">
+                      <div className="bg-gradient-to-b from-white to-slate-50/80 rounded-3xl border border-slate-200/80 p-6 sticky top-[160px] max-h-[calc(100vh-180px)] overflow-y-auto shadow-2xl shadow-slate-200/40 space-y-5">
                         <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base">{t('orderSummary')}</h3>
                         
                         {/* Coupon Selection */}
@@ -669,7 +669,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
 
                 {/* Subtotal & Steps Navigation */}
                 <div className="lg:col-span-1">
-                  <div className="bg-white rounded-3xl border border-slate-200/60 p-6 sticky top-[200px] shadow-xs space-y-5">
+                  <div className="bg-gradient-to-b from-white to-slate-50/80 rounded-3xl border border-slate-200/80 p-6 sticky top-[160px] max-h-[calc(100vh-180px)] overflow-y-auto shadow-2xl shadow-slate-200/40 space-y-5">
                     <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base font-bold">{t('confirmationSummary')}</h3>
                     
                     <div className="space-y-3 text-xs">
@@ -776,7 +776,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
 
                 {/* Subtotal & Confirmation order button */}
                 <div className="lg:col-span-1">
-                  <div className="bg-white rounded-3xl border border-slate-200/60 p-6 sticky top-[200px] shadow-xs space-y-5">
+                  <div className="bg-gradient-to-b from-white to-slate-50/80 rounded-3xl border border-slate-200/80 p-6 sticky top-[160px] max-h-[calc(100vh-180px)] overflow-y-auto shadow-2xl shadow-slate-200/40 space-y-5">
                     <h3 className="font-extrabold text-slate-900 border-b border-slate-100 pb-3 text-sm sm:text-base">{t('finalCheckout')}</h3>
                     
                     <div className="space-y-3 text-xs">
