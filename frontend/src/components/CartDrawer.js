@@ -696,14 +696,14 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
                       <button 
                         onClick={() => setCheckoutStep('cart')}
-                        className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition text-xs flex items-center justify-center gap-1"
+                        className="flex-grow-[2] py-3 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition text-xs flex items-center justify-center gap-1"
                       >
                         <ArrowLeft size={14} />
                         {t('backToCart')}
                       </button>
                       <button 
                         onClick={() => setCheckoutStep('payment')}
-                        className="flex-grow-[2] py-3 font-bold rounded-xl transition text-xs flex items-center justify-content gap-1.5 bg-[#FF6600] hover:bg-[#e05a00] text-white shadow-lg shadow-[#FF6600]/20"
+                        className="flex-1 py-3 font-bold rounded-xl transition text-xs flex items-center justify-content gap-1.5 bg-[#FF6600] hover:bg-[#e05a00] text-white shadow-lg shadow-[#FF6600]/20"
                       >
                         {t('nextPayment')}
                         <ArrowRight size={14} />
