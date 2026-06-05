@@ -9511,6 +9511,24 @@ export default function AdminDashboard({ onTabChange }) {
                   Social Login Configuration
                 </h3>
 
+                <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-[11px] text-blue-800 space-y-2 mb-2">
+                  <p className="font-bold text-blue-900 text-xs">Social Login Setup Guide:</p>
+                  <ul className="list-disc pl-5 space-y-1.5 opacity-90">
+                    <li>
+                      <strong>Google:</strong> Go to Google Cloud Console {"->"} API & Services {"->"} Credentials. Create an OAuth Client ID. 
+                      Set the <strong>Authorized Redirect URI</strong> to: <code className="bg-white px-1 py-0.5 rounded border border-blue-200">https://gorolyshop.com/api/auth/google/callback</code>
+                    </li>
+                    <li>
+                      <strong>Facebook:</strong> Go to Facebook Developer Portal. Create an App {"->"} Add Facebook Login product. 
+                      Set the <strong>Valid OAuth Redirect URIs</strong> to: <code className="bg-white px-1 py-0.5 rounded border border-blue-200">https://gorolyshop.com/api/auth/facebook/callback</code>
+                    </li>
+                    <li>
+                      <strong>LinkedIn:</strong> Go to LinkedIn Developer Portal. Create an App {"->"} Auth tab. 
+                      Set the <strong>Authorized Redirect URLs</strong> to: <code className="bg-white px-1 py-0.5 rounded border border-blue-200">https://gorolyshop.com/api/auth/linkedin/callback</code>
+                    </li>
+                  </ul>
+                </div>
+
                 <div className="space-y-6">
                   {/* Google config */}
                   <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
