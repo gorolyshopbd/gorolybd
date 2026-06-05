@@ -9339,6 +9339,7 @@ export default function AdminDashboard({ onTabChange }) {
                     >
                       <option value="Simulated">Simulated (For Testing)</option>
                       <option value="SMS">SMS (SAS Bulk SMS)</option>
+                      <option value="Custom">Custom SMS API</option>
                       <option value="Email">Email (Gmail SMTP)</option>
                     </select>
                   </div>

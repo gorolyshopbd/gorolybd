@@ -407,7 +407,24 @@ const sendOTP = async (req, res) => {
     }
   } else if (type === 'phone' && gateway !== 'Simulated') {
     try {
-      if (gateway === 'SAS_BULK_SMS' || gateway === 'Simulated' || !gateway || gateway === 'SMS') {
+      if (gateway === 'Custom') {
+        if (settings?.custom_sms_api_url && settings.custom_sms_api_url.length > 5) {
+          let reqUrl = settings.custom_sms_api_url
+            .replace('[NUMBER]', target)
+            .replace('[MESSAGE]', encodeURIComponent(`Your OTP code is ${otp}`));
+          
+          const resp = await fetch(reqUrl);
+          const result = await resp.text();
+          console.log(`[OTP Sent via Custom SMS] to ${target}: ${result}`);
+          
+          if (!resp.ok) {
+            throw new Error(`Custom SMS API Error: ${result}`);
+          }
+          return res.json({ message: `OTP sent successfully to ${target}` });
+        } else {
+          return res.status(500).json({ message: 'Custom SMS Gateway URL is not configured properly' });
+        }
+      } else if (gateway === 'SAS_BULK_SMS' || !gateway || gateway === 'SMS') {
         if (settings?.sas_sms_api_key && settings?.sas_sms_sender_id) {
           let baseUrl = settings.sas_sms_gateway_url || 'http://sms.sasbulksms.com:3040';
           if (baseUrl === 'https://sms.sasbulksms.com/') baseUrl = 'http://sms.sasbulksms.com:3040';
