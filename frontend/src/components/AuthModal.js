@@ -38,6 +38,10 @@ export default function AuthModal({ isOpen, onClose }) {
   const [simName, setSimName] = useState('');
   const [simEmail, setSimEmail] = useState('');
 
+  // Real Social OAuth states
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  const [facebookEnabled, setFacebookEnabled] = useState(false);
+
   // Signup OTP states
   const [checkoutOtpEnabled, setCheckoutOtpEnabled] = useState(true);
   const [signupOtpSent, setSignupOtpSent] = useState(false);
@@ -54,6 +58,37 @@ export default function AuthModal({ isOpen, onClose }) {
         .then((d) => {
           if (d) {
             setCheckoutOtpEnabled(d.checkoutOtpEnabled !== false);
+            if (d.socialGoogleEnabled && d.socialGoogleClientId) {
+              setGoogleEnabled(true);
+              window.googleClientId = d.socialGoogleClientId;
+              if (!document.getElementById('google-jssdk')) {
+                const script = document.createElement('script');
+                script.id = 'google-jssdk';
+                script.src = 'https://accounts.google.com/gsi/client';
+                script.async = true;
+                script.defer = true;
+                document.body.appendChild(script);
+              }
+            }
+            if (d.socialFacebookEnabled && d.socialFacebookClientId) {
+              setFacebookEnabled(true);
+              window.fbAsyncInit = function() {
+                window.FB.init({
+                  appId      : d.socialFacebookClientId,
+                  cookie     : true,
+                  xfbml      : true,
+                  version    : 'v16.0'
+                });
+              };
+              if (!document.getElementById('facebook-jssdk')) {
+                const script = document.createElement('script');
+                script.id = 'facebook-jssdk';
+                script.src = 'https://connect.facebook.net/en_US/sdk.js';
+                script.async = true;
+                script.defer = true;
+                document.body.appendChild(script);
+              }
+            }
           }
         })
         .catch(() => { });
@@ -194,9 +229,58 @@ export default function AuthModal({ isOpen, onClose }) {
   };
 
   const handleTriggerSocial = (provider) => {
-    setSocialProvider(provider);
-    setSocialSimOpen(true);
-    setErrorMsg('');
+    if (provider === 'google' && window.google) {
+      setErrorMsg('');
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: window.googleClientId,
+        scope: 'email profile',
+        callback: (tokenResponse) => {
+          if (tokenResponse && tokenResponse.access_token) {
+            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+            })
+            .then(res => res.json())
+            .then(async data => {
+              if (data.email) {
+                const res = await socialOauthLogin('google', data.email, data.name || data.given_name || 'Google User');
+                if (res.success) {
+                  onClose();
+                  resetForm();
+                  window.location.reload();
+                } else {
+                  setErrorMsg(res.error || 'Social Login failed.');
+                }
+              }
+            });
+          }
+        },
+      });
+      client.requestAccessToken();
+    } else if (provider === 'facebook' && window.FB) {
+      setErrorMsg('');
+      window.FB.login(function(response) {
+        if (response.authResponse) {
+          window.FB.api('/me', {fields: 'name,email'}, async function(fbRes) {
+            if (fbRes.email) {
+              const res = await socialOauthLogin('facebook', fbRes.email, fbRes.name || 'Facebook User');
+              if (res.success) {
+                onClose();
+                resetForm();
+                window.location.reload();
+              } else {
+                setErrorMsg(res.error || 'Social Login failed.');
+              }
+            } else {
+              setErrorMsg('Facebook Login failed. Email permission is required.');
+            }
+          });
+        }
+      }, {scope: 'public_profile,email'});
+    } else {
+      setSocialProvider(provider);
+      setSocialSimOpen(true);
+      setErrorMsg('');
+    }
   };
 
   const handleConfirmSocialLogin = async (e) => {
@@ -842,40 +926,46 @@ export default function AuthModal({ isOpen, onClose }) {
                     <div className="flex-grow border-t border-slate-150"></div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="flex justify-center items-center gap-3">
                     {/* Google */}
+                    {googleEnabled && (
                     <button
                       type="button"
                       onClick={() => handleTriggerSocial('google')}
-                      className="py-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 flex items-center justify-center transition hover:-translate-y-0.5 text-red-500"
+                      className="py-2.5 px-6 border border-slate-200 rounded-xl hover:bg-slate-50 flex items-center justify-center transition hover:-translate-y-0.5 text-red-500 w-full max-w-[140px]"
                       title="Google Login"
                     >
                       <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-6.887 4.114-4.68 0-8.472-3.84-8.472-8.514 0-4.675 3.792-8.515 8.472-8.515 2.186 0 4.148.815 5.666 2.378l3.195-3.195C18.17 1.054 15.422 0 12.24 0 5.48 0 0 5.48 0 12.24s5.48 12.24 12.24 12.24c7.04 0 12.24-4.945 12.24-12.24 0-.825-.098-1.44-.22-1.955H12.24z" />
                       </svg>
                     </button>
+                    )}
                     {/* Facebook */}
+                    {facebookEnabled && (
                     <button
                       type="button"
                       onClick={() => handleTriggerSocial('facebook')}
-                      className="py-2.5 border border-slate-200 rounded-xl hover:bg-orange-50 hover:border-orange-200 flex items-center justify-center transition hover:-translate-y-0.5 text-[#1877F2] shadow-sm"
+                      className="py-2.5 px-6 border border-slate-200 rounded-xl hover:bg-orange-50 hover:border-orange-200 flex items-center justify-center transition hover:-translate-y-0.5 text-[#1877F2] shadow-sm w-full max-w-[140px]"
                       title="Facebook Login"
                     >
                       <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z" />
                       </svg>
                     </button>
-                    {/* LinkedIn */}
+                    )}
+                    {/* LinkedIn (Fallback Simulation) */}
+                    {(!googleEnabled && !facebookEnabled) && (
                     <button
                       type="button"
                       onClick={() => handleTriggerSocial('linkedin')}
-                      className="py-2.5 border border-slate-200 rounded-xl hover:bg-orange-50 hover:border-orange-200 flex items-center justify-center transition hover:-translate-y-0.5 text-slate-800 shadow-sm"
+                      className="py-2.5 px-6 border border-slate-200 rounded-xl hover:bg-orange-50 hover:border-orange-200 flex items-center justify-center transition hover:-translate-y-0.5 text-slate-800 shadow-sm w-full max-w-[140px]"
                       title="LinkedIn Login"
                     >
                       <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
                       </svg>
                     </button>
+                    )}
                   </div>
                 </div>
               )}
