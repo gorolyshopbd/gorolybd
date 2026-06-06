@@ -1,7 +1,6 @@
 'use client';
-
 import React, { createContext, useState, useEffect, useCallback } from 'react';
-import { createClient } from '@insforge/sdk';
+
 import { useTracking } from '@/hooks/useTracking';
 
 // Helper to safely parse JSON responses without throwing on HTML
@@ -17,12 +16,7 @@ const safeJson = async (res) => {
 export const ShopContext = createContext();
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const BASE_URL = API_URL.replace('/api', '');
-
-export const insforge = createClient({
-  baseUrl: process.env.NEXT_PUBLIC_INSFORGE_URL,
-  anonKey: process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY,
-});
+const BASE_URL = API_URL ? API_URL.replace('/api', '') : '';
 
 export const formatPrice = (amount, symbol = '$') => {
   const num = Number(amount);
@@ -91,36 +85,7 @@ export const ShopProvider = ({ children }) => {
   const [rewardProducts, setRewardProducts] = useState([]);
   const [rtLive, setRtLive] = useState(false);
 
-  useEffect(() => {
-    let mounted = true;
-    const init = async () => {
-      try {
-        await insforge.realtime.connect();
-        const res = await insforge.realtime.subscribe('dashboard');
-        if (res && res.ok && mounted) setRtLive(true);
-      } catch (error) {
-        if (mounted) setRtLive(false);
-        console.warn('Realtime dashboard connection unavailable:', error?.message || error);
-      }
-    };
-    init();
-
-    insforge.realtime.on('order_updated', () => {});
-    insforge.realtime.on('product_updated', () => {});
-
-    insforge.realtime.on('connect', () => { if (mounted) setRtLive(true); });
-    insforge.realtime.on('disconnect', () => { if (mounted) setRtLive(false); });
-
-    return () => {
-      mounted = false;
-      try {
-        insforge.realtime.unsubscribe('dashboard');
-        insforge.realtime.disconnect();
-      } catch (error) {
-        console.warn('Realtime dashboard cleanup skipped:', error?.message || error);
-      }
-    };
-  }, []);
+  // Realtime features disabled (migrated to standard DB)
 
   // Seller Packages Functions
   const fetchSellerPackages = async () => {
