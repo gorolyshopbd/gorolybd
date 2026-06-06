@@ -1148,7 +1148,6 @@ export const ShopProvider = ({ children }) => {
         setRewardBySeller,
         setRewardByProduct,
         rtLive,
-        insforge,
       }}
     >
       {children}
