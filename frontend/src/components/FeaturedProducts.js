@@ -17,13 +17,13 @@ function ProductCard({ product, onProductClick }) {
       className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-100 bg-white cursor-pointer hover:shadow-lg transition-all duration-300 relative p-2"
     >
       {/* Image Container */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-[#f3f4f6] flex flex-col items-center justify-between">
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-[#f3f4f6] flex flex-col items-center justify-center">
         {/* Scale Icon */}
         <div className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-110">
           <Scale size={14} className="text-slate-700" />
         </div>
         
-        <div className="flex-1 flex items-center justify-center w-full p-4 pb-0">
+        <div className="flex-1 flex items-center justify-center w-full p-4">
           <img
             src={getImageUrl(product.image)}
             alt={product.name}
@@ -34,7 +34,7 @@ function ProductCard({ product, onProductClick }) {
         {/* Red Add to Cart Button */}
         <button
           onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }}
-          className="w-full bg-[#ff0000] py-2.5 text-center text-[15px] font-bold text-white transition hover:bg-[#cc0000] z-10 mt-3"
+          className="absolute bottom-0 left-0 w-full bg-[#ff0000] py-2.5 text-center text-[15px] font-bold text-white transition-all duration-300 ease-in-out hover:bg-[#cc0000] z-10 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100"
         >
           Add to cart
         </button>
