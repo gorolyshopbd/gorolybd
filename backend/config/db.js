@@ -235,6 +235,19 @@ const connectDB = async () => {
   try {
     const client = await pool.connect();
     console.log(`PostgreSQL connected to ${client.connectionParameters.database}`);
+    
+    // Auto-create chat_messages table if missing
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        is_admin BOOLEAN DEFAULT false,
+        is_read BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
     client.release();
   } catch (err) {
     console.error('PostgreSQL connection error:', err.message);
