@@ -17,6 +17,23 @@ export const getCoupons = async (req, res) => {
   }
 };
 
+export const getActiveCoupons = async (req, res) => {
+  try {
+    const { data: coupons, error } = await db.database.from('coupons').select('*').eq('is_active', true).order('created_at', { ascending: false });
+    if (error) throw error;
+    
+    const formatted = coupons.map(c => ({
+      ...c,
+      _id: c.id,
+      expiryDate: c.expiry_date,
+      isActive: c.is_active
+    }));
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const createCoupon = async (req, res) => {
   try {
     const { code, discount, expiryDate, isActive } = req.body;

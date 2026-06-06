@@ -56,7 +56,8 @@ export const getImageUrl = (path) => {
   if (path.startsWith('http')) return path;
   if (path.startsWith('/uploads/')) return `${BASE_URL}${path}`;
   if (path.startsWith('uploads/')) return `${BASE_URL}/${path}`;
-  return path;
+  // For paths like "products/filename.png" or "categories/filename.png"
+  return `${BASE_URL}/uploads/${path}`;
 };
 
 export const ShopProvider = ({ children }) => {
@@ -839,9 +840,7 @@ export const ShopProvider = ({ children }) => {
   // Fetch available coupons for dropdown
   const fetchAvailableCoupons = async () => {
     try {
-      const res = await fetch(`${API_URL}/coupons`, {
-        headers: { Authorization: `Bearer ${user?.token}` },
-      });
+      const res = await fetch(`${API_URL}/coupons/active`);
       if (res.ok) {
         const data = await res.json();
         return data.filter((c) => c.isActive);

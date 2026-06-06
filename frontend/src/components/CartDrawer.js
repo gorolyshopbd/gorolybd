@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 
 export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
   const router = useRouter();
+  const tracking = useTracking();
   const {
     user,
     cartItems,
@@ -705,7 +706,13 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                         {t('backToCart')}
                       </button>
                       <button 
-                        onClick={() => setCheckoutStep('payment')}
+                        onClick={() => {
+                          if (checkoutOtpEnabled && !phoneVerified) {
+                            alert(t('verifyPhoneAlert') || 'Please verify your phone number via OTP before proceeding to payment.');
+                            return;
+                          }
+                          setCheckoutStep('payment');
+                        }}
                         className="flex-[2] py-3 font-bold rounded-xl transition text-xs flex items-center justify-center gap-1.5 bg-[#FF6600] hover:bg-[#e05a00] text-white shadow-lg shadow-[#FF6600]/20"
                       >
                         {t('nextPayment')}

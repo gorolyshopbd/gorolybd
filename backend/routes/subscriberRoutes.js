@@ -1,5 +1,5 @@
 import express from 'express';
-import { insforgeAdmin } from '../config/db.js';
+import { db } from '../config/db.js';
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Email is required' });
     }
 
-    const { data, error } = await insforgeAdmin.database
+    const { data, error } = await db.database
       .from('subscribers')
       .insert([{ email }])
       .select();

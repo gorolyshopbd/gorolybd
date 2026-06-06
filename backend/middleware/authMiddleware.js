@@ -24,11 +24,6 @@ const protect = async (req, res, next) => {
         .single();
 
       if (error) {
-        console.error('Database error in authMiddleware:', error);
-        return res.status(500).json({ message: 'Database connection failed or timed out.' });
-      }
-      
-      if (!user) {
         return res.status(401).json({ message: 'Not authorized, user not found' });
       }
 
