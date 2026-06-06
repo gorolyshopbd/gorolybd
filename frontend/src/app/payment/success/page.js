@@ -3,12 +3,14 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, XCircle, ArrowRight } from 'lucide-react';
+import { useTracking } from '@/hooks/useTracking';
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState('Verifying...');
   const [success, setSuccess] = useState(false);
+  const tracking = useTracking();
 
   useEffect(() => {
     const transactionId = searchParams.get('transaction_id')
@@ -36,6 +38,9 @@ function PaymentSuccessContent() {
         if (data.success) {
           setSuccess(true);
           setStatus('Payment verified successfully!');
+          if (data.order) {
+            tracking.trackPurchase(data.order);
+          }
         } else {
           setStatus(data.message || 'Payment verification failed.');
         }

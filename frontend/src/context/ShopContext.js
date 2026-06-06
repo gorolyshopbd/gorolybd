@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import { createClient } from '@insforge/sdk';
+import { useTracking } from '@/hooks/useTracking';
 
 // Helper to safely parse JSON responses without throwing on HTML
 const safeJson = async (res) => {
@@ -59,6 +60,7 @@ export const getImageUrl = (path) => {
 };
 
 export const ShopProvider = ({ children }) => {
+  const tracking = useTracking();
   const [user, setUser] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [coupon, setCoupon] = useState(null);
@@ -763,6 +765,7 @@ export const ShopProvider = ({ children }) => {
 
   // Cart Functions
   const addToCart = (product, qty = 1) => {
+    tracking.trackAddToCart(product, qty, calculateFinalPrice(product));
     setCartItems((prev) => {
       const existItem = prev.find((x) => x.product === product._id);
       if (existItem) {
@@ -788,6 +791,8 @@ export const ShopProvider = ({ children }) => {
   };
 
   const removeFromCart = (id) => {
+    const itemToRemove = cartItems.find(x => x.product === id);
+    if (itemToRemove) tracking.trackRemoveFromCart(itemToRemove);
     setCartItems((prev) => prev.filter((x) => x.product !== id));
   };
 

@@ -69,6 +69,7 @@ const getProducts = async (req, res) => {
       ...p,
       _id: p.id,
       countInStock: p.count_in_stock,
+      purchasePrice: p.purchase_price,
       discountPercent: p.discount_percent,
       discountType: p.discount_type || 'percent',
       isFlashSale: p.is_flash_sale,
@@ -123,6 +124,7 @@ const getProductById = async (req, res) => {
       ...product,
       _id: product.id,
       countInStock: product.count_in_stock,
+      purchasePrice: product.purchase_price,
       discountPercent: product.discount_percent,
       discountType: product.discount_type || 'percent',
       isFlashSale: product.is_flash_sale,
@@ -183,7 +185,7 @@ const createProduct = async (req, res) => {
     name, price, description, image, images, brand, category, countInStock, discountPercent, discountType,
     isFlashSale, isDigital, digitalFileUrl, metaTitle, metaDescription, metaKeywords, metaImage, tags, youtubeUrl, flashSaleStart, flashSaleEnd,
     unit, minOrderQty, barcode, slug, shippingDays, cashOnDelivery,
-    isPublished, isCatalog, isTodaysDeal, isFeatured, shortDescription
+    isPublished, isCatalog, isTodaysDeal, isFeatured, shortDescription, purchasePrice
   } = req.body;
 
   try {
@@ -195,6 +197,7 @@ const createProduct = async (req, res) => {
       brand: brand || 'Sample Brand',
       category: category || 'Sample Category',
       count_in_stock: countInStock || 0,
+      purchase_price: purchasePrice || 0,
       description: description || 'Sample Description',
       discount_percent: discountPercent || 0,
       discount_type: discountType === 'flat' ? 'flat' : 'percent',
@@ -271,7 +274,7 @@ const updateProduct = async (req, res) => {
     name, price, description, image, images, brand, category, countInStock, discountPercent, discountType,
     isFlashSale, isDigital, digitalFileUrl, metaTitle, metaDescription, metaKeywords, metaImage, tags, youtubeUrl, flashSaleStart, flashSaleEnd,
     unit, minOrderQty, barcode, slug, shippingDays, cashOnDelivery,
-    isPublished, isCatalog, isTodaysDeal, isFeatured, shortDescription
+    isPublished, isCatalog, isTodaysDeal, isFeatured, shortDescription, purchasePrice
   } = req.body;
 
   try {
@@ -291,6 +294,7 @@ const updateProduct = async (req, res) => {
     if (brand !== undefined) updateData.brand = brand;
     if (category !== undefined) updateData.category = category;
     if (countInStock !== undefined) updateData.count_in_stock = countInStock;
+    if (purchasePrice !== undefined) updateData.purchase_price = purchasePrice;
     if (discountPercent !== undefined) updateData.discount_percent = discountPercent;
     if (discountType !== undefined) updateData.discount_type = discountType === 'flat' ? 'flat' : 'percent';
     if (isFlashSale !== undefined) updateData.is_flash_sale = isFlashSale;

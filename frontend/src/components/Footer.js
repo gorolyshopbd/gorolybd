@@ -6,7 +6,7 @@ import { getImageUrl } from '@/context/ShopContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export default function Footer({ onTabChange, onCartClick }) {
+export default function Footer({ onTabChange, onCartClick, onAuthClick }) {
   const [settings, setSettings] = useState(null);
   const [pages, setPages] = useState([]);
   const [email, setEmail] = useState('');
@@ -106,36 +106,9 @@ export default function Footer({ onTabChange, onCartClick }) {
   return (
     <div className="relative">
       <footer className="bg-[#050505] text-white w-full mt-8 font-sans">
-        {/* Newsletter Section */}
-        <div className="border-b border-white/5">
-          <div className="max-w-7xl mx-auto px-6 md:px-10 py-6 md:py-7 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="md:w-1/2 space-y-1">
-              <h3 className="text-lg md:text-xl font-bold text-white tracking-tight">Subscribe to our newsletter</h3>
-              <p className="text-slate-300 text-xs md:text-sm font-medium max-w-md">
-                Get the latest updates on new products, flash sales, and exclusive coupons.
-              </p>
-            </div>
-            <div className="md:w-1/2 w-full flex items-center gap-2">
-              <input 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email address" 
-                className="flex-1 px-3 py-2.5 rounded-lg text-slate-900 focus:outline-none text-sm"
-              />
-              <button 
-                onClick={handleSubscribe}
-                disabled={subscribeStatus === 'subscribing'}
-                className="bg-[#FF6600] hover:bg-[#e65c00] disabled:bg-slate-500 text-white font-bold px-6 py-2.5 rounded-lg transition text-sm shadow-[0_0_12px_rgba(255,102,0,0.3)]">
-                {subscribeStatus === 'subscribing' ? '...' : subscribeStatus === 'success' ? 'Done!' : 'Subscribe'}
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Main Footer Links */}
-        <div className="max-w-7xl mx-auto px-6 md:px-10 py-7 md:py-9">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-7 lg:gap-10">
+        <div className="max-w-7xl mx-auto px-6 md:px-10 py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-7 lg:gap-8">
             
             {/* Col 1: Brand & Socials */}
             <div className="space-y-4">
@@ -161,12 +134,12 @@ export default function Footer({ onTabChange, onCartClick }) {
                       <circle cx="24" cy="28" r="1.5" fill="white"/>
                       <path d="M13 14l1-3h12l1 3" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
                     </svg>
-                    <span className="text-[#FF6600] font-black text-sm tracking-tight">GOROLY <span className="text-slate-800">SHOP</span></span>
+                    <span className="text-[#FF6600] font-black text-[17px] tracking-tight">GOROLY <span className="text-slate-800">SHOP</span></span>
                   </div>
                 </div>
               </div>
 
-              <p className="text-xs font-medium text-slate-300 leading-relaxed">
+              <p className="text-[17px] font-medium text-slate-300 leading-relaxed">
                 Goroly Shop is a rapidly growing e-commerce brand in Bangladesh, committed to providing premium, authentic products with fast and reliable doorstep delivery.
               </p>
               <div className="flex gap-2 pt-1">
@@ -195,15 +168,15 @@ export default function Footer({ onTabChange, onCartClick }) {
 
             {/* Col 2: Information */}
             <div className="space-y-3">
-              <h4 className="text-[11px] font-bold text-white uppercase tracking-wider">Information</h4>
-              <ul className="space-y-2 text-xs font-bold text-slate-200">
+              <h4 className="text-[17px] font-bold text-white uppercase tracking-wider">Information</h4>
+              <ul className="space-y-2 text-[17px] font-bold text-slate-200">
                 {mergedPages.map((page) => (
                   <li key={page.slug}>
                     <button 
                       onClick={() => onTabChange(`page-${page.slug}`)} 
                       className="text-white hover:text-[#FF6600] transition-colors duration-200 flex items-center gap-1 text-left bg-transparent border-0 cursor-pointer"
                     >
-                      <span className="text-slate-400 text-sm leading-none font-normal">›</span> {page.title}
+                      <span className="text-slate-400 text-[17px] leading-none font-normal">›</span> {page.title}
                     </button>
                   </li>
                 ))}
@@ -212,15 +185,15 @@ export default function Footer({ onTabChange, onCartClick }) {
 
             {/* Col 3: Goroly Shop Seller */}
             <div className="space-y-3">
-              <h4 className="text-[11px] font-bold text-white uppercase tracking-wider">Goroly Shop Seller</h4>
-              <ul className="space-y-2 text-xs font-bold text-slate-200">
+              <h4 className="text-[17px] font-bold text-white uppercase tracking-wider">Goroly Shop Seller</h4>
+              <ul className="space-y-2 text-[17px] font-bold text-slate-200">
                 {[{ label: 'Become A Seller', tab: 'page-become-a-seller' },{ label: 'Seller Policy', tab: 'page-seller-policy' },{ label: 'Product Policy', tab: 'page-product-policy' },{ label: 'Pickup & Delivery Policy', tab: 'page-pickup-delivery-policy' },{ label: 'Seller Exchange & Return Policy', tab: 'page-seller-exchange-return-policy' }].map((item) => (
                   <li key={item.tab}>
                     <button
                       onClick={() => onTabChange && onTabChange(item.tab)}
                       className="text-white hover:text-[#FF6600] transition-colors duration-200 flex items-center gap-1 text-left bg-transparent border-0 cursor-pointer"
                     >
-                      <span className="text-slate-400 text-sm leading-none font-normal">›</span> {item.label}
+                      <span className="text-slate-400 text-[17px] leading-none font-normal">›</span> {item.label}
                     </button>
                   </li>
                 ))}
@@ -230,8 +203,8 @@ export default function Footer({ onTabChange, onCartClick }) {
             {/* Col 4: Support & App Download */}
             <div className="space-y-4">
               <div className="space-y-3">
-                <h4 className="text-[11px] font-bold text-white uppercase tracking-wider">Customer Support</h4>
-                <ul className="space-y-2.5 text-xs font-bold text-white">
+                <h4 className="text-[17px] font-bold text-white uppercase tracking-wider">Customer Support</h4>
+                <ul className="space-y-2.5 text-[17px] font-bold text-white">
                   <li className="flex items-center gap-2">
                     <Mail size={13} className="text-[#FF6600] flex-shrink-0" />
                     <span>{s.footerEmail || 'support@shopio.com'}</span>
@@ -245,7 +218,7 @@ export default function Footer({ onTabChange, onCartClick }) {
 
               {/* App Download Buttons */}
               <div className="space-y-2">
-                <h5 className="text-[11px] font-bold text-white uppercase tracking-wider flex items-center gap-1">
+                <h5 className="text-[17px] font-bold text-white uppercase tracking-wider flex items-center gap-1">
                   <Download size={12} className="text-[#FF6600]" />
                   DOWNLOAD APP
                 </h5>
@@ -277,14 +250,62 @@ export default function Footer({ onTabChange, onCartClick }) {
                 </div>
               </div>
             </div>
+
+            {/* Col 5: My Account */}
+            <div className="space-y-3">
+              <h4 className="text-[17px] font-bold text-white uppercase tracking-wider">My Account</h4>
+              <ul className="space-y-2 text-[17px] font-bold text-slate-200">
+                <li>
+                  <button 
+                    onClick={() => onAuthClick && onAuthClick()} 
+                    className="text-white hover:text-[#FF6600] transition-colors duration-200 flex items-center gap-1 text-left bg-transparent border-0 cursor-pointer"
+                  >
+                    <span className="text-slate-400 text-[17px] leading-none font-normal">›</span> Login
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => onAuthClick && onAuthClick()} 
+                    className="text-white hover:text-[#FF6600] transition-colors duration-200 flex items-center gap-1 text-left bg-transparent border-0 cursor-pointer"
+                  >
+                    <span className="text-slate-400 text-[17px] leading-none font-normal">›</span> Create Account
+                  </button>
+                </li>
+              </ul>
+            </div>
             
+            {/* Col 6: Newsletter */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-[17px] font-bold text-white tracking-wide leading-tight">Subscribe to our news letter</h3>
+                <p className="text-slate-300 text-[17px] font-semibold leading-relaxed">
+                  Get all the latest information on Events sales and Offers.
+                </p>
+              </div>
+              <div className="w-full flex flex-col gap-3">
+                <input 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email" 
+                  className="w-full px-4 py-3 rounded-lg bg-[#333333] border border-[#444444] text-white placeholder-slate-500 focus:outline-none focus:border-white transition text-[17px] font-medium"
+                />
+                <button 
+                  onClick={handleSubscribe}
+                  disabled={subscribeStatus === 'subscribing'}
+                  className="w-full bg-[#FF6600] hover:bg-[#e65c00] disabled:bg-slate-500 text-white font-bold px-4 py-3 rounded-lg transition-all duration-300 shadow-[0_4px_15px_rgba(255,102,0,0.3)] hover:shadow-[0_6px_20px_rgba(255,102,0,0.4)] text-[17px] tracking-wide">
+                  {subscribeStatus === 'subscribing' ? '...' : subscribeStatus === 'success' ? 'Done!' : 'Subscribe'}
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
 
         {/* Bottom Secure Bar */}
         <div className="border-t border-white/5">
           <div className="max-w-7xl mx-auto px-6 md:px-10 py-4 flex flex-col md:flex-row items-center justify-between gap-3">
-            <div className="text-[11px] font-bold text-slate-300">
+            <div className="text-[17px] font-bold text-slate-300">
               © {new Date().getFullYear()} Shopio BD. All rights reserved.
             </div>
             

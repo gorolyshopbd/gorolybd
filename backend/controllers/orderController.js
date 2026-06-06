@@ -614,6 +614,7 @@ const getAdminSummary = async (req, res) => {
           totalCustomers: 0, 
           pendingOrders: 0, 
           totalProducts: productsCount || 0, 
+          totalPurchaseCost: 0,
           orders: [],
           revenueOverview: [],
           orderStatistics: [],
@@ -765,12 +766,20 @@ const getAdminSummary = async (req, res) => {
         countInStock: p.count_in_stock
       }));
 
+    // Calculate Total Purchase Cost
+    let totalPurchaseCost = 0;
+    (allProducts || []).forEach(p => {
+      if (req.user.role === 'seller' && p.user_id !== req.user._id) return;
+      totalPurchaseCost += Number(p.purchase_price || 0) * Number(p.count_in_stock || 0);
+    });
+
     res.json({
       totalOrders,
       totalRevenue,
       totalCustomers: usersCount || 0,
       pendingOrders,
       totalProducts: productsCount || 0,
+      totalPurchaseCost,
       orders: formattedOrders,
       revenueOverview,
       orderStatistics,

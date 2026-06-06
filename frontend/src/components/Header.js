@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { ShopContext, getImageUrl } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { ShoppingBag, Search, User, Heart, Menu, X, LogOut, Sun, Moon, ChevronDown, ChevronRight, Zap, MapPin, GitCompare, Truck, PhoneCall, Sparkles, Store, LayoutGrid, SlidersHorizontal } from 'lucide-react';
-import CompareModal from './CompareModal';
+import Link from 'next/link';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -18,7 +18,6 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
   const [categories, setCategories] = useState([]);
   const [pages, setPages] = useState([]);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
-  const [compareOpen, setCompareOpen] = useState(false);
   const [desktopCategoryMenuOpen, setDesktopCategoryMenuOpen] = useState(false);
   const [categoryPanelOpen, setCategoryPanelOpen] = useState(false);
   const desktopCategoryMenuRef = useRef(null);
@@ -337,8 +336,8 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
             {/* Right */}
             <div className="flex items-center gap-2">
               {/* Compare */}
-              <button
-                onClick={() => setCompareOpen(true)}
+              <Link
+                href="/compare"
                 className="group flex items-center gap-1.5 px-3.5 py-1 bg-slate-50 hover:bg-[#FF6600]/10 border border-slate-200 hover:border-[#FF6600]/30 rounded-full transition-all duration-300 text-slate-700 hover:text-[#FF6600] cursor-pointer shadow-xs dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-[#FF6600]/40 dark:hover:bg-[#FF6600]/10"
               >
                 <GitCompare size={14} className="text-slate-400 group-hover:text-[#FF6600] transition-colors flex-shrink-0" />
@@ -346,7 +345,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 {compareList.length > 0 && (
                   <span className="bg-[#FF6600] text-white text-[8px] font-black rounded-full px-1.5 py-0.5 leading-none">{compareList.length}</span>
                 )}
-              </button>
+              </Link>
 
               {/* Track Order */}
               <button
@@ -383,7 +382,13 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
 
               {/* Logo */}
               <button
-                onClick={() => onTabChange('home')}
+                onClick={() => {
+                  if (onTabChange) {
+                    onTabChange('home');
+                  } else {
+                    window.location.href = '/';
+                  }
+                }}
                 className="flex items-center gap-2 flex-shrink-0 group"
               >
                 <img src={getImageUrl(headerSettings.headerLogo) || '/logo.png'} alt={headerSettings.siteTitle || 'Goroly Shop'} className="h-14 w-auto object-contain" />
@@ -677,7 +682,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                   <button
                     key={item.label}
                     onClick={item.action}
-                    className="nav-link-underline text-white hover:text-white font-semibold text-xs transition bg-transparent border-0 cursor-pointer py-1"
+                    className="nav-link-underline text-white hover:text-white font-semibold text-[15px] transition bg-transparent border-0 cursor-pointer py-1"
                   >
                     {item.label}
                   </button>
@@ -685,8 +690,8 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
 
                 {/* Pages Dropdown */}
                 <div className="dropdown-parent relative h-full flex items-center">
-                  <button className="nav-link-underline flex items-center gap-1 text-white hover:text-white font-semibold text-xs transition bg-transparent border-0 cursor-pointer py-1">
-                    {t('pages')} <ChevronDown size={11} className="text-white/60" />
+                  <button className="nav-link-underline flex items-center gap-1.5 text-white hover:text-white font-semibold text-[15px] transition bg-transparent border-0 cursor-pointer py-1">
+                    {t('pages')} <ChevronDown size={13} className="text-white/60" />
                   </button>
                   <div className="dropdown-menu absolute left-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-slate-100 dark:border-slate-800/80 p-2 z-50">
                     <div className="px-3 py-1.5 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-50 dark:border-slate-800/50 mb-1">Quick Links</div>
@@ -928,8 +933,6 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
           </div>
         </div>, document.body
       )}
-
-      <CompareModal isOpen={compareOpen} onClose={() => setCompareOpen(false)} />
     </div>
   );
 }

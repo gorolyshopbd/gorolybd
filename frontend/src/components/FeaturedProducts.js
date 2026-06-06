@@ -8,8 +8,9 @@ import { ShoppingBag, Scale } from 'lucide-react';
 
 function ProductCard({ product, onProductClick }) {
   const router = useRouter();
-  const { currencySymbol, addToCart } = useContext(ShopContext);
+  const { currencySymbol, addToCart, addToCompare, compareList = [] } = useContext(ShopContext);
   const finalPrice = calculateFinalPrice(product);
+  const isCompared = compareList.some((x) => x._id === product._id);
 
   return (
     <article 
@@ -19,9 +20,18 @@ function ProductCard({ product, onProductClick }) {
       {/* Image Container */}
       <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-[#f3f4f6] flex flex-col items-center justify-center">
         {/* Scale Icon */}
-        <div className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-110">
-          <Scale size={14} className="text-slate-700" />
-        </div>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            addToCompare(product);
+          }}
+          className={`absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition hover:scale-110 cursor-pointer border-0 ${
+            isCompared ? 'bg-amber-100' : 'bg-white'
+          }`}
+          title="Add to Compare"
+        >
+          <Scale size={14} className={isCompared ? 'text-amber-600' : 'text-slate-700'} />
+        </button>
         
         <div className="flex-1 flex items-center justify-center w-full p-4">
           <img

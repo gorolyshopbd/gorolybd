@@ -4,6 +4,7 @@ import React, { useContext, useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ShopContext, getImageUrl, formatPrice, calculateFinalPrice, formatDiscountLabel } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useTracking } from '@/hooks/useTracking';
 import Head from 'next/head';
 import Header from '@/components/Header';
 import CartDrawer from '@/components/CartDrawer';
@@ -16,6 +17,7 @@ export default function ProductDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { addToCart, user, API_URL, currencySymbol, addToCompare, compareList = [] } = useContext(ShopContext);
+  const tracking = useTracking();
   const { lang, t } = useLanguage();
   const imageContainerRef = useRef(null);
 
@@ -113,6 +115,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!product) return;
     document.title = product.metaTitle || product.name || 'Product - Goroly Shop';
+    tracking.trackViewItem(product, calculateFinalPrice(product));
   }, [product]);
 
   useEffect(() => {

@@ -1,0 +1,221 @@
+{
+  "exportFormatVersion": 2,
+  "exportTime": "2024-01-01 00:00:00",
+  "containerVersion": {
+    "path": "accounts/1/containers/1/versions/0",
+    "accountId": "1",
+    "containerId": "1",
+    "container": {
+      "path": "accounts/1/containers/1",
+      "accountId": "1",
+      "containerId": "1",
+      "name": "Goroly GTM Container",
+      "publicId": "GTM-XXXXXX",
+      "usageContext": [
+        "WEB"
+      ],
+      "fingerprint": "123456789",
+      "tagManagerUrl": ""
+    },
+    "trigger": [
+      {
+        "accountId": "1",
+        "containerId": "1",
+        "triggerId": "1",
+        "name": "Custom Event - view_item",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {
+                "type": "TEMPLATE",
+                "key": "arg0",
+                "value": "{{_event}}"
+              },
+              {
+                "type": "TEMPLATE",
+                "key": "arg1",
+                "value": "view_item"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "accountId": "1",
+        "containerId": "1",
+        "triggerId": "2",
+        "name": "Custom Event - add_to_cart",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {
+                "type": "TEMPLATE",
+                "key": "arg0",
+                "value": "{{_event}}"
+              },
+              {
+                "type": "TEMPLATE",
+                "key": "arg1",
+                "value": "add_to_cart"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "accountId": "1",
+        "containerId": "1",
+        "triggerId": "3",
+        "name": "Custom Event - remove_from_cart",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {
+                "type": "TEMPLATE",
+                "key": "arg0",
+                "value": "{{_event}}"
+              },
+              {
+                "type": "TEMPLATE",
+                "key": "arg1",
+                "value": "remove_from_cart"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "accountId": "1",
+        "containerId": "1",
+        "triggerId": "4",
+        "name": "Custom Event - begin_checkout",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {
+                "type": "TEMPLATE",
+                "key": "arg0",
+                "value": "{{_event}}"
+              },
+              {
+                "type": "TEMPLATE",
+                "key": "arg1",
+                "value": "begin_checkout"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "accountId": "1",
+        "containerId": "1",
+        "triggerId": "5",
+        "name": "Custom Event - purchase",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {
+                "type": "TEMPLATE",
+                "key": "arg0",
+                "value": "{{_event}}"
+              },
+              {
+                "type": "TEMPLATE",
+                "key": "arg1",
+                "value": "purchase"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "variable": [
+      {
+        "accountId": "1",
+        "containerId": "1",
+        "variableId": "1",
+        "name": "DLV - ecommerce",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "ecommerce"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "accountId": "1",
+        "containerId": "1",
+        "variableId": "2",
+        "name": "DLV - ecommerce items",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "ecommerce.items"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "accountId": "1",
+        "containerId": "1",
+        "variableId": "3",
+        "name": "DLV - ecommerce value",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "ecommerce.value"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "accountId": "1",
+        "containerId": "1",
+        "variableId": "4",
+        "name": "DLV - transaction id",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "ecommerce.transaction_id"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      }
+    ]
+  }
+}

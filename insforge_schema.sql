@@ -112,6 +112,7 @@ CREATE TABLE IF NOT EXISTS products (
   num_reviews        INT NOT NULL DEFAULT 0,
   price              NUMERIC(10,2) NOT NULL DEFAULT 0,
   count_in_stock     INT NOT NULL DEFAULT 0,
+  purchase_price     NUMERIC(10,2) DEFAULT 0,
   discount_percent   NUMERIC(10,2) DEFAULT 0,
   discount_type      TEXT DEFAULT 'percent' CHECK (discount_type IN ('percent', 'flat')),
   is_flash_sale      BOOLEAN DEFAULT false,

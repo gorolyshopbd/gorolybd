@@ -580,7 +580,7 @@ export default function Storefront() {
                                 </div>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); addToCart(product, 1); }}
-                                  className="w-full bg-[#ff0000] py-2.5 text-center text-[15px] font-bold text-white transition hover:bg-[#cc0000] z-10 mt-3"
+                                  className="absolute bottom-0 left-0 w-full bg-[#ff0000] py-2.5 text-center text-[15px] font-bold text-white transition-all duration-300 ease-in-out hover:bg-[#cc0000] z-10 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100"
                                   title={t('addToCart')}
                                 >
                                   Add to cart
@@ -810,7 +810,7 @@ export default function Storefront() {
       {activeTab !== 'videos' && <ChatWidget />}
       {/* Footer */}
       {activeTab !== 'videos' && (
-        <Footer onTabChange={setActiveTab} onCartClick={() => setCartOpen(true)} />
+        <Footer onTabChange={setActiveTab} onCartClick={() => setCartOpen(true)} onAuthClick={() => setAuthOpen(true)} />
       )}
     </div>
   );

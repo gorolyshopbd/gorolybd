@@ -3,6 +3,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { ShopContext, getImageUrl, formatPrice, calculateFinalPrice, formatDiscountLabel } from '@/context/ShopContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useTracking } from '@/hooks/useTracking';
 import { X, Trash2, ShoppingBag, Plus, Minus, Tag, CreditCard, Ship, CheckCircle, Smartphone, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -205,6 +206,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
       setPlacing(false);
       if (res.success) {
         setPlacedOrder(res.order);
+        tracking.trackPurchase(res.order);
         setCheckoutStep('success');
       } else {
         alert(res.error || t('orderPlaceError'));
@@ -464,6 +466,7 @@ export default function CartDrawer({ isOpen, onClose, onAuthTrigger }) {
                             if (!user) {
                               onAuthTrigger();
                             } else {
+                              tracking.trackBeginCheckout(cartItems, totalPrice);
                               setCheckoutStep('shipping');
                             }
                           }}

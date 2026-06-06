@@ -92,6 +92,7 @@ export default function AdminDashboard({ onTabChange }) {
     totalCustomers: 0,
     pendingOrders: 0,
     totalProducts: 0,
+    totalPurchaseCost: 0,
     orders: [],
   });
 
@@ -223,6 +224,7 @@ export default function AdminDashboard({ onTabChange }) {
     description: '',
     image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=300&auto=format&fit=crop',
     images: [''],
+    purchasePrice: '0',
     discountPercent: '0',
     discountType: 'percent',
     isFlashSale: false,
@@ -260,7 +262,7 @@ export default function AdminDashboard({ onTabChange }) {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editForm, setEditForm] = useState({
     name: '', price: '', category: '', parentCategory: '', brand: '', countInStock: '',
-    description: '', shortDescription: '', image: '', images: [], discountPercent: '0', discountType: 'percent',
+    description: '', shortDescription: '', image: '', images: [], purchasePrice: '0', discountPercent: '0', discountType: 'percent',
     isFlashSale: false, flashSaleStart: '', flashSaleEnd: '', isDigital: false, digitalFileUrl: '',
     metaTitle: '', metaDescription: '', metaKeywords: '', metaImage: '', tags: '', youtubeUrl: '',
     unit: 'pc', minOrderQty: '1', barcode: '', slug: '',
@@ -1176,6 +1178,7 @@ export default function AdminDashboard({ onTabChange }) {
         body: JSON.stringify({
           name: newProduct.name,
           price: Number(newProduct.price),
+          purchasePrice: Number(newProduct.purchasePrice || 0),
           category: newProduct.category,
           brand: newProduct.brand,
           countInStock: Number(newProduct.countInStock),
@@ -1291,7 +1294,7 @@ export default function AdminDashboard({ onTabChange }) {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
         body: JSON.stringify({
-          name: editForm.name, price: Number(editForm.price), category: editForm.category,
+          name: editForm.name, price: Number(editForm.price), purchasePrice: Number(editForm.purchasePrice || 0), category: editForm.category,
           brand: editForm.brand, countInStock: Number(editForm.countInStock),
           description: editForm.description, 
           shortDescription: editForm.shortDescription || '',
@@ -2106,6 +2109,7 @@ export default function AdminDashboard({ onTabChange }) {
         body: JSON.stringify({
           name: `${prod.name} (Copy)`,
           price: Number(prod.price),
+          purchasePrice: Number(prod.purchasePrice || 0),
           category: prod.category,
           brand: prod.brand,
           countInStock: Number(prod.countInStock),
@@ -2271,7 +2275,7 @@ export default function AdminDashboard({ onTabChange }) {
                         return parent ? parent.name : prod.category;
                       })();
                       setEditForm({
-                        name: prod.name, price: String(prod.price), category: prod.category,
+                        name: prod.name, price: String(prod.price), purchasePrice: String(prod.purchasePrice || 0), category: prod.category,
                         parentCategory: parentName,
                         brand: prod.brand, countInStock: String(prod.countInStock),
                         description: prod.description, image: prod.image, images: prod.images || [''],
@@ -2605,38 +2609,35 @@ export default function AdminDashboard({ onTabChange }) {
     : (metrics.orderStatistics?.find((item) => item.name === 'Cancelled')?.value || (metrics.orders || []).filter((order) => order.status === 'Cancelled').length || 0);
   const trackingOrders = Array.isArray(metrics.orders) ? metrics.orders : [];
   const trackingReportTotals = trackingReport?.totals || {};
-  const trackingRevenue = Number(trackingReportTotals.totalRevenue ?? metrics.totalRevenue ?? 0);
-  const trackingSessions = Number(trackingReportTotals.sessions ?? Math.max(Number(metrics.totalOrders || 0) * 9 + Number(metrics.totalCustomers || 0) * 3, 42));
-  const trackingEvents = Number(trackingReportTotals.events ?? Math.max(Number(metrics.totalOrders || 0) * 5 + Number(metrics.totalProducts || 0) * 2 + Number(metrics.totalCustomers || 0), 18));
-  const trackingConversionRate = Number(trackingReportTotals.conversionRate ?? (trackingSessions > 0 ? Math.min(((Number(metrics.totalOrders || 0) / trackingSessions) * 100), 100).toFixed(1) : '0.0'));
+  const trackingRevenue = Number(trackingReportTotals.totalRevenue ?? 0);
+  const trackingSessions = Number(trackingReportTotals.sessions ?? 0);
+  const trackingEvents = Number(trackingReportTotals.events ?? 0);
+  const trackingConversionRate = Number(trackingReportTotals.conversionRate ?? 0).toFixed(1);
   const fallbackTrackingChartData = Array.from({ length: 8 }).map((_, index) => {
     const labelDate = new Date();
     labelDate.setMinutes(labelDate.getMinutes() - (7 - index) * 15);
-    const sliceOrders = trackingOrders.filter((_, orderIndex) => orderIndex % 8 === index);
-    const orderCount = sliceOrders.length || (index % 3 === 0 ? Math.min(Number(metrics.totalOrders || 0), index + 1) : 0);
-    const revenue = sliceOrders.reduce((sum, order) => sum + Number(order.totalPrice || order.total_price || 0), 0) || Math.round((trackingRevenue / 8) * (0.65 + index * 0.06));
     return {
       time: labelDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      fb: Math.max(orderCount * 4 + index * 3, index + 4),
-      ga4: Math.max(orderCount * 6 + index * 4, index + 7),
-      revenue,
+      fb: 0,
+      ga4: 0,
+      revenue: 0,
     };
   });
   const trackingChartData = Array.isArray(trackingReport?.chart) && trackingReport.chart.length
     ? trackingReport.chart.map((item) => ({ time: item.time, fb: item.facebookEvents || item.fb || 0, ga4: item.ga4Events || item.ga4 || 0, revenue: item.revenue || 0 }))
     : fallbackTrackingChartData;
   const trackingSourceData = Array.isArray(trackingReport?.sources) && trackingReport.sources.length ? trackingReport.sources : [
-    { name: 'Facebook CAPI', value: Math.max(Math.round(trackingEvents * 0.42), 1), color: '#1877F2' },
-    { name: 'GA4 Web', value: Math.max(Math.round(trackingEvents * 0.36), 1), color: '#F9AB00' },
-    { name: 'Store Server', value: Math.max(Math.round(trackingEvents * 0.22), 1), color: '#10B981' },
+    { name: 'Facebook CAPI', value: 0, color: '#1877F2' },
+    { name: 'GA4 Web', value: 0, color: '#F9AB00' },
+    { name: 'Store Server', value: 0, color: '#10B981' },
   ];
   const trackingEventCounts = trackingReport?.eventCounts || {
-    PageView: Math.max(Number(metrics.totalCustomers || 0) * 4 + Number(metrics.totalProducts || 0), 12),
-    ViewContent: Math.max(Number(metrics.totalProducts || 0) * 2, 8),
-    AddToCart: Math.max(Number(metrics.totalOrders || 0) * 2 + Math.round(Number(metrics.totalProducts || 0) / 2), 5),
-    InitiateCheckout: Math.max(Number(metrics.totalOrders || 0) + Math.round(Number(metrics.totalCustomers || 0) / 4), 3),
-    Purchase: Number(metrics.totalOrders || 0),
-    Lead: Math.max(Math.round(Number(metrics.totalCustomers || 0) / 5), 1),
+    PageView: 0,
+    ViewContent: 0,
+    AddToCart: 0,
+    InitiateCheckout: 0,
+    Purchase: 0,
+    Lead: 0,
   };
   const trackingHealthCards = [
     {
@@ -3368,6 +3369,7 @@ export default function AdminDashboard({ onTabChange }) {
               {[
                 { label: isSellerAccount ? 'My Orders' : 'Total Orders', val: metrics.totalOrders ? metrics.totalOrders.toLocaleString() : '0', icon: ShoppingBag, iconBg: 'bg-violet-100 text-violet-600' },
                 { label: isSellerAccount ? 'My Revenue' : 'Total Revenue', val: metrics.totalRevenue ? `${currencySymbol}${metrics.totalRevenue.toLocaleString()}` : '0', icon: DollarSign, iconBg: 'bg-emerald-100 text-emerald-600' },
+                { label: 'Total Purchase Cost', val: metrics.totalPurchaseCost ? `${currencySymbol}${metrics.totalPurchaseCost.toLocaleString()}` : '0', icon: DollarSign, iconBg: 'bg-indigo-100 text-indigo-600' },
                 { label: isSellerAccount ? 'Low Stock' : 'Total Customers', val: isSellerAccount ? sellerLowStockProducts.length.toLocaleString() : (metrics.totalCustomers ? metrics.totalCustomers.toLocaleString() : '0'), icon: isSellerAccount ? AlertCircle : Users, iconBg: 'bg-orange-100 text-orange-600' },
                 { label: 'Pending Orders', val: isSellerAccount ? sellerPendingOrders.length.toLocaleString() : (metrics.pendingOrders ? metrics.pendingOrders.toLocaleString() : '0'), icon: AlertCircle, iconBg: 'bg-amber-100 text-amber-600' },
                 { label: 'Cancelled Orders', val: cancelledOrdersCount.toLocaleString(), icon: X, iconBg: 'bg-red-100 text-red-600' },
@@ -3760,19 +3762,26 @@ export default function AdminDashboard({ onTabChange }) {
                       </tr>
                     </thead>
                     <tbody className="text-sm">
-                      {(Array.isArray(trackingReport?.recentEvents) && trackingReport.recentEvents.length ? trackingReport.recentEvents : (trackingOrders.length ? trackingOrders.slice(0, 6).map((order, index) => ({
-                        event: index % 2 === 0 ? 'Purchase' : 'ViewContent',
-                        destination: index % 2 === 0 ? 'Facebook CAPI + GA4' : 'GA4 Realtime',
-                        value: Number(order.totalPrice || order.total_price || 0),
-                        status: 'Queued',
-                      })) : [{ event: 'Purchase', destination: 'Facebook CAPI + GA4', value: trackingRevenue, status: 'Queued' }, { event: 'ViewContent', destination: 'GA4 Realtime', value: 0, status: 'Queued' }])).map((event, index) => (
+                      {(() => {
+                        const events = Array.isArray(trackingReport?.recentEvents) && trackingReport.recentEvents.length ? trackingReport.recentEvents : [];
+                        if (events.length === 0) {
+                          return (
+                            <tr>
+                              <td colSpan="4" className="px-3 py-6 text-center text-slate-400 text-xs font-semibold">
+                                Waiting for real-time events...
+                              </td>
+                            </tr>
+                          );
+                        }
+                        return events.map((event, index) => (
                         <tr key={index} className="border-b border-slate-50">
                           <td className="px-3 py-3 font-bold text-slate-800">{event.event}</td>
                           <td className="px-3 py-3 text-slate-500 font-semibold">{event.destination}</td>
                           <td className="px-3 py-3 font-black text-slate-900">{formatPrice(Number(event.value || 0), currencySymbol)}</td>
                           <td className="px-3 py-3"><span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-600">{event.status || 'Queued'}</span></td>
                         </tr>
-                      ))}
+                        ));
+                      })()}
                     </tbody>
                   </table>
                 </div>
@@ -4901,17 +4910,29 @@ export default function AdminDashboard({ onTabChange }) {
                           <div className="border border-slate-200 rounded-2xl p-5 space-y-4">
                             <h3 className="font-bold text-gray-900 text-sm border-b border-slate-100 pb-3">Product Price & Stock</h3>
 
-                            {/* Unit Price */}
-                            <div>
-                              <label className="text-[11px] font-bold text-gray-600">Unit Price ({currencyCode}) *</label>
-                              <input
-                                type="number"
-                                required
-                                placeholder="0"
-                                value={newProduct.price}
-                                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                                className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-300 transition"
-                              />
+                            {/* Purchase Price & Unit Price */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-[11px] font-bold text-gray-600">Purchase Price ({currencyCode}) *</label>
+                                <input
+                                  type="number"
+                                  placeholder="0"
+                                  value={newProduct.purchasePrice}
+                                  onChange={(e) => setNewProduct({ ...newProduct, purchasePrice: e.target.value })}
+                                  className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-300 transition"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[11px] font-bold text-gray-600">Unit Price ({currencyCode}) *</label>
+                                <input
+                                  type="number"
+                                  required
+                                  placeholder="0"
+                                  value={newProduct.price}
+                                  onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                                  className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-300 transition"
+                                />
+                              </div>
                             </div>
 
                             {/* Special Discount Type + Special Discount */}
@@ -9995,9 +10016,13 @@ export default function AdminDashboard({ onTabChange }) {
                         className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner placeholder-gray-400"
                       />
                     </div>
-                    {settings.ga4MeasurementId && (
-                      <p className="text-[10px] text-emerald-400 font-semibold">GA4 will be loaded on storefront.</p>
-                    )}
+                    {settings.ga4MeasurementId ? (
+                      /^G-[A-Z0-9]+$/i.test(settings.ga4MeasurementId.trim()) ? (
+                        <p className="text-[10px] text-emerald-500 font-semibold flex items-center gap-1"><Check size={12}/> Connected</p>
+                      ) : (
+                        <p className="text-[10px] text-red-500 font-semibold flex items-center gap-1"><AlertCircle size={12}/> Error: Invalid Measurement ID. Must start with "G-"</p>
+                      )
+                    ) : null}
                   </div>
 
                   <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md space-y-3">
@@ -10034,9 +10059,13 @@ export default function AdminDashboard({ onTabChange }) {
                         className="w-full mt-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 hover:bg-white transition-all duration-300 shadow-inner placeholder-gray-400"
                       />
                     </div>
-                    {settings.googleTagManagerEnabled && settings.googleTagManagerId && (
-                      <p className="text-[10px] text-emerald-500 font-semibold">GTM will be loaded on storefront.</p>
-                    )}
+                    {settings.googleTagManagerEnabled && settings.googleTagManagerId ? (
+                      /^GTM-[A-Z0-9]+$/i.test(settings.googleTagManagerId.trim()) ? (
+                        <p className="text-[10px] text-emerald-500 font-semibold flex items-center gap-1"><Check size={12}/> Connected</p>
+                      ) : (
+                        <p className="text-[10px] text-red-500 font-semibold flex items-center gap-1"><AlertCircle size={12}/> Error: Invalid Container ID. Must start with "GTM-"</p>
+                      )
+                    ) : null}
                   </div>
                 </div>
                 <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl border border-slate-200 hover:bg-white transition-all duration-300 hover:shadow-md space-y-3">
@@ -10771,6 +10800,16 @@ export default function AdminDashboard({ onTabChange }) {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Purchase Price ({currencyCode}) *</label>
+                      <input
+                        type="number"
+                        placeholder="0.00"
+                        value={editForm.purchasePrice}
+                        onChange={(e) => setEditForm({ ...editForm, purchasePrice: e.target.value })}
+                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition"
+                      />
+                    </div>
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Base Price ({currencyCode}) *</label>
                       <input

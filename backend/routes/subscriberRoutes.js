@@ -14,7 +14,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Email is required' });
     }
 
-    const { data, error } = await insforgeAdmin
+    const { data, error } = await insforgeAdmin.database
       .from('subscribers')
       .insert([{ email }])
       .select();
