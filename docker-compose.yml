@@ -4,14 +4,16 @@ services:
     container_name: shopio-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - backend
       - frontend
+    networks:
+      - shopio-net
 
   backend:
     build: ./backend
@@ -25,10 +27,13 @@ services:
       - NODE_ENV=production
       - BACKEND_URL=https://gorolyshop.com
       - FRONTEND_URL=https://gorolyshop.com
+      - DATABASE_URL=postgres://postgres:shopio_password_123@db:5432/shopio
     volumes:
       - backend_uploads:/app/uploads
     depends_on:
       - db
+    networks:
+      - shopio-net
 
   frontend:
     build:
@@ -44,6 +49,8 @@ services:
       - ./frontend/.env.production
     depends_on:
       - backend
+    networks:
+      - shopio-net
 
   db:
     image: postgres:15-alpine
@@ -57,7 +64,13 @@ services:
       - postgres_data:/var/lib/postgresql/data
     expose:
       - "5432"
+    networks:
+      - shopio-net
 
 volumes:
   backend_uploads:
   postgres_data:
+
+networks:
+  shopio-net:
+    driver: bridge
