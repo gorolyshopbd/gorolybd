@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@insforge/sdk": "^1.3.0",
     "jodit-react": "^5.3.21",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",

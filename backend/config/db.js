@@ -248,6 +248,38 @@ const connectDB = async () => {
       )
     `);
     
+    // Auto-create roles table if missing
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS roles (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        label VARCHAR(100) NOT NULL,
+        permissions TEXT[] DEFAULT '{}',
+        description TEXT DEFAULT '',
+        is_system BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    // Seed default roles if table is empty
+    const { rows: existing } = await client.query('SELECT count(*)::int as cnt FROM roles');
+    if (existing[0].cnt === 0) {
+      await client.query(`
+        INSERT INTO roles (name, label, permissions, description, is_system) VALUES
+        ('superadmin', 'Super Admin', ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat','settings','users'], 'Full system access with user management', true),
+        ('admin', 'Admin', ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat','settings'], 'Admin access without user management', true),
+        ('manager', 'Manager', ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat'], 'Manager access without settings and users', true),
+        ('moderator', 'Moderator', ARRAY['orders','chat','products'], 'Limited access to orders, chat and products', true),
+        ('seller', 'Seller', ARRAY['products','orders','chat'], 'Seller access to their own products and orders', true),
+        ('customer', 'Customer', ARRAY[]::TEXT[], 'Regular customer with no admin access', true)
+      `);
+    }
+    
+    // Remove CHECK constraint on users.role to allow custom roles
+    await client.query(`
+      ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check
+    `);
+    
     client.release();
   } catch (err) {
     console.error('PostgreSQL connection error:', err.message);

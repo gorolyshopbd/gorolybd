@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
+    linterOptions: {
+      reportUnusedDisableDirectives: false,
+    },
     rules: {
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/purity": "off",

@@ -86,6 +86,7 @@ export default function Storefront() {
       .then((r) => r.ok ? r.json() : [])
       .then((d) => setShopCategories(Array.isArray(d) ? dedupeCategoriesByName(d) : []))
       .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Realtime: keep the shop filters/banner in sync with admin category changes
@@ -588,7 +589,7 @@ export default function Storefront() {
                               </div>
                               <div className="flex flex-1 flex-col pt-3 px-1 pb-1">
                                 <div className="flex items-center justify-end text-[12px] font-medium">
-                                  <span className="text-emerald-700">Sold {product.soldCount || Math.floor(Math.random() * 50) + 10}</span>
+                                  <span className="text-emerald-700">Sold {product.soldCount || 0}</span>
                                 </div>
                                 <div className="my-2.5 h-[1px] w-full bg-slate-100"></div>
                                 <h3 className="line-clamp-2 min-h-[40px] text-left text-[14px] font-bold leading-snug text-slate-700 transition group-hover:text-[#FF6600]">{product.name}</h3>

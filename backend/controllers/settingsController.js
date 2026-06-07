@@ -66,8 +66,27 @@ export const getSettings = async (req, res) => {
         smtp_from_email: '',
         smtp_enabled: false
       };
-      const { data: newSettings } = await db.database.from('settings').insert(defaultSettings).select().single();
-      settings = newSettings;
+      const { data: newSettings } = await db.database.from('settings').insert([defaultSettings]).select('*').single();
+      settings = newSettings || defaultSettings;
+    }
+
+    if (!settings) {
+      settings = {
+        otp_gateway: 'Simulated', otp_length: 6, otp_expiry: 5, checkout_otp_enabled: true,
+        bkash_mode: 'Sandbox', bkash_enabled: true, bkash_merchant_number: '01700000000',
+        nagad_mode: 'Sandbox', nagad_enabled: true, nagad_merchant_id: 'NAGAD12345',
+        rupantor_pay_mode: 'Sandbox', rupantor_pay_enabled: true, rupantor_pay_store_id: '', rupantor_pay_signature_key: '',
+        sslcommerz_mode: 'Sandbox', sslcommerz_enabled: true, sslcommerz_store_id: 'shopio_ssl_mock',
+        cod_enabled: true, facebook_pixel_id: '', facebook_access_token: '', ga4_measurement_id: '',
+        google_tag_manager_id: '', google_tag_manager_enabled: false,
+        site_title: 'Goroly Shop - E-Commerce', favicon_url: '', header_logo: '', footer_logo: '',
+        all_products_banner_image: '', footer_description: '', header_bg_color: '#F97316',
+        header_text_color: '#FFFFFF', header_accent_color: '#FF6600', notice_bar_enabled: true,
+        notice_bar_text: 'Summer Sale! Free delivery on orders over ৳999.', notice_bar_bg_color: '#6F1BE4',
+        notice_bar_text_color: '#FFFFFF', top_bar_helpline: '', top_bar_store_link: '',
+        top_bar_play_store_link: '', top_bar_app_store_link: '', currency: 'BDT', currency_symbol: '৳',
+        smtp_host: 'smtp.gmail.com', smtp_port: 587, smtp_user: '', smtp_pass: '', smtp_from_email: '', smtp_enabled: false
+      };
     }
 
     const isPublic = req.originalUrl && req.originalUrl.includes('/public');

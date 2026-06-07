@@ -18,7 +18,7 @@ export async function generateMetadata() {
 
   try {
     if (process.env.NEXT_PUBLIC_API_URL) {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/public`, { cache: 'no-store' });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/public`, { next: { revalidate: 3600 } });
       if (res.ok) {
         const data = await res.json();
         if (data.siteTitle) siteTitle = data.siteTitle;

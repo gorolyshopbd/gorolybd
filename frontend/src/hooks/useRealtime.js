@@ -7,7 +7,7 @@ export function useRealtime(channelName, eventHandlers = {}) {
   
   const publish = useCallback(async (event, payload) => {
     // Realtime disabled after Postgres migration
-  }, [channelName]);
+  }, []);
 
   return { isConnected, publish };
 }

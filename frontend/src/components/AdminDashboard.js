@@ -10,7 +10,7 @@ import {
   CircleDot, Tag, Plus, Check, Truck, CreditCard, ChevronRight, X,
   Sliders, Ship, Globe, MessageCircle, MessageSquare, Eye, EyeOff, LayoutGrid, Server,
   BarChart3, PieChart, TrendingUp, Play, Image as ImageIcon, CheckCircle2, MoreVertical, Edit2, Search,
-  FolderOpen, Upload, Trash2, Edit, Shirt, Smartphone, Sparkles, Watch, Home, Calendar, Bell, Settings, Download, Wifi, WifiOff, Zap, User, Lock, XCircle
+  FolderOpen, Upload, Trash2, Edit, Shirt, Smartphone, Sparkles, Watch, Home, Calendar, Bell, Settings, Download, Wifi, WifiOff, Zap, User, Lock, XCircle, Shield
 } from 'lucide-react';
 import HeroSettingsForm from './HeroSettingsForm';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart as RPie, Pie, Cell, LineChart, Line, CartesianGrid, AreaChart, Area } from 'recharts';
@@ -166,6 +166,14 @@ export default function AdminDashboard({ onTabChange }) {
   const [productCategoryFilter, setProductCategoryFilter] = useState('all');
   const [productSortOrder, setProductSortOrder] = useState('latest');
   const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [editingPurchaseId, setEditingPurchaseId] = useState(null);
+  const [editingPurchaseVal, setEditingPurchaseVal] = useState('');
+  const [showPurchaseAddForm, setShowPurchaseAddForm] = useState(false);
+  const [purchaseAddForm, setPurchaseAddForm] = useState({ name: '', price: '', purchasePrice: '', countInStock: '1', category: '', brand: '', barcode: '', discountPercent: '', image: '', description: '' });
+  const [roleList, setRoleList] = useState([]);
+  const [showRoleForm, setShowRoleForm] = useState(false);
+  const [roleForm, setRoleForm] = useState({ name: '', label: '', description: '', permissions: [] });
+  const [editingRoleId, setEditingRoleId] = useState(null);
 
   // Categories (API-based management)
   const [categoryList, setCategoryList] = useState([]);
@@ -621,6 +629,20 @@ export default function AdminDashboard({ onTabChange }) {
     }
   };
 
+  const fetchRoles = async () => {
+    try {
+      const res = await fetch(`${API_URL}/users/roles/all`, {
+        headers: { Authorization: `Bearer ${user?.token || ''}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRoleList(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+    }
+  };
+
   const fetchCoupons = async () => {
     if (!user) return;
     try {
@@ -919,6 +941,7 @@ export default function AdminDashboard({ onTabChange }) {
     fetchCategories();
     fetchBrands();
     fetchVideos();
+    fetchRoles();
     if (user) {
       fetchPayouts();
       fetchSellerSettings();
@@ -2096,6 +2119,29 @@ export default function AdminDashboard({ onTabChange }) {
     }
   };
 
+  const handleSavePurchasePrice = async (productId) => {
+    try {
+      const val = parseFloat(editingPurchaseVal);
+      if (isNaN(val) || val < 0) {
+        alert('Please enter a valid purchase price');
+        return;
+      }
+      const res = await fetch(`${API_URL}/products/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+        body: JSON.stringify({ purchasePrice: val }),
+      });
+      if (res.ok) {
+        setEditingPurchaseId(null);
+        fetchProducts();
+      } else {
+        alert('Failed to update purchase price');
+      }
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const handleDuplicateProduct = async (prod) => {
     if (!confirm('Are you sure you want to duplicate this product?')) return;
     setLoading(true);
@@ -2792,7 +2838,8 @@ export default function AdminDashboard({ onTabChange }) {
                 { id: 'products_attribute_values', label: 'Attribute Values' },
                 { id: 'products_brands', label: 'Brands' },
                 { id: 'products_categories', label: 'Categories' },
-                { id: 'products_import', label: 'Import Products' }
+                { id: 'products_import', label: 'Import Products' },
+                { id: 'products_purchase', label: 'Product Purchase' }
               ]
             },
             { id: 'coupons', label: 'Coupons', icon: Tag, adminOnly: true },
@@ -2808,6 +2855,7 @@ export default function AdminDashboard({ onTabChange }) {
               ]
             },
             { id: 'staffs', label: 'Manage Staffs', icon: Users, adminOnly: true },
+            { id: 'staff_roles', label: 'Staff Roles', icon: Shield, adminOnly: true },
             { 
               id: 'sellers', label: 'Sellers', icon: Package, adminOnly: true,
               subItems: [
@@ -2953,6 +3001,7 @@ export default function AdminDashboard({ onTabChange }) {
                                           (sub.id === 'products_admin' && activeTab === 'products' && productSubTab === 'admin') ||
                                           (sub.id === 'products_seller' && activeTab === 'products' && productSubTab === 'seller') ||
                                           (sub.id === 'products_import' && activeTab === 'products' && productSubTab === 'import') ||
+                                          (sub.id === 'products_purchase' && activeTab === 'products' && productSubTab === 'purchase') ||
                                           (sub.id === 'products_brands' && activeTab === 'brands') ||
                                           (sub.id === 'products_categories' && activeTab === 'categories') ||
                                           (sub.id === 'orders_all' && activeTab === 'orders') ||
@@ -3861,7 +3910,8 @@ export default function AdminDashboard({ onTabChange }) {
                 { id: 'colors', label: 'Colors' },
                 { id: 'attributes', label: 'Attributes Sets' },
                 { id: 'attribute_values', label: 'Attribute Values' },
-                { id: 'import', label: 'Import Products' }
+                { id: 'import', label: 'Import Products' },
+                { id: 'purchase', label: 'Product Purchase' }
               ].filter(subTab => {
                 if (user && user.role === 'seller') {
                   return subTab.id === 'add' || subTab.id === 'all';
@@ -5654,6 +5704,383 @@ export default function AdminDashboard({ onTabChange }) {
               </div>
             )}
 
+            {/* Sub-tab: PRODUCT PURCHASE */}
+            {productSubTab === 'purchase' && (
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="flex justify-between items-center bg-white p-6 border border-slate-200 rounded-2xl shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <span className="w-1.5 h-6 bg-amber-500 rounded-full"></span>
+                    <div>
+                      <h1 className="text-xl font-bold text-gray-900">Product Purchase</h1>
+                      <p className="text-[10px] text-gray-500 mt-0.5">
+                        Manage product purchase costs and margins
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowPurchaseAddForm(!showPurchaseAddForm)}
+                    className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                  >
+                    {showPurchaseAddForm ? <X size={14} /> : <Plus size={14} />} {showPurchaseAddForm ? 'CANCEL' : 'ADD NEW PRODUCT'}
+                  </button>
+                </div>
+
+                {/* Inline Add Form */}
+                {showPurchaseAddForm && (
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                    <h3 className="font-bold text-gray-900 text-sm mb-4">Quick Add Product</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Product Name *</label>
+                        <input
+                          type="text"
+                          placeholder="Enter product name"
+                          value={purchaseAddForm.name}
+                          onChange={(e) => setPurchaseAddForm({ ...purchaseAddForm, name: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-900"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Selling Price *</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={purchaseAddForm.price}
+                          onChange={(e) => setPurchaseAddForm({ ...purchaseAddForm, price: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-900"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Purchase Price</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={purchaseAddForm.purchasePrice}
+                          onChange={(e) => setPurchaseAddForm({ ...purchaseAddForm, purchasePrice: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-900"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Stock Qty</label>
+                        <input
+                          type="number"
+                          placeholder="1"
+                          value={purchaseAddForm.countInStock}
+                          onChange={(e) => setPurchaseAddForm({ ...purchaseAddForm, countInStock: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-900"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Category</label>
+                        <select
+                          value={purchaseAddForm.category}
+                          onChange={(e) => setPurchaseAddForm({ ...purchaseAddForm, category: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-700 cursor-pointer"
+                        >
+                          <option value="">Select Category</option>
+                          {categoryList.map((cat) => (
+                            <option key={cat._id} value={cat.name}>{cat.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Brand</label>
+                        <select
+                          value={purchaseAddForm.brand}
+                          onChange={(e) => setPurchaseAddForm({ ...purchaseAddForm, brand: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-700 cursor-pointer"
+                        >
+                          <option value="">Select Brand</option>
+                          {brandList.map((b) => (
+                            <option key={b._id} value={b.name}>{b.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Barcode</label>
+                        <input
+                          type="text"
+                          placeholder="Barcode / SKU"
+                          value={purchaseAddForm.barcode || ''}
+                          onChange={(e) => setPurchaseAddForm({ ...purchaseAddForm, barcode: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-900"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Discount %</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0"
+                          value={purchaseAddForm.discountPercent || ''}
+                          onChange={(e) => setPurchaseAddForm({ ...purchaseAddForm, discountPercent: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-900"
+                        />
+                      </div>
+                      <div className="sm:col-span-2 lg:col-span-4">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Image URL</label>
+                        <input
+                          type="text"
+                          placeholder="https://example.com/image.jpg"
+                          value={purchaseAddForm.image || ''}
+                          onChange={(e) => setPurchaseAddForm({ ...purchaseAddForm, image: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-900"
+                        />
+                      </div>
+                      <div className="sm:col-span-2 lg:col-span-4">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Description</label>
+                        <textarea
+                          rows="3"
+                          placeholder="Product description..."
+                          value={purchaseAddForm.description || ''}
+                          onChange={(e) => setPurchaseAddForm({ ...purchaseAddForm, description: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-900 resize-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100">
+                      <button
+                        onClick={() => {
+                          if (!purchaseAddForm.name || !purchaseAddForm.price) {
+                            alert('Product name and selling price are required');
+                            return;
+                          }
+                          (async () => {
+                            try {
+                              const res = await fetch(`${API_URL}/products`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                                body: JSON.stringify({
+                                  name: purchaseAddForm.name,
+                                  price: Number(purchaseAddForm.price),
+                                  purchasePrice: Number(purchaseAddForm.purchasePrice || 0),
+                                  countInStock: Number(purchaseAddForm.countInStock || 1),
+                                  category: purchaseAddForm.category || undefined,
+                                  brand: purchaseAddForm.brand || undefined,
+                                  barcode: purchaseAddForm.barcode || undefined,
+                                  discountPercent: Number(purchaseAddForm.discountPercent || 0),
+                                  image: purchaseAddForm.image || undefined,
+                                  description: purchaseAddForm.description || undefined,
+                                }),
+                              });
+                              if (res.ok) {
+                                alert('Product added successfully!');
+                                setPurchaseAddForm({ name: '', price: '', purchasePrice: '', countInStock: '1', category: '', brand: '', barcode: '', discountPercent: '', image: '', description: '' });
+                                setShowPurchaseAddForm(false);
+                                fetchProducts();
+                              } else {
+                                const err = await res.json();
+                                alert(err.message || 'Failed to create product');
+                              }
+                            } catch (err) {
+                              alert(err.message);
+                            }
+                          })();
+                        }}
+                        className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition cursor-pointer"
+                      >
+                        <Check size={14} className="inline mr-1" /> SAVE PRODUCT
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Total Products', val: productsList.length, icon: Package, color: 'bg-blue-100 text-blue-600' },
+                    { label: 'Total Purchase Cost', val: metrics.totalPurchaseCost ? `${currencySymbol}${metrics.totalPurchaseCost.toLocaleString()}` : `${currencySymbol}0`, icon: DollarSign, color: 'bg-indigo-100 text-indigo-600' },
+                    { label: 'Total Stock Value', val: `${currencySymbol}${productsList.reduce((sum, p) => sum + (Number(p.price || 0) * Number(p.countInStock || 0)), 0).toLocaleString()}`, icon: BarChart3, color: 'bg-emerald-100 text-emerald-600' },
+                    { label: 'Avg Profit Margin', val: (() => { const withCost = productsList.filter(p => Number(p.purchasePrice || 0) > 0); if (withCost.length === 0) return 'N/A'; const avg = withCost.reduce((sum, p) => sum + ((Number(p.price || 0) - Number(p.purchasePrice || 0)) / Number(p.price || 1) * 100), 0) / withCost.length; return `${avg.toFixed(1)}%`; })(), icon: TrendingUp, color: 'bg-amber-100 text-amber-600' }
+                  ].map((card, i) => {
+                    const Icon = card.icon;
+                    return (
+                      <div key={i} className="bg-white p-5 border border-slate-200 rounded-2xl shadow-xs hover:shadow-md transition">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{card.label}</span>
+                          <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${card.color}`}>
+                            <Icon size={16} />
+                          </span>
+                        </div>
+                        <div className="text-xl font-extrabold text-gray-900">{card.val}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Search & Filter */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="text-sm font-bold text-gray-800">All Products Purchase Info</div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="w-full sm:w-48">
+                        <select
+                          value={productSellerFilter}
+                          onChange={(e) => setProductSellerFilter(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-700 font-semibold cursor-pointer"
+                        >
+                          <option value="all">Select Seller</option>
+                          <option value="admin">Admin Products</option>
+                          {allUsers.filter(u => u.role === 'seller').map((seller) => (
+                            <option key={seller._id} value={seller._id}>{seller.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-center gap-1.5 w-full sm:w-56">
+                        <input
+                          type="text"
+                          placeholder="Search product..."
+                          value={productSearchQuery}
+                          onChange={(e) => setProductSearchQuery(e.target.value)}
+                          className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-xs text-gray-700"
+                        />
+                        <button type="button" className="p-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition cursor-pointer flex items-center justify-center">
+                          <Search size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Purchase Table */}
+                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                  {(() => {
+                    const filtered = productsList.filter(p => {
+                      if (productSellerFilter === 'admin') return !p.user_id || p.user_id === user?._id;
+                      if (productSellerFilter !== 'all') return p.user_id === productSellerFilter;
+                      return true;
+                    }).filter(p => {
+                      if (!productSearchQuery) return true;
+                      const q = productSearchQuery.toLowerCase();
+                      return (p.name || '').toLowerCase().includes(q) || (p.barcode || '').toLowerCase().includes(q);
+                    });
+
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="p-8 text-center text-gray-500 text-sm">No products found.</div>
+                      );
+                    }
+
+                    return (
+                      <div className="overflow-x-auto p-2">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-slate-50 text-gray-500 text-[10px] uppercase tracking-widest font-bold">
+                              <th className="py-3 px-4 rounded-l-xl">#</th>
+                              <th className="py-3 px-4">Product</th>
+                              <th className="py-3 px-4">Barcode/SKU</th>
+                              <th className="py-3 px-4">Stock</th>
+                              <th className="py-3 px-4">Purchase Price</th>
+                              <th className="py-3 px-4">Selling Price</th>
+                              <th className="py-3 px-4">Margin</th>
+                              <th className="py-3 px-4">Stock Value (Cost)</th>
+                              <th className="py-3 px-4 text-right rounded-r-xl">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-sm">
+                            {filtered.map((prod, idx) => {
+                              const purchaseCost = Number(prod.purchasePrice || 0);
+                              const sellPrice = Number(prod.price || 0);
+                              const stock = prod.isDigital ? 'Unlimited' : Number(prod.countInStock || 0);
+                              const stockQty = prod.isDigital ? 0 : Number(prod.countInStock || 0);
+                              const margin = sellPrice > 0 ? ((sellPrice - purchaseCost) / sellPrice * 100) : 0;
+                              const stockValue = purchaseCost * stockQty;
+                              const isEditing = editingPurchaseId === prod._id;
+
+                              return (
+                                <tr key={prod._id} className="border-b border-transparent hover:bg-slate-50 transition group">
+                                  <td className="py-3 px-4 rounded-l-xl text-gray-500 font-medium">{idx + 1}</td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center gap-3">
+                                      <img src={getImageUrl(prod.image)} className="w-9 h-9 object-cover rounded-lg border border-slate-200" />
+                                      <span className="font-bold text-gray-900 text-sm line-clamp-1 max-w-[180px]" title={prod.name}>{prod.name}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-gray-500 font-mono text-xs">{prod.barcode || '-'}</td>
+                                  <td className="py-3 px-4 font-semibold">
+                                    <span className={`${stock === 'Unlimited' ? 'text-blue-600' : stockQty <= 5 ? 'text-red-600' : 'text-gray-900'}`}>
+                                      {stock === 'Unlimited' ? '∞' : stockQty}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    {isEditing ? (
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-gray-400 text-xs">{currencySymbol}</span>
+                                        <input
+                                          type="number"
+                                          step="0.01"
+                                          value={editingPurchaseVal}
+                                          onChange={(e) => setEditingPurchaseVal(e.target.value)}
+                                          className="w-24 px-2 py-1 border border-amber-300 rounded-lg text-sm font-bold focus:outline-hidden focus:ring-2 focus:ring-amber-500/30"
+                                          autoFocus
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') handleSavePurchasePrice(prod._id);
+                                            if (e.key === 'Escape') setEditingPurchaseId(null);
+                                          }}
+                                        />
+                                        <button
+                                          onClick={() => handleSavePurchasePrice(prod._id)}
+                                          className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+                                          title="Save"
+                                        >
+                                          <Check size={14} />
+                                        </button>
+                                        <button
+                                          onClick={() => setEditingPurchaseId(null)}
+                                          className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition"
+                                          title="Cancel"
+                                        >
+                                          <X size={14} />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <span className="font-bold text-gray-900 cursor-pointer hover:text-amber-600 transition flex items-center gap-1" onClick={() => {
+                                        setEditingPurchaseId(prod._id);
+                                        setEditingPurchaseVal(String(purchaseCost || ''));
+                                      }}>
+                                        {currencySymbol}{purchaseCost.toLocaleString()}
+                                        <Edit size={12} className="opacity-0 group-hover:opacity-100 transition text-amber-500" />
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="py-3 px-4 font-bold text-gray-900">{currencySymbol}{sellPrice.toLocaleString()}</td>
+                                  <td className="py-3 px-4">
+                                    <span className={`font-extrabold ${margin >= 30 ? 'text-emerald-600' : margin >= 10 ? 'text-amber-600' : 'text-red-500'}`}>
+                                      {margin.toFixed(1)}%
+                                    </span>
+                                    <span className="text-[9px] text-gray-400 block">
+                                      {currencySymbol}{(sellPrice - purchaseCost).toLocaleString()} profit
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-gray-700 font-semibold">
+                                    {stock === 'Unlimited' ? '-' : `${currencySymbol}${stockValue.toLocaleString()}`}
+                                  </td>
+                                  <td className="py-3 px-4 text-right rounded-r-xl">
+                                    <button
+                                      onClick={() => {
+                                        setEditingPurchaseId(prod._id);
+                                        setEditingPurchaseVal(String(purchaseCost || ''));
+                                      }}
+                                      className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                                    >
+                                      Edit Cost
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 
@@ -7083,11 +7510,14 @@ export default function AdminDashboard({ onTabChange }) {
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Role</label>
                     <select value={userForm.role} onChange={(e) => {
                       const role = e.target.value;
-                      setUserForm({ ...userForm, role, permissions: ROLE_PERMS[role] || [] });
+                      const found = roleList.find(r => r.name === role);
+                      setUserForm({ ...userForm, role, permissions: found ? found.permissions : (ROLE_PERMS[role] || []) });
                     }} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm">
-                      {Object.keys(ROLE_PERMS)
-                        .filter((r) => ['superadmin', 'admin', 'manager', 'moderator'].includes(r))
-                        .map((r) => <option key={r} value={r}>{r}</option>)}
+                      {(roleList.length > 0 ? roleList.filter(r => r.name !== 'customer' && r.name !== 'seller') : Object.keys(ROLE_PERMS).filter((r) => ['superadmin', 'admin', 'manager', 'moderator'].includes(r))).map((r) => {
+                        const name = typeof r === 'string' ? r : r.name;
+                        const label = typeof r === 'string' ? r : r.label;
+                        return <option key={name} value={name}>{label}</option>;
+                      })}
                     </select>
                   </div>
                   <div>
@@ -7256,11 +7686,14 @@ export default function AdminDashboard({ onTabChange }) {
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Role</label>
                           <select value={editingUserForm.role} onChange={(e) => {
                             const role = e.target.value;
-                            setEditingUserForm({ ...editingUserForm, role, permissions: ROLE_PERMS[role] || [] });
+                            const found = roleList.find(r => r.name === role);
+                            setEditingUserForm({ ...editingUserForm, role, permissions: found ? found.permissions : (ROLE_PERMS[role] || []) });
                           }} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm">
-                            {Object.keys(ROLE_PERMS)
-                              .filter((r) => ['superadmin', 'admin', 'manager', 'moderator'].includes(r))
-                              .map((r) => <option key={r} value={r}>{r}</option>)}
+                            {(roleList.length > 0 ? roleList.filter(r => r.name !== 'customer' && r.name !== 'seller') : Object.keys(ROLE_PERMS).filter((r) => ['superadmin', 'admin', 'manager', 'moderator'].includes(r))).map((r) => {
+                              const name = typeof r === 'string' ? r : r.name;
+                              const label = typeof r === 'string' ? r : r.label;
+                              return <option key={name} value={name}>{label}</option>;
+                            })}
                           </select>
                         </div>
                       </div>
@@ -7291,6 +7724,237 @@ export default function AdminDashboard({ onTabChange }) {
                   </div>
                 </div>
               )}
+            </div>
+          );
+        })()}
+
+        {/* STAFF ROLES TAB */}
+        {activeTab === 'staff_roles' && (() => {
+          const ALL_PERMISSIONS = ['orders', 'products', 'categories', 'brands', 'coupons', 'shipping', 'pages', 'offers', 'banners', 'chat', 'settings', 'users'];
+          const PERMISSION_LABELS = {
+            orders: 'Orders', products: 'Products', categories: 'Categories', brands: 'Brands',
+            coupons: 'Coupons', shipping: 'Shipping', pages: 'Pages', offers: 'Offers',
+            banners: 'Banners', chat: 'Support Chat', settings: 'Settings', users: 'Users'
+          };
+
+          return (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex justify-between items-center bg-white p-6 border border-slate-200 rounded-2xl shadow-xs">
+                <div className="flex items-center gap-3">
+                  <span className="w-1.5 h-6 bg-amber-500 rounded-full"></span>
+                  <div>
+                    <h1 className="text-xl font-bold text-gray-900">Staff Roles</h1>
+                    <p className="text-[10px] text-gray-500 mt-0.5">Create and manage staff roles with custom permissions</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setRoleForm({ name: '', label: '', description: '', permissions: [] });
+                    setEditingRoleId(null);
+                    setShowRoleForm(true);
+                  }}
+                  className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                >
+                  <Plus size={14} /> ADD ROLE
+                </button>
+              </div>
+
+              {/* Role Form */}
+              {showRoleForm && (
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                  <h3 className="font-bold text-gray-900 text-sm mb-4">{editingRoleId ? 'Edit Role' : 'Create New Role'}</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Role Name *</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. support_agent"
+                        value={roleForm.name}
+                        onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Display Label *</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Support Agent"
+                        value={roleForm.label}
+                        onChange={(e) => setRoleForm({ ...roleForm, label: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Description</label>
+                      <input
+                        type="text"
+                        placeholder="Brief description of this role"
+                        value={roleForm.description}
+                        onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-sm text-gray-900"
+                      />
+                    </div>
+                  </div>
+
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-3">Permissions</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-5">
+                    {ALL_PERMISSIONS.map((perm) => (
+                      <label key={perm} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition">
+                        <input
+                          type="checkbox"
+                          checked={roleForm.permissions.includes(perm)}
+                          onChange={() => {
+                            setRoleForm(prev => ({
+                              ...prev,
+                              permissions: prev.permissions.includes(perm)
+                                ? prev.permissions.filter(p => p !== perm)
+                                : [...prev.permissions, perm]
+                            }));
+                          }}
+                          className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500/30 cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-gray-700">{PERMISSION_LABELS[perm]}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                    <button
+                      onClick={() => setShowRoleForm(false)}
+                      className="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-gray-700 text-sm font-bold rounded-xl transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!roleForm.name || !roleForm.label) {
+                          alert('Role name and label are required');
+                          return;
+                        }
+                        try {
+                          const url = editingRoleId
+                            ? `${API_URL}/users/roles/${editingRoleId}`
+                            : `${API_URL}/users/roles/create`;
+                          const method = editingRoleId ? 'PUT' : 'POST';
+                          const res = await fetch(url, {
+                            method,
+                            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                            body: JSON.stringify(roleForm),
+                          });
+                          if (res.ok) {
+                            alert(editingRoleId ? 'Role updated successfully!' : 'Role created successfully!');
+                            setShowRoleForm(false);
+                            setEditingRoleId(null);
+                            fetchRoles();
+                          } else {
+                            const err = await res.json();
+                            alert(err.message || 'Failed to save role');
+                          }
+                        } catch (err) {
+                          alert(err.message);
+                        }
+                      }}
+                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition cursor-pointer"
+                    >
+                      <Check size={14} className="inline mr-1" /> {editingRoleId ? 'UPDATE ROLE' : 'SAVE ROLE'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Roles List */}
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                {roleList.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500 text-sm">No roles found. Create your first role!</div>
+                ) : (
+                  <div className="overflow-x-auto p-2">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 text-gray-500 text-[10px] uppercase tracking-widest font-bold">
+                          <th className="py-3 px-4 rounded-l-xl">#</th>
+                          <th className="py-3 px-4">Role</th>
+                          <th className="py-3 px-4">Description</th>
+                          <th className="py-3 px-4">Permissions</th>
+                          <th className="py-3 px-4">Type</th>
+                          <th className="py-3 px-4 text-right rounded-r-xl">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-sm">
+                        {roleList.map((role, idx) => (
+                          <tr key={role.id} className="border-b border-transparent hover:bg-slate-50 transition">
+                            <td className="py-3 px-4 rounded-l-xl text-gray-500 font-medium">{idx + 1}</td>
+                            <td className="py-3 px-4">
+                              <div className="font-bold text-gray-900">{role.label}</div>
+                              <div className="text-[10px] text-gray-400 font-mono">{role.name}</div>
+                            </td>
+                            <td className="py-3 px-4 text-gray-500 text-xs max-w-[200px]">{role.description || '-'}</td>
+                            <td className="py-3 px-4">
+                              <div className="flex flex-wrap gap-1">
+                                {(role.permissions || []).length === 0 ? (
+                                  <span className="text-[10px] text-gray-400">No permissions</span>
+                                ) : (
+                                  (role.permissions || []).map((perm) => (
+                                    <span key={perm} className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[9px] font-bold">
+                                      {PERMISSION_LABELS[perm] || perm}
+                                    </span>
+                                  ))
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              {role.is_system ? (
+                                <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[9px] font-bold">System</span>
+                              ) : (
+                                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[9px] font-bold">Custom</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-right rounded-r-xl space-x-1 whitespace-nowrap">
+                              {!role.is_system && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setRoleForm({ name: role.name, label: role.label, description: role.description || '', permissions: role.permissions || [] });
+                                      setEditingRoleId(role.id);
+                                      setShowRoleForm(true);
+                                    }}
+                                    className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={async () => {
+                                      if (!confirm(`Delete role "${role.label}"?`)) return;
+                                      try {
+                                        const res = await fetch(`${API_URL}/users/roles/${role.id}`, {
+                                          method: 'DELETE',
+                                          headers: { Authorization: `Bearer ${user.token}` },
+                                        });
+                                        if (res.ok) {
+                                          alert('Role deleted successfully');
+                                          fetchRoles();
+                                        } else {
+                                          const err = await res.json();
+                                          alert(err.message || 'Failed to delete role');
+                                        }
+                                      } catch (err) {
+                                        alert(err.message);
+                                      }
+                                    }}
+                                    className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                                  >
+                                    Delete
+                                  </button>
+                                </>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           );
         })()}

@@ -1021,6 +1021,88 @@ const importSellers = async (req, res) => {
     });
 };
 
+// @desc    Get all roles
+// @route   GET /api/users/roles
+// @access  Private/Admin
+const getRoles = async (req, res) => {
+  try {
+    const result = await db.database.from('roles').select('*').execute();
+    if (result.error) throw result.error;
+    res.json({ data: result.data });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Create a new role
+// @route   POST /api/users/roles
+// @access  Private/Admin
+const createRole = async (req, res) => {
+  try {
+    const { name, label, permissions, description } = req.body;
+    if (!name || !label) {
+      return res.status(400).json({ message: 'Name and label are required' });
+    }
+    const result = await db.database.from('roles').insert({
+      name: name.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+      label,
+      permissions: permissions || [],
+      description: description || '',
+      is_system: false,
+    }).select('*').execute();
+    if (result.error) throw result.error;
+    res.status(201).json({ data: result.data[0] });
+  } catch (error) {
+    if (error.constraint === 'roles_name_key') {
+      return res.status(400).json({ message: 'A role with this name already exists' });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update a role
+// @route   PUT /api/users/roles/:id
+// @access  Private/Admin
+const updateRole = async (req, res) => {
+  try {
+    const { name, label, permissions, description } = req.body;
+    const existing = await db.database.from('roles').select('*').eq('id', req.params.id).single().execute();
+    if (existing.error) throw existing.error;
+    if (!existing.data) return res.status(404).json({ message: 'Role not found' });
+    if (existing.data.is_system) return res.status(400).json({ message: 'System roles cannot be edited' });
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    if (label !== undefined) updateData.label = label;
+    if (permissions !== undefined) updateData.permissions = permissions;
+    if (description !== undefined) updateData.description = description;
+
+    const result = await db.database.from('roles').update(updateData).eq('id', req.params.id).select('*').execute();
+    if (result.error) throw result.error;
+    res.json({ data: result.data[0] });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete a role
+// @route   DELETE /api/users/roles/:id
+// @access  Private/Admin
+const deleteRole = async (req, res) => {
+  try {
+    const existing = await db.database.from('roles').select('*').eq('id', req.params.id).single().execute();
+    if (existing.error) throw existing.error;
+    if (!existing.data) return res.status(404).json({ message: 'Role not found' });
+    if (existing.data.is_system) return res.status(400).json({ message: 'System roles cannot be deleted' });
+
+    const result = await db.database.from('roles').delete().eq('id', req.params.id).execute();
+    if (result.error) throw result.error;
+    res.json({ message: 'Role deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export {
 
   authUser,
@@ -1052,4 +1134,8 @@ export {
   ROLE_PERMISSIONS,
   getRolePermissions,
   hasAdminAccess,
+  getRoles,
+  createRole,
+  updateRole,
+  deleteRole,
 };

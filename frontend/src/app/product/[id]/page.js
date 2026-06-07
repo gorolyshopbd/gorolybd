@@ -116,6 +116,7 @@ export default function ProductDetailPage() {
     if (!product) return;
     document.title = product.metaTitle || product.name || 'Product - Goroly Shop';
     tracking.trackViewItem(product, calculateFinalPrice(product));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product]);
 
   useEffect(() => {
@@ -577,7 +578,7 @@ export default function ProductDetailPage() {
                             <div key={idx} className="p-4 bg-white border border-slate-100 rounded-xl space-y-2 shadow-xs">
                               <div className="flex items-center justify-between">
                                 <span className="font-bold text-slate-800 text-xs sm:text-sm">{rev.name}</span>
-                                <span className="text-[10px] text-slate-400 font-semibold">{new Date(rev.createdAt || Date.now()).toLocaleDateString()}</span>
+                                <span className="text-[10px] text-slate-400 font-semibold">{rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : ''}</span>
                               </div>
                               <div className="flex text-amber-400">
                                 {Array.from({ length: 5 }).map((_, i) => (
