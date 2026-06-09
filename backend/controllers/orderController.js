@@ -2,6 +2,8 @@ import { db } from '../config/db.js';
 import { createSteadfastParcel } from '../services/steadfastService.js';
 import { runOrderAutomation } from '../services/orderAutomationService.js';
 
+const STEADFAST_BEARER_TOKEN = process.env.STEADFAST_BEARER_TOKEN || '';
+
 const isSteadfastProvider = (provider = '') => provider.toLowerCase().replace(/[^a-z]/g, '') === 'steadfast';
 
 const getSellerProductIds = async (sellerId) => {
@@ -50,7 +52,7 @@ const getOrderSellers = async (items = []) => {
   return sellers || [];
 };
 
-const bookSteadfastParcelForOrder = async (orderId) => {
+const bookSteadfastParcelForOrder = async (orderId, fallbackCredentials = {}) => {
   const { data: order, error: orderError } = await db.database
     .from('orders')
     .select('*')
@@ -80,8 +82,11 @@ const bookSteadfastParcelForOrder = async (orderId) => {
     };
   }
 
-  const result = await createSteadfastParcel({ order, items: items || [], credentials: sellerCredentials });
+  const credentials = sellerCredentials.apiKey ? sellerCredentials : fallbackCredentials;
+  const result = await createSteadfastParcel({ order, items: items || [], credentials });
   if (result.skipped) return result;
+
+  console.log('[SteadFast] Parcel created:', JSON.stringify({ orderId, trackingCode: result.trackingCode, status: result.status }));
 
   await db.database
     .from('orders')
@@ -111,7 +116,9 @@ const addOrderItems = async (req, res) => {
     shippingMethod,
     advancePayment,
     advanceAmount,
+    deviceFingerprint,
   } = req.body;
+  const ipAddress = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || req.connection?.remoteAddress || '';
 
   if (orderItems && orderItems.length === 0) {
     res.status(400).json({ message: 'No order items' });
@@ -172,6 +179,8 @@ const addOrderItems = async (req, res) => {
         shipping_method_name: shippingMethod?.name || '',
         shipping_method_price: shippingMethod?.price || 0,
         shipping_method_days: shippingMethod?.estimatedDays || '',
+        ip_address: ipAddress,
+        device_fingerprint: deviceFingerprint || '',
         is_paid: false,
         paid_at: null,
         status: 'Pending',
@@ -194,7 +203,8 @@ const addOrderItems = async (req, res) => {
     const { error: itemsError } = await db.database.from('order_items').insert(formattedItems);
     if (itemsError) throw itemsError;
 
-    // 3. AI/SMS/call confirmation automation. SteadFast booking happens after phone confirmation.
+    // 3. AI/SMS/call confirmation automation + auto SteadFast booking
+    let steadfastBooked = false;
     try {
       const sellers = await getOrderSellers(formattedItems);
       const automationSeller = sellers.find((seller) => seller.order_automation_enabled) || sellers[0] || null;
@@ -203,13 +213,34 @@ const addOrderItems = async (req, res) => {
         items: formattedItems,
         seller: automationSeller,
       });
-      if (!automation?.skipped) {
+
+      // Auto-book SteadFast if any seller has credentials or global env is set
+      const hasConfiguredSeller = sellers.some((s) => s.steadfast_enabled && s.steadfast_api_key && s.steadfast_secret_key);
+      if (hasConfiguredSeller || (process.env.STEADFAST_API_KEY && process.env.STEADFAST_SECRET_KEY)) {
+        try {
+          const booking = await bookSteadfastParcelForOrder(order.id);
+          if (!booking.skipped) {
+            steadfastBooked = true;
+          }
+        } catch (bookingError) {
+          console.error('[Auto SteadFast] Booking failed:', bookingError.message);
+        }
+      }
+
+      if (!automation?.skipped || steadfastBooked) {
+        const statusParts = [];
+        if (!automation?.skipped) {
+          statusParts.push(automation.errors?.length
+            ? `Automation partial: ${automation.errors.join('; ')}`
+            : 'Automation complete');
+        }
+        if (steadfastBooked) {
+          statusParts.push('SteadFast parcel booked');
+        }
         await db.database
           .from('orders')
           .update({
-            courier_status: automation.errors?.length
-              ? `Automation partial: ${automation.errors.join('; ')}`.slice(0, 250)
-              : 'Waiting for customer phone confirmation',
+            courier_status: statusParts.join(' | ').slice(0, 250),
           })
           .eq('id', order.id);
       }
@@ -301,6 +332,27 @@ const getOrderById = async (req, res) => {
 // @desc    Update order status or track shipping
 // @route   PUT /api/orders/:id/status
 // @access  Private/Admin
+const restoreStockOnCancel = async (orderId) => {
+  try {
+    const { data: orderItems } = await db.database
+      .from('order_items').select('product_id, qty').eq('order_id', orderId).execute();
+    if (!orderItems || orderItems.length === 0) return;
+    for (const item of orderItems) {
+      if (item.product_id) {
+        const { data: product } = await db.database
+          .from('products').select('count_in_stock').eq('id', item.product_id).single().execute();
+        if (product) {
+          await db.database
+            .from('products').update({ count_in_stock: (product.count_in_stock || 0) + Number(item.qty) })
+            .eq('id', item.product_id).execute();
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error restoring stock on cancel:', err.message);
+  }
+};
+
 const updateOrderStatus = async (req, res) => {
   const { status, courierProvider } = req.body;
   
@@ -312,16 +364,34 @@ const updateOrderStatus = async (req, res) => {
       }
     }
 
+    // Restore stock if cancelling
+    if (status === 'Cancelled') {
+      await restoreStockOnCancel(req.params.id);
+    }
+
     let updateData = { status };
     if (courierProvider) {
-      updateData.courier_provider = courierProvider;
       if (isSteadfastProvider(courierProvider)) {
-        const result = await bookSteadfastParcelForOrder(req.params.id);
-        updateData.status = result.skipped ? status : 'Shipped';
+        const userFallback = (req.user.steadfast_api_key && req.user.steadfast_secret_key)
+          ? { apiKey: req.user.steadfast_api_key, secretKey: req.user.steadfast_secret_key }
+          : {};
+        const result = await bookSteadfastParcelForOrder(req.params.id, userFallback);
+        if (result.skipped) {
+          const hasSteadfast = req.user.steadfast_api_key && req.user.steadfast_secret_key;
+          return res.json({
+            skipped: true,
+            message: hasSteadfast
+              ? 'The seller for this order has not configured SteadFast.'
+              : 'SteadFast API credentials are not configured. Go to SteadFast Integration to add your keys.',
+            ...updateData,
+          });
+        }
+        updateData.status = 'Shipped';
         updateData.courier_provider = 'SteadFast';
         updateData.courier_tracking_code = result.trackingCode || '';
-        updateData.courier_status = result.skipped ? result.message : (result.status || 'Booked');
+        updateData.courier_status = result.status || 'Booked';
       } else {
+        updateData.courier_provider = courierProvider;
         const trackingCode = `${courierProvider.toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`;
         updateData.courier_tracking_code = trackingCode;
         updateData.courier_status = 'Booked';
@@ -414,6 +484,7 @@ const handleVoiceConfirmation = async (req, res) => {
     }
 
     if (digit === '2') {
+      await restoreStockOnCancel(req.params.id);
       await db.database
         .from('orders')
         .update({
@@ -792,12 +863,144 @@ const getAdminSummary = async (req, res) => {
   }
 };
 
+// @desc    Courier delivery webhook (SteadFast / RedX / Pathao)
+// @route   POST /api/orders/courier-webhook
+// @access  Public (with Bearer token auth from env)
+const handleCourierWebhook = async (req, res) => {
+  const { notification_type, consignment_id, tracking_code, invoice, cod_amount, delivery_charge, status: deliveryStatus, tracking_message, updated_at } = req.body;
+
+  if (STEADFAST_BEARER_TOKEN) {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (token !== STEADFAST_BEARER_TOKEN) {
+      console.warn('[Courier Webhook] Unauthorized attempt - invalid token');
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+  }
+
+  console.log('[Courier Webhook] Received:', JSON.stringify({ notification_type, consignment_id, invoice, status: deliveryStatus }));
+
+  if (!notification_type) {
+    return res.status(200).json({ received: true });
+  }
+
+  try {
+    let order = null;
+
+    if (invoice) {
+      const { data } = await db.database
+        .from('orders')
+        .select('*')
+        .eq('id', invoice)
+        .maybeSingle();
+      order = data;
+    }
+
+    if (!order && consignment_id) {
+      const { data } = await db.database
+        .from('orders')
+        .select('*')
+        .eq('courier_tracking_code', String(consignment_id))
+        .maybeSingle();
+      order = data;
+    }
+
+    if (!order && tracking_code) {
+      const { data } = await db.database
+        .from('orders')
+        .select('*')
+        .eq('courier_tracking_code', tracking_code)
+        .maybeSingle();
+      order = data;
+    }
+
+    if (!order) {
+      console.log('[Courier Webhook] No matching order found for', { invoice, consignment_id, tracking_code });
+      return res.status(200).json({ received: true });
+    }
+
+    const trackingCode = tracking_code || order.courier_tracking_code || String(consignment_id || '');
+
+    if (notification_type === 'delivery_status' && deliveryStatus === 'Delivered') {
+      const updateFields = {
+        courier_status: 'Delivered',
+        status: 'Delivered',
+        courier_tracking_code: trackingCode,
+      };
+
+      if (cod_amount && Number(cod_amount) > 0 && !order.is_paid) {
+        updateFields.is_paid = true;
+        updateFields.paid_at = new Date().toISOString();
+        updateFields.payment_result_status = 'COD_COLLECTED';
+        updateFields.payment_result_time = Date.now().toString();
+      }
+
+      await db.database.from('orders').update(updateFields).eq('id', order.id);
+      console.log(`[Courier Webhook] Order ${order.id} marked as Delivered${cod_amount > 0 ? ' (COD collected)' : ''}`);
+    } else if (notification_type === 'tracking_update') {
+      const statusMsg = tracking_message || 'In transit';
+      await db.database
+        .from('orders')
+        .update({
+          courier_status: `In Transit - ${statusMsg}`.slice(0, 250),
+          courier_tracking_code: trackingCode,
+        })
+        .eq('id', order.id);
+      console.log(`[Courier Webhook] Order ${order.id} tracking update: ${statusMsg}`);
+    } else {
+      await db.database
+        .from('orders')
+        .update({
+          courier_status: `${deliveryStatus || notification_type} - ${tracking_message || ''}`.slice(0, 250),
+          courier_tracking_code: trackingCode,
+        })
+        .eq('id', order.id);
+      console.log(`[Courier Webhook] Order ${order.id} status: ${deliveryStatus || notification_type}`);
+    }
+
+    return res.status(200).json({ received: true });
+  } catch (error) {
+    console.error('[Courier Webhook] Error:', error);
+    return res.status(200).json({ received: true });
+  }
+};
+
+export const bulkUpdateOrders = async (req, res) => {
+  const { orderIds, status } = req.body;
+  if (!Array.isArray(orderIds) || orderIds.length === 0) {
+    return res.status(400).json({ message: 'No orders selected' });
+  }
+  
+  try {
+    if (req.user.role === 'seller') {
+      return res.status(403).json({ message: 'Sellers cannot bulk update orders yet' });
+    }
+
+    if (status === 'Cancelled') {
+      for (const id of orderIds) {
+        await restoreStockOnCancel(id);
+      }
+    }
+
+    const { error } = await db.database
+      .from('orders')
+      .update({ status })
+      .in('id', orderIds);
+
+    if (error) throw error;
+    res.json({ message: 'Orders updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export {
   addOrderItems,
   getOrderById,
   updateOrderStatus,
   updateOrderToPaid,
   handleVoiceConfirmation,
+  handleCourierWebhook,
   deleteOrder,
   getMyOrders,
   getOrders,

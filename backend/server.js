@@ -24,6 +24,11 @@ import rewardRoutes from './routes/rewardRoutes.js';
 import rupantorpayRoutes from './routes/rupantorpayRoutes.js';
 import subscriberRoutes from './routes/subscriberRoutes.js';
 import marketingRoutes from './routes/marketingRoutes.js';
+import purchaseRoutes from './routes/purchaseRoutes.js';
+import fraudRoutes from './routes/fraudRoutes.js';
+import expenseRoutes from './routes/expenseRoutes.js';
+import financeRoutes from './routes/financeRoutes.js';
+import inventoryRoutes from './routes/inventoryRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -60,6 +65,11 @@ app.use('/api/seller-subscriptions', sellerSubscriptionRoutes);
 app.use('/api/rewards', rewardRoutes);
 app.use('/api/rupantorpay', rupantorpayRoutes);
 app.use('/api/subscribers', subscriberRoutes);
+app.use('/api/purchases', purchaseRoutes);
+app.use('/api/admin/fraud', fraudRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/finance', financeRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 // Serve static uploads folder
 const __filename = fileURLToPath(import.meta.url);

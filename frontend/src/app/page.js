@@ -28,7 +28,8 @@ import AboutUsPage from '@/components/AboutUsPage';
 import TermsPage from '@/components/TermsPage';
 import PrivacyPage from '@/components/PrivacyPage';
 import ReturnRefundPage from '@/components/ReturnRefundPage';
-import { ShoppingCart, Star, Heart, ArrowRight, Eye, LayoutGrid, List, ChevronDown, ChevronUp, SlidersHorizontal, Scale } from 'lucide-react';
+import { Home, ShoppingBag, Grid3X3, User, ShoppingCart, Star, Heart, ArrowRight, Eye, LayoutGrid, List, ChevronDown, ChevronUp, SlidersHorizontal, Scale } from 'lucide-react';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import { useRouter } from 'next/navigation';
 
 
@@ -252,7 +253,7 @@ export default function Storefront() {
   }
 
   return (
-    <div className="storefront-shell flex flex-col min-h-screen bg-white justify-between">
+    <div className="storefront-shell flex flex-col min-h-screen bg-white justify-between pb-16 md:pb-0">
       {/* Header */}
       {activeTab !== 'videos' &&
         activeTab !== 'page-become-a-seller' &&
@@ -812,6 +813,16 @@ export default function Storefront() {
       {/* Footer */}
       {activeTab !== 'videos' && (
         <Footer onTabChange={setActiveTab} onCartClick={() => setCartOpen(true)} onAuthClick={() => setAuthOpen(true)} />
+      )}
+
+      {/* Mobile Bottom Navigation */}
+      {activeTab !== 'admin' && (
+        <MobileBottomNav
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onCartClick={() => setCartOpen(true)}
+          onAuthClick={() => setAuthOpen(true)}
+        />
       )}
     </div>
   );

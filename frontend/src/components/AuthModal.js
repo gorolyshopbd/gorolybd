@@ -314,9 +314,6 @@ export default function AuthModal({ isOpen, onClose }) {
     if (res.success) {
       setSignupOtpSent(true);
       setSignupOtpSuccess(method === 'call' ? 'Calling your phone with OTP...' : 'OTP sent successfully!');
-      if (res.otp) {
-        setSignupOtpCode(res.otp);
-      }
     } else {
       setSignupOtpError(res.error || 'Failed to send OTP');
     }

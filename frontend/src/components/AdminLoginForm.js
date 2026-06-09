@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import {
   Mail, Lock, Eye, EyeOff, ArrowLeft, ShieldCheck, Loader2,
   AlertCircle, CheckCircle2, TriangleAlert,
-  Keyboard, Sparkles, Info, Copy, CopyCheck
+  Keyboard, Sparkles, Info, Copy, CopyCheck, ArrowRight,
+  TrendingUp, MonitorCheck, ShieldAlert
 } from 'lucide-react';
 
 const DEMO_EMAIL = 'admin@shopio.com';
@@ -29,7 +30,10 @@ export default function AdminLoginForm({ onSuccess }) {
     const saved = localStorage.getItem('shop_admin_remember');
     if (saved) {
       const { email: savedEmail } = JSON.parse(saved);
-      if (savedEmail) { setEmail(savedEmail); setRemember(true); }
+      if (savedEmail) { 
+        setEmail(savedEmail); 
+        setRemember(true); 
+      }
     }
     setTimeout(() => emailRef.current?.focus(), 400);
   }, []);
@@ -74,55 +78,112 @@ export default function AdminLoginForm({ onSuccess }) {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-slate-50 font-sans selection:bg-orange-200/60">
-      {/* Animated gradient orbs */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[15%] -left-[10%] w-[55%] h-[55%] bg-gradient-to-br from-orange-300/25 via-yellow-300/15 to-transparent rounded-full blur-[130px] animate-[floatSlow_8s_ease-in-out_infinite]" />
-        <div className="absolute -bottom-[15%] -right-[10%] w-[55%] h-[55%] bg-gradient-to-br from-amber-300/25 via-orange-300/15 to-transparent rounded-full blur-[130px] animate-[floatSlow_8s_ease-in-out_infinite_2s]" />
-        <div className="absolute top-[20%] right-[25%] w-[25%] h-[25%] bg-cyan-300/10 rounded-full blur-[100px] animate-[floatSlow_10s_ease-in-out_infinite_4s]" />
-        <div className="absolute bottom-[30%] left-[20%] w-[20%] h-[20%] bg-orange-300/10 rounded-full blur-[90px] animate-[floatSlow_10s_ease-in-out_infinite_1s]" />
-        <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:32px_32px] opacity-30" />
-      </div>
+    <div className="min-h-screen w-full flex flex-col md:flex-row bg-slate-50 font-sans select-none overflow-hidden">
+      
+      {/* LEFT PANEL: Brand Promo (Deep Luxury Dark) */}
+      <div className="w-full md:w-1/2 bg-gradient-to-br from-[#070D19] via-[#0B1329] to-[#132247] text-white p-8 sm:p-12 md:p-16 flex flex-col justify-between relative overflow-hidden">
+        
+        {/* Glow meshes background */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] bg-orange-500/10 rounded-full blur-[140px] animate-[pulse_10s_infinite]" />
+          <div className="absolute -bottom-[20%] right-[10%] w-[55%] h-[55%] bg-amber-500/10 rounded-full blur-[120px] animate-[pulse_8s_infinite_2s]" />
+          <div className="absolute top-[30%] -right-[15%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px]" />
+          <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] opacity-10" />
+        </div>
 
-      {/* Login Card */}
-      <div className="relative z-10 w-full max-w-[420px] px-5 animate-fade-in">
-        <div className={[
-          'w-full p-8 sm:p-10',
-          'bg-white/75 backdrop-blur-2xl',
-          'border border-white/60',
-          'rounded-[2.25rem]',
-          'shadow-[0_25px_70px_-20px_rgba(0,0,0,0.12)]',
-          'transition-all duration-500',
-        ].join(' ')}>
-          {/* Logo Area */}
-          <div className="flex flex-col items-center mb-8">
-            <div className={[
-              'w-16 h-16 bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600',
-              'rounded-2xl flex items-center justify-center',
-              'shadow-xl shadow-orange-500/25',
-              'ring-4 ring-orange-100/50',
-              'mb-4',
-              'transition-transform duration-500 hover:scale-105 hover:-rotate-2',
-            ].join(' ')}>
-              <ShieldCheck size={30} className="text-white" strokeWidth={2.5} />
-            </div>
-            <h1 className="text-[1.65rem] font-extrabold text-slate-800 tracking-tight leading-tight">
-              Goroly Shop Workspace
+        {/* Brand Header */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-10 h-10 bg-[#FF6600] rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/25">
+            <ShieldCheck size={22} className="text-white" strokeWidth={2.5} />
+          </div>
+          <div className="text-2xl font-black tracking-tight" style={{ fontWeight: 900 }}>
+            Goroly<span className="text-[#FF6600]">Shop</span>
+          </div>
+          <span className="bg-slate-800 text-[10px] text-slate-350 font-bold px-2 py-0.5 rounded-full border border-slate-700/50 uppercase tracking-wider">
+            Workspace
+          </span>
+        </div>
+
+        {/* Center Marketing Copy */}
+        <div className="relative z-10 my-auto py-12 md:py-0 space-y-8 max-w-lg">
+          <div className="space-y-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight" style={{ fontWeight: 900 }}>
+              Control center for <span className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">your business</span>.
             </h1>
-            <p className="text-[0.65rem] font-bold text-slate-400 mt-1.5 uppercase tracking-[0.2em]">
-              Admin Control Panel
+            <p className="text-slate-400 text-sm leading-relaxed font-medium">
+              Manage inventory, coordinate orders, build marketing automations, and track seller performance from one unified, secure workspace.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4.5" noValidate>
-            {/* Email Input */}
+          {/* Features Highlights */}
+          <div className="space-y-5 pt-4">
+            <div className="flex items-start gap-4 group">
+              <div className="w-10 h-10 rounded-xl bg-slate-800/60 border border-slate-700/30 flex items-center justify-center text-orange-400 group-hover:text-orange-300 group-hover:bg-slate-800/90 transition-all duration-300">
+                <MonitorCheck size={18} />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-slate-200">Real-time Performance Metrics</h3>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Track live orders, store visits, subscription sales, and marketing campaign outcomes instantly.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4 group">
+              <div className="w-10 h-10 rounded-xl bg-slate-800/60 border border-slate-700/30 flex items-center justify-center text-amber-400 group-hover:text-amber-300 group-hover:bg-slate-800/90 transition-all duration-300">
+                <TrendingUp size={18} />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-slate-200">Inventory &amp; Supplier Tracking</h3>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Record product purchases, update current stocks, manage prices, and organize product catalogs.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Left Panel Footer */}
+        <div className="relative z-10 text-slate-500 text-[10px] font-semibold tracking-wider uppercase">
+          Goroly Shop Administrator Gateway © 2026. All rights reserved.
+        </div>
+      </div>
+
+      {/* RIGHT PANEL: Form Container (Spacious and Interactive) */}
+      <div className="w-full md:w-1/2 bg-white p-8 sm:p-12 md:p-16 flex flex-col justify-between relative">
+        
+        {/* Return to storefront link */}
+        <div className="flex justify-end">
+          <button
+            onClick={() => router.push('/')}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-slate-750 transition-colors duration-200 group"
+          >
+            <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+            Return to Storefront
+          </button>
+        </div>
+
+        {/* Central Card Form */}
+        <div className="my-auto max-w-[380px] w-full mx-auto py-8 md:py-0 space-y-7">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">
+              Sign In to Workspace
+            </h2>
+            <p className="text-xs text-slate-400 font-medium leading-relaxed">
+              Enter your credentials below to access the administrative dashboard.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            
+            {/* Email Field */}
             <div className="space-y-1.5">
-              <label className="text-[0.625rem] font-bold text-slate-500 uppercase tracking-wider ml-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block ml-0.5">
                 Email Address
               </label>
               <div className="relative group">
-                <span className="absolute inset-y-0 left-0 pl-4 flex items-center justify-center pointer-events-none text-slate-400 group-focus-within:text-orange-500 transition-colors duration-300">
-                  <Mail size={17} />
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center justify-center pointer-events-none text-slate-400 group-focus-within:text-[#FF6600] transition-colors duration-250">
+                  <Mail size={16} />
                 </span>
                 <input
                   ref={emailRef}
@@ -133,28 +194,28 @@ export default function AdminLoginForm({ onSuccess }) {
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyDown={handleKeyDown}
                   onKeyUp={handleKeyUp}
-                  placeholder="admin@gorolyshop.com"
-                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50/90 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400/70 placeholder:font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/12 focus:border-orange-500 focus:bg-white transition-all duration-300 shadow-sm"
+                  placeholder="admin@shopio.com"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-850 placeholder:text-slate-400 placeholder:font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/12 focus:border-[#FF6600] focus:bg-white hover:bg-slate-100/40 hover:border-slate-300 transition-all duration-250 shadow-xs"
                 />
               </div>
             </div>
 
-            {/* Password Input */}
+            {/* Password Field */}
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between ml-1">
-                <label className="text-[0.625rem] font-bold text-slate-500 uppercase tracking-wider">
+              <div className="flex items-center justify-between ml-0.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Password
                 </label>
                 <button
                   type="button"
-                  className="text-[0.6rem] font-bold text-orange-500 hover:text-orange-700 transition-colors tracking-wide"
+                  className="text-[10px] font-bold text-[#FF6600] hover:text-[#e05a00] transition-colors duration-200"
                 >
-                  Forgot?
+                  Forgot Password?
                 </button>
               </div>
               <div className="relative group">
-                <span className="absolute inset-y-0 left-0 pl-4 flex items-center justify-center pointer-events-none text-slate-400 group-focus-within:text-orange-500 transition-colors duration-300">
-                  <Lock size={17} />
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center justify-center pointer-events-none text-slate-400 group-focus-within:text-[#FF6600] transition-colors duration-250">
+                  <Lock size={16} />
                 </span>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -164,52 +225,55 @@ export default function AdminLoginForm({ onSuccess }) {
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyDown={handleKeyDown}
                   onKeyUp={handleKeyUp}
-                  placeholder="Enter your password"
-                  className="w-full pl-11 pr-12 py-3.5 bg-slate-50/90 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400/70 placeholder:font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/12 focus:border-orange-500 focus:bg-white transition-all duration-300 shadow-sm"
+                  placeholder="••••••••"
+                  className="w-full pl-11 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-850 placeholder:text-slate-400 placeholder:font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/12 focus:border-[#FF6600] focus:bg-white hover:bg-slate-100/40 hover:border-slate-300 transition-all duration-250 shadow-xs"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center justify-center text-slate-400 hover:text-slate-650 transition-colors duration-200"
                 >
-                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {capsLock && (
-                <div className="flex items-center gap-1.5 pl-1 pt-0.5 text-[0.6rem] font-bold text-amber-600 animate-fade-in">
+                <div className="flex items-center gap-1.5 pl-1 pt-0.5 text-[10px] font-semibold text-amber-600 animate-pulse">
                   <TriangleAlert size={12} />
-                  Caps Lock is on
+                  Caps Lock is active
                 </div>
               )}
             </div>
 
-            {/* Remember me */}
-            <div className="flex items-center gap-2 ml-0.5">
+            {/* Remember me Option */}
+            <div className="flex items-center gap-2 ml-0.5 pt-1">
               <button
                 type="button"
                 role="checkbox"
                 aria-checked={remember}
                 onClick={() => setRemember(!remember)}
                 className={[
-                  'w-4 h-4 rounded-[5px] border-2 flex items-center justify-center',
-                  'transition-all duration-200 flex-shrink-0',
+                  'w-4 h-4 rounded-md border flex items-center justify-center',
+                  'transition-all duration-200 flex-shrink-0 cursor-pointer',
                   remember
-                    ? 'bg-orange-500 border-orange-500 shadow-sm shadow-orange-300/40'
+                    ? 'bg-[#FF6600] border-[#FF6600] shadow-sm shadow-orange-300/45'
                     : 'border-slate-300 bg-white hover:border-slate-400',
                 ].join(' ')}
               >
-                {remember && <CheckCircle2 size={12} className="text-white" strokeWidth={3} />}
+                {remember && <CheckCircle2 size={11} className="text-white" strokeWidth={3.5} />}
               </button>
-              <span className="text-[0.7rem] font-semibold text-slate-500 select-none cursor-pointer" onClick={() => setRemember(!remember)}>
+              <span 
+                className="text-xs font-semibold text-slate-500 select-none cursor-pointer hover:text-slate-700 transition-colors duration-200"
+                onClick={() => setRemember(!remember)}
+              >
                 Remember this device
               </span>
             </div>
 
-            {/* Error Message */}
+            {/* Error Message Alert */}
             {error && (
-              <div className="flex items-start gap-2.5 p-3.5 bg-orange-50/90 border border-orange-200/70 rounded-xl text-orange-600 text-xs font-semibold shadow-sm animate-fade-in">
-                <AlertCircle size={15} className="mt-0.5 flex-shrink-0 text-orange-400" />
+              <div className="flex items-start gap-2.5 p-3.5 bg-red-50 border border-red-200/60 rounded-xl text-red-600 text-xs font-bold shadow-xs animate-shake">
+                <AlertCircle size={15} className="mt-0.5 flex-shrink-0 text-red-400" />
                 <span>{error}</span>
               </div>
             )}
@@ -219,39 +283,37 @@ export default function AdminLoginForm({ onSuccess }) {
               type="submit"
               disabled={loading}
               className={[
-                'relative w-full py-3.5 mt-1',
-                'bg-gradient-to-r from-orange-500 via-orange-600 to-amber-600',
+                'relative w-full py-3 mt-2',
+                'bg-gradient-to-r from-orange-500 via-[#FF6600] to-amber-600',
                 'hover:from-orange-600 hover:via-orange-700 hover:to-amber-700',
-                'text-white font-bold rounded-2xl',
-                'shadow-lg shadow-orange-500/20 hover:shadow-xl hover:shadow-orange-500/25',
+                'text-white font-bold rounded-xl text-xs uppercase tracking-wider',
+                'shadow-md shadow-orange-500/15 hover:shadow-lg hover:shadow-orange-500/25',
                 'transform hover:-translate-y-0.5 active:translate-y-0',
-                'transition-all duration-250',
+                'transition-all duration-200 cursor-pointer',
                 'flex justify-center items-center gap-2',
-                'disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg',
-                'overflow-hidden',
+                'disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-md',
               ].join(' ')}
             >
               {loading ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" />
+                  <Loader2 size={16} className="animate-spin" />
                   <span>Authenticating...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles size={16} />
-                  <span>Secure Login</span>
+                  <Sparkles size={14} />
+                  <span>Secure Sign In</span>
                 </>
               )}
-              <span className="absolute inset-0 bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.08)_50%,transparent_100%)] bg-[length:200%_100%] hover:animate-[shimmer_1.5s_ease-in-out]" />
             </button>
           </form>
 
-          {/* Demo Credentials */}
-          <div className="mt-7 p-4 bg-orange-50/70 border border-orange-100/60 rounded-xl">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5 text-[0.6rem] font-bold text-orange-500 uppercase tracking-wider">
+          {/* Custom Autofill Demo credentials container */}
+          <div className="p-4 bg-orange-50/50 border border-orange-100/60 rounded-xl space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-[9px] font-bold text-orange-500 uppercase tracking-wider">
                 <Info size={11} />
-                Demo Credentials
+                Auto-fill workspace credentials
               </div>
               <button
                 type="button"
@@ -260,59 +322,42 @@ export default function AdminLoginForm({ onSuccess }) {
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}
-                className="flex items-center gap-1 text-[0.55rem] font-bold text-slate-400 hover:text-orange-500 transition-colors"
+                className="flex items-center gap-1 text-[9px] font-bold text-slate-400 hover:text-slate-700 transition-colors"
               >
-                {copied ? <CopyCheck size={11} /> : <Copy size={11} />}
+                {copied ? <CopyCheck size={11} className="text-emerald-500" /> : <Copy size={11} />}
                 {copied ? 'Copied' : 'Copy'}
               </button>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => { setEmail(DEMO_EMAIL); setPassword(DEMO_PASS); }}
-                className="flex-1 flex items-center gap-2 px-3 py-2 bg-white border border-orange-100 rounded-lg hover:border-orange-300 hover:shadow-sm transition-all text-xs group"
-              >
-                <div className="flex flex-col items-start">
-                  <span className="text-[0.55rem] font-bold text-slate-400 uppercase tracking-wider">Email</span>
-                  <span className="text-[0.7rem] font-semibold text-slate-700 group-hover:text-orange-600 transition-colors">{DEMO_EMAIL}</span>
-                </div>
-                <div className="w-px h-6 bg-orange-100 mx-1" />
-                <div className="flex flex-col items-start">
-                  <span className="text-[0.55rem] font-bold text-slate-400 uppercase tracking-wider">Password</span>
-                  <span className="text-[0.7rem] font-semibold text-slate-700 group-hover:text-orange-600 transition-colors">{DEMO_PASS}</span>
-                </div>
-                <div className="ml-auto text-indigo-400 group-hover:text-orange-600 transition-colors">
-                  <ArrowLeft size={12} className="rotate-180" />
-                </div>
-              </button>
-            </div>
-          </div>
 
-          {/* Back Link */}
-          <div className="mt-6 text-center">
             <button
-              onClick={() => router.push('/')}
-              className="inline-flex items-center gap-1.5 text-[0.65rem] font-bold text-slate-400 hover:text-orange-600 transition-colors group"
+              type="button"
+              onClick={() => { 
+                setEmail(DEMO_EMAIL); 
+                setPassword(DEMO_PASS); 
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 bg-white border border-orange-100 rounded-lg hover:border-orange-300 hover:shadow-xs group transition-all duration-200 cursor-pointer"
             >
-              <ArrowLeft size={12} className="group-hover:-translate-x-0.5 transition-transform" />
-              Return to Storefront
-              <Keyboard size={11} className="text-slate-300 ml-0.5" />
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col items-start text-left">
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Email</span>
+                  <span className="text-xs font-semibold text-slate-700 group-hover:text-[#FF6600] transition-colors">{DEMO_EMAIL}</span>
+                </div>
+                <div className="w-px h-6 bg-orange-100" />
+                <div className="flex flex-col items-start text-left">
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Password</span>
+                  <span className="text-xs font-semibold text-slate-700 group-hover:text-[#FF6600] transition-colors">{DEMO_PASS}</span>
+                </div>
+              </div>
+              <ArrowRight size={13} className="text-slate-400 group-hover:text-[#FF6600] group-hover:translate-x-0.5 transition-all" />
             </button>
           </div>
         </div>
-      </div>
 
-      <style jsx global>{`
-        @keyframes floatSlow {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(15px, -20px) scale(1.05); }
-          66% { transform: translate(-10px, 15px) scale(0.95); }
-        }
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
+        {/* Footer info right panel */}
+        <div className="text-slate-400 text-[9px] font-semibold text-center tracking-wide mt-8">
+          Secured with SHA-256 and SSL encryption. System activity is logged.
+        </div>
+      </div>
     </div>
   );
 }

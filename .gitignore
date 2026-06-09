@@ -9,3 +9,17 @@ diff.txt
 edits.json
 test.js
 backend/test-login.js
+
+# InsForge & AI agent skills
+.agent
+.agents
+.augment
+.claude
+.cline
+.github/copilot*
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf

@@ -1,3 +1,5 @@
+import fetch from 'node-fetch';
+
 const STEADFAST_API_URL = process.env.STEADFAST_API_URL || 'https://portal.packzy.com/api/v1/create_order';
 const STEADFAST_API_KEY = process.env.STEADFAST_API_KEY;
 const STEADFAST_SECRET_KEY = process.env.STEADFAST_SECRET_KEY;
@@ -68,6 +70,7 @@ export const createSteadfastParcel = async ({ order, items = [], credentials = {
   const data = await response.json().catch(() => ({}));
   if (!response.ok || data.status === 0 || data.status === false || data.status === 'error') {
     const message = data.message || data.error || `SteadFast API failed with status ${response.status}`;
+    console.error('[SteadFast] API Error:', JSON.stringify({ status: response.status, data }));
     throw new Error(message);
   }
 

@@ -4,8 +4,8 @@ export const getSellerSettings = async (req, res) => {
   try {
     let { data: settings, error } = await db.database.from('seller_settings').select('*').limit(1).single();
     
-    if (!settings && error?.code === 'PGRST116') {
-      // Default settings if empty (PGRST116 is the error code for 0 rows in single())
+    if (!settings) {
+      // Default settings if empty
       const defaultSettings = {
         category_based_commission: false,
         seller_based_commission: false,
@@ -17,8 +17,6 @@ export const getSellerSettings = async (req, res) => {
       
       if (insertError) throw insertError;
       settings = newSettings;
-    } else if (error && error.code !== 'PGRST116') {
-      throw error;
     }
     
     res.json(settings);

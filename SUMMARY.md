@@ -40,6 +40,10 @@
 ## Done Recently
 - **Category API**: Verified `CategorySection.js` is already fetching from the API (`/categories`).
 - **Newsletter Subscription**: Added `subscribers` schema, `POST /api/subscribers` route, and wired up the Subscribe button state and API call in `Footer.js`.
+- **Sidebar Menu Reorder**: Moved **Products** tab above **Orders** in AdminDashboard sidebar menu for better logical grouping.
+- **Prompt → Dropdown Replacement**: Replaced `prompt()`-based inline permission add in both **Manage Staffs** and **Staff Roles** tables with proper `<select>` dropdown + confirm/cancel buttons.
+- **Backend Roles Table Fix**: `getRoles()` was falling back to mock system-only data on DB failure, hiding custom roles and their delete buttons. Fixed by adding `ensureRolesTable()` (auto-creates `roles` table + seeds system roles), removing mock fallback, and updating CRUD helpers to use `ensureRolesTable()` on error.
+- **VPS Migration — `is_system` Column Missing on Existing Tables**: If the `roles` table was created before the `is_system` column was added (e.g., on VPS), `CREATE TABLE IF NOT EXISTS` won't add it — making `role.is_system` `undefined` and showing edit/delete buttons on **all** roles. Fixed by adding `ALTER TABLE roles ADD COLUMN IF NOT EXISTS is_system BOOLEAN DEFAULT false` in both `db.js:connectDB()` and `userController.js:ensureRolesTable()`, plus `UPDATE` to retroactively flag existing system role rows.
 
 ## Relevant Files
 - `backend/models/Category.js`, `Brand.js`, `ChatMessage.js` (isClosed), `User.js` (phone), `Product.js` (flashSaleStart/End), `Settings.js` (customHeaderCode)

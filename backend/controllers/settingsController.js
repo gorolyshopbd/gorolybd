@@ -2,74 +2,45 @@ import { db } from '../config/db.js';
 import fs from 'fs';
 import path from 'path';
 
+const SETTINGS_FILE = path.join(process.cwd(), 'data', 'settings.json');
+
 export const getSettings = async (req, res) => {
   try {
-    // We assume there's always one row with id 1
-    let { data: settings, error } = await db.database.from('settings').select('*').limit(1).single();
+    let settings = null;
 
-    if (!settings) {
-      // Default settings if empty
-      const defaultSettings = {
-        otp_gateway: 'Simulated',
-        otp_length: 6,
-        otp_expiry: 5,
-        checkout_otp_enabled: true,
-        bkash_mode: 'Sandbox',
-        bkash_enabled: true,
-        bkash_merchant_number: '01700000000',
-        nagad_mode: 'Sandbox',
-        nagad_enabled: true,
-        nagad_merchant_id: 'NAGAD12345',
-        rupantor_pay_mode: 'Sandbox',
-        rupantor_pay_enabled: true,
-        rupantor_pay_store_id: '',
-        rupantor_pay_signature_key: '',
-        sslcommerz_mode: 'Sandbox',
-        sslcommerz_enabled: true,
-        sslcommerz_store_id: 'shopio_ssl_mock',
-        cod_enabled: true,
-        facebook_pixel_id: '',
-        facebook_access_token: '',
-        ga4_measurement_id: '',
-        google_tag_manager_id: '',
-        google_tag_manager_enabled: false,
-        site_title: 'Shopio - MERN E-Commerce',
-        favicon_url: '',
-        header_logo: '',
-        footer_logo: '',
-        header_bg_color: '#F97316',
-        header_text_color: '#FFFFFF',
-        header_accent_color: '#FF6600',
-        flash_sale_gradient_start: '#052e2b',
-        flash_sale_gradient_mid: '#047857',
-        flash_sale_gradient_end: '#00B894',
-        flash_sale_radial_color: '#5eead4',
-        flash_sale_accent_color: '#00B894',
-        notice_bar_enabled: true,
-        notice_bar_text: 'Summer Sale - All Swim Suits OFF 50%! Free delivery on orders over ৳999.',
-        notice_bar_bg_color: '#6F1BE4',
-        notice_bar_text_color: '#FFFFFF',
-        top_bar_helpline: '8801234567890',
-        top_bar_store_link: 'https://maps.google.com',
-        top_bar_play_store_link: 'https://play.google.com',
-        top_bar_app_store_link: 'https://apps.apple.com',
-        withdraw_min_amount: 500,
-        // SAS Bulk SMS gateway configuration fields
-        sas_sms_gateway_url: 'http://sms.sasbulksms.com:3040/',
-        sas_sms_api_key: 'e5fb91d8b3275308',
-        sas_sms_secret_key: 'bed1c287',
-        sas_sms_sender_id: '8809640911650',
-        smtp_host: 'smtp.gmail.com',
-        smtp_port: 587,
-        smtp_user: '',
-        smtp_pass: '',
-        smtp_from_email: '',
-        smtp_enabled: false
-      };
-      const { data: newSettings } = await db.database.from('settings').insert([defaultSettings]).select('*').single();
-      settings = newSettings || defaultSettings;
+    // 1. Try reading from local JSON file
+    if (fs.existsSync(SETTINGS_FILE)) {
+      try {
+        const fileData = fs.readFileSync(SETTINGS_FILE, 'utf-8');
+        settings = JSON.parse(fileData);
+      } catch (err) {
+        console.error('Error parsing settings.json:', err.message);
+      }
     }
 
+    // 2. If not in local JSON file, try database query
+    if (!settings) {
+      try {
+        const result = await db.database.from('settings').select('*').limit(1).single();
+        if (result && result.data) {
+          settings = result.data;
+          // Save to local file for future offline use
+          try {
+            const dataDir = path.dirname(SETTINGS_FILE);
+            if (!fs.existsSync(dataDir)) {
+              fs.mkdirSync(dataDir, { recursive: true });
+            }
+            fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+          } catch (writeErr) {
+            console.error('Failed to write settings cache:', writeErr.message);
+          }
+        }
+      } catch (dbErr) {
+        console.warn('DB settings query failed:', dbErr.message);
+      }
+    }
+
+    // 3. Fallback to default if both failed
     if (!settings) {
       settings = {
         otp_gateway: 'Simulated', otp_length: 6, otp_expiry: 5, checkout_otp_enabled: true,
@@ -87,6 +58,17 @@ export const getSettings = async (req, res) => {
         top_bar_play_store_link: '', top_bar_app_store_link: '', currency: 'BDT', currency_symbol: '৳',
         smtp_host: 'smtp.gmail.com', smtp_port: 587, smtp_user: '', smtp_pass: '', smtp_from_email: '', smtp_enabled: false
       };
+      
+      // Save default settings to local file
+      try {
+        const dataDir = path.dirname(SETTINGS_FILE);
+        if (!fs.existsSync(dataDir)) {
+          fs.mkdirSync(dataDir, { recursive: true });
+        }
+        fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+      } catch (writeErr) {
+        console.error('Failed to write default settings:', writeErr.message);
+      }
     }
 
     const isPublic = req.originalUrl && req.originalUrl.includes('/public');
@@ -347,31 +329,55 @@ export const updateSettings = async (req, res) => {
     // Remove undefined values so only provided fields are updated
     Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
 
-    const { data: existingSettings } = await db.database.from('settings').select('id').limit(1).single();
+    // Read and merge settings locally
+    let currentSettings = {};
+    if (fs.existsSync(SETTINGS_FILE)) {
+      try {
+        currentSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
+      } catch (err) {
+        // ignore
+      }
+    }
+    const mergedSettings = { ...currentSettings, ...updateData };
+    if (req.body.flashSaleGradientStart) mergedSettings.flash_sale_gradient_start = req.body.flashSaleGradientStart;
+    if (req.body.flashSaleGradientMid) mergedSettings.flash_sale_gradient_mid = req.body.flashSaleGradientMid;
+    if (req.body.flashSaleGradientEnd) mergedSettings.flash_sale_gradient_end = req.body.flashSaleGradientEnd;
+    if (req.body.flashSaleRadialColor) mergedSettings.flash_sale_radial_color = req.body.flashSaleRadialColor;
+    if (req.body.flashSaleAccentColor) mergedSettings.flash_sale_accent_color = req.body.flashSaleAccentColor;
 
-    if (existingSettings) {
-      const { error } = await db.database.from('settings').update(updateData).eq('id', existingSettings.id);
-      if (error) throw new Error(error.message || 'Failed to update settings');
-    } else {
-      const { error } = await db.database.from('settings').insert(updateData);
-      if (error) throw new Error(error.message || 'Failed to insert settings');
+    // Save locally
+    try {
+      const dataDir = path.dirname(SETTINGS_FILE);
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      fs.writeFileSync(SETTINGS_FILE, JSON.stringify(mergedSettings, null, 2));
+    } catch (writeErr) {
+      console.error('Failed to write settings update locally:', writeErr.message);
     }
 
-    // Also try saving flash sale colors separately (these columns may or may not exist)
-    const flashData = {};
-    if (req.body.flashSaleGradientStart) flashData.flash_sale_gradient_start = req.body.flashSaleGradientStart;
-    if (req.body.flashSaleGradientMid) flashData.flash_sale_gradient_mid = req.body.flashSaleGradientMid;
-    if (req.body.flashSaleGradientEnd) flashData.flash_sale_gradient_end = req.body.flashSaleGradientEnd;
-    if (req.body.flashSaleRadialColor) flashData.flash_sale_radial_color = req.body.flashSaleRadialColor;
-    if (req.body.flashSaleAccentColor) flashData.flash_sale_accent_color = req.body.flashSaleAccentColor;
+    // Try to sync with DB
+    try {
+      const { data: existingSettings } = await db.database.from('settings').select('id').limit(1).single();
 
-    if (Object.keys(flashData).length > 0 && existingSettings) {
-      // Silently try — won't break if columns don't exist
-      try {
-        await db.database.from('settings').update(flashData).eq('id', existingSettings.id);
-      } catch (err) {
-        // ignore errors for missing flash sale columns
+      if (existingSettings) {
+        await db.database.from('settings').update(updateData).eq('id', existingSettings.id);
+        
+        // Also try saving flash sale colors separately
+        const flashData = {};
+        if (req.body.flashSaleGradientStart) flashData.flash_sale_gradient_start = req.body.flashSaleGradientStart;
+        if (req.body.flashSaleGradientMid) flashData.flash_sale_gradient_mid = req.body.flashSaleGradientMid;
+        if (req.body.flashSaleGradientEnd) flashData.flash_sale_gradient_end = req.body.flashSaleGradientEnd;
+        if (req.body.flashSaleRadialColor) flashData.flash_sale_radial_color = req.body.flashSaleRadialColor;
+        if (req.body.flashSaleAccentColor) flashData.flash_sale_accent_color = req.body.flashSaleAccentColor;
+        if (Object.keys(flashData).length > 0) {
+          await db.database.from('settings').update(flashData).eq('id', existingSettings.id);
+        }
+      } else {
+        await db.database.from('settings').insert(updateData);
       }
+    } catch (dbErr) {
+      console.warn('[updateSettings] Database sync failed (saved locally only):', dbErr.message);
     }
 
     res.json({ message: 'Settings updated successfully' });
@@ -421,14 +427,48 @@ export const testFacebookPixel = async (req, res) => {
   }
 };
 
+const TRACKING_REPORT_FILE = path.join(process.cwd(), 'data', 'tracking_report.json');
+
 export const getTrackingReport = async (req, res) => {
   try {
-    const [{ data: settings }, { data: orders = [] }, { data: users = [] }, { data: products = [] }] = await Promise.all([
-      db.database.from('settings').select('facebook_pixel_id,facebook_access_token,ga4_measurement_id,google_tag_manager_id,google_tag_manager_enabled').limit(1).single().catch(() => ({ data: {} })),
-      db.database.from('orders').select('id,total_price,totalPrice,status,created_at,createdAt').order('created_at', { ascending: false }).limit(100).catch(() => ({ data: [] })),
-      db.database.from('users').select('id').limit(500).catch(() => ({ data: [] })),
-      db.database.from('products').select('id').limit(500).catch(() => ({ data: [] })),
-    ]);
+    let settings = {}, orders = [], users = [], products = [];
+    let dbAvailable = false;
+
+    try {
+      const safeQuery = async (q, fallback) => { try { return await q; } catch (e) { return fallback; } };
+      const results = await Promise.all([
+        safeQuery(db.database.from('settings').select('facebook_pixel_id,facebook_access_token,ga4_measurement_id,google_tag_manager_id,google_tag_manager_enabled').limit(1).single(), { data: {} }),
+        safeQuery(db.database.from('orders').select('id,total_price,status,created_at').order('created_at', { ascending: false }).limit(100), { data: [] }),
+        safeQuery(db.database.from('users').select('id').limit(500), { data: [] }),
+        safeQuery(db.database.from('products').select('id').limit(500), { data: [] }),
+      ]);
+      settings = results[0].data || {};
+      orders = results[1].data || [];
+      users = results[2].data || [];
+      products = results[3].data || [];
+      dbAvailable = true;
+    } catch (dbErr) {
+      console.warn('[getTrackingReport] DB unavailable, trying local cache:', dbErr.message);
+      // Try local cache
+      if (fs.existsSync(TRACKING_REPORT_FILE)) {
+        try {
+          const cached = JSON.parse(fs.readFileSync(TRACKING_REPORT_FILE, 'utf-8'));
+          cached.fromCache = true;
+          cached.generatedAt = new Date().toISOString();
+          return res.json(cached);
+        } catch (cacheErr) {
+          console.warn('[getTrackingReport] Cache read failed:', cacheErr.message);
+        }
+      }
+    }
+
+    // Also try reading settings from local file if DB had no pixel config
+    if (!settings?.facebook_pixel_id && fs.existsSync(SETTINGS_FILE)) {
+      try {
+        const localSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
+        settings = { ...localSettings, ...settings };
+      } catch (_) {}
+    }
 
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total_price || order.totalPrice || 0), 0);
@@ -456,7 +496,7 @@ export const getTrackingReport = async (req, res) => {
       };
     });
 
-    res.json({
+    const report = {
       generatedAt: new Date().toISOString(),
       facebook: {
         configured: Boolean(settings?.facebook_pixel_id && settings?.facebook_access_token),
@@ -491,8 +531,123 @@ export const getTrackingReport = async (req, res) => {
         value: Number(order.total_price || order.totalPrice || 0),
         status: 'Queued',
       })),
-    });
+    };
+
+    // Persist to local cache for offline use
+    try {
+      const dataDir = path.dirname(TRACKING_REPORT_FILE);
+      if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+      fs.writeFileSync(TRACKING_REPORT_FILE, JSON.stringify(report, null, 2));
+    } catch (cacheErr) {
+      console.warn('[getTrackingReport] Failed to write cache:', cacheErr.message);
+    }
+
+    res.json(report);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+export const testSmsGateway = async (req, res) => {
+  try {
+    const { toNumber, apiKey, secretKey, senderId, gatewayUrl } = req.body;
+
+    if (!toNumber || !apiKey || !senderId) {
+      return res.status(400).json({ success: false, message: 'Phone number, API Key, and Sender ID are required.' });
+    }
+
+    let baseUrl = (gatewayUrl || 'http://sms.sasbulksms.com:3040').trim().replace(/\/+$/, '');
+
+    // Normalize BD phone number
+    let toUser = toNumber.replace(/\D/g, '');
+    if (toUser.startsWith('880') && toUser.length === 13) {
+      // already correct
+    } else if (toUser.startsWith('01') && toUser.length === 11) {
+      toUser = '88' + toUser;
+    } else if (toUser.startsWith('1') && toUser.length === 10) {
+      toUser = '880' + toUser;
+    } else if (toUser.startsWith('8801') && toUser.length === 13) {
+      // already correct
+    } else {
+      toUser = '88' + toUser.replace(/^0+/, '');
+    }
+
+    const testOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const messageContent = `Goroly Shop Test OTP: ${testOtp}`;
+
+    const params = new URLSearchParams({
+      apikey: apiKey.trim(),
+      secretkey: (secretKey || '').trim(),
+      callerID: senderId.trim(),
+      toUser: toUser,
+      messageContent: messageContent,
+    });
+
+    const reqUrl = `${baseUrl}/sendtext?${params.toString()}`;
+    console.log(`[TEST SMS] Calling: ${reqUrl}`);
+
+    let respText = '';
+    let httpStatus = 0;
+    try {
+      const resp = await fetch(reqUrl, { method: 'GET', signal: AbortSignal.timeout(15000) });
+      httpStatus = resp.status;
+      respText = await resp.text();
+      console.log(`[TEST SMS] Response (${httpStatus}): ${respText}`);
+    } catch (fetchErr) {
+      return res.status(500).json({
+        success: false,
+        message: `Connection failed to gateway: ${fetchErr.message}`,
+        debug: { url: reqUrl, error: fetchErr.message }
+      });
+    }
+
+    // Parse response
+    let parsedResponse = null;
+    try { parsedResponse = JSON.parse(respText); } catch (_) {}
+
+    const statusCode = parsedResponse?.Status || parsedResponse?.status;
+    const statusText = parsedResponse?.Text || parsedResponse?.text || respText;
+
+    // Check for common success indicators
+    if (statusCode === '0' || statusCode === 0 || statusText === 'ACCEPTD') {
+      return res.json({ success: true, message: `SMS sent! OTP: ${testOtp} → ${toUser}`, raw: respText });
+    }
+
+    // Map known error codes
+    const errorMap = {
+      '108': 'Invalid Secret Key (code 108)',
+      '109': 'Invalid API Key or Secret Key (code 109)',
+      '114': 'Inappropriate request parameter (code 114)',
+      '136': 'Profile/Provider is blocked (code 136)',
+      '137': 'TPS limit exceeded (code 137)',
+      '151': 'Invalid traffic type (code 151)',
+      '5400': 'IP restricted - your server IP is blocked (code 5400)',
+      '1': 'Request rejected (REJECTD)',
+      '-1': 'Request rejected',
+    };
+
+    if (parsedResponse) {
+      const codeStr = String(statusCode);
+      const errDetail = errorMap[codeStr] || statusText || 'Unknown error';
+      return res.status(400).json({
+        success: false,
+        message: `SMS Gateway Error: ${errDetail}`,
+        raw: respText,
+        debug: { toUser, statusCode, statusText }
+      });
+    }
+
+    // Fallback: check HTTP status
+    if (httpStatus >= 200 && httpStatus < 300) {
+      return res.json({ success: true, message: `SMS sent (HTTP ${httpStatus})! OTP: ${testOtp} → ${toUser}`, raw: respText });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: `HTTP ${httpStatus}: ${respText.substring(0, 200)}`,
+      debug: { url: reqUrl, toUser }
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -1,9 +1,7 @@
-// In-memory OTP storage mapping target (email/phone) to verification codes
 const otps = new Map();
 
-export const saveOTP = (target, otp) => {
-  // Expires in 5 minutes
-  const expiresAt = Date.now() + 5 * 60 * 1000;
+export const saveOTP = (target, otp, expiryMinutes = 5) => {
+  const expiresAt = Date.now() + expiryMinutes * 60 * 1000;
   otps.set(target, { otp, expiresAt });
 };
 
@@ -18,7 +16,7 @@ export const verifyOTP = (target, otp) => {
 
   const isValid = record.otp === otp;
   if (isValid) {
-    otps.delete(target); // Consume OTP once validated
+    otps.delete(target);
   }
   return isValid;
 };

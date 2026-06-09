@@ -5,10 +5,7 @@ import { db } from '../config/db.js';
 // @access  Private
 export const getPayouts = async (req, res) => {
   try {
-    let query = db.database.from('seller_payouts').select(`
-      *,
-      users:seller_id (name, store_name, email)
-    `).order('created_at', { ascending: false });
+    let query = db.database.from('seller_payouts').select('*').order('created_at', { ascending: false });
 
     // If seller, only get their own payouts
     if (req.user.role === 'seller' && !req.user.isAdmin) {
@@ -18,7 +15,23 @@ export const getPayouts = async (req, res) => {
     const { data, error } = await query;
 
     if (error) throw error;
-    res.json(data);
+    
+    // Fetch users manually
+    let usersMap = {};
+    if (data && data.length > 0) {
+      const userIds = data.map(p => p.seller_id);
+      const { data: users } = await db.query(`SELECT id, name, store_name, email FROM users WHERE id = ANY($1)`, [userIds]);
+      if (users && users.rows) {
+        users.rows.forEach(u => usersMap[u.id] = u);
+      }
+    }
+    
+    const formatted = data.map(p => ({
+      ...p,
+      users: usersMap[p.seller_id] || null
+    }));
+
+    res.json(formatted);
   } catch (error) {
     res.status(500).json({ message: error.message || 'Failed to fetch payouts' });
   }

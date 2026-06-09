@@ -6,13 +6,18 @@ import dynamic from 'next/dynamic';
 const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 import { useLanguage } from '@/context/LanguageContext';
 import { 
-  ShoppingBag, ShoppingCart, DollarSign, Contact, Users, AlertCircle, Package, ArrowRight,
+  ShoppingBag, ShoppingCart, DollarSign, Contact, Users, AlertCircle, Package, ArrowRight, ArrowLeft,
   CircleDot, Tag, Plus, Check, Truck, CreditCard, ChevronRight, X,
   Sliders, Ship, Globe, MessageCircle, MessageSquare, Eye, EyeOff, LayoutGrid, Server,
   BarChart3, PieChart, TrendingUp, Play, Image as ImageIcon, CheckCircle2, MoreVertical, Edit2, Search,
-  FolderOpen, Upload, Trash2, Edit, Shirt, Smartphone, Sparkles, Watch, Home, Calendar, Bell, Settings, Download, Wifi, WifiOff, Zap, User, Lock, XCircle, Shield
+  FolderOpen, Upload, Trash2, Edit, Shirt, Smartphone, Sparkles, Watch, Home, Calendar, Bell, Settings, Download, Wifi, WifiOff, Zap, User, Lock, XCircle, Shield, ShieldAlert, Ban
 } from 'lucide-react';
 import HeroSettingsForm from './HeroSettingsForm';
+import SmartDashboardView from './SmartDashboardView';
+import FinanceSystemView from './FinanceSystemView';
+import InventoryManagementView from './InventoryManagementView';
+import MarketingRoiView from './MarketingRoiView';
+import DashboardOrders from './DashboardOrders';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart as RPie, Pie, Cell, LineChart, Line, CartesianGrid, AreaChart, Area } from 'recharts';
 import { useRealtime } from '@/hooks/useRealtime';
 
@@ -158,6 +163,7 @@ export default function AdminDashboard({ onTabChange }) {
   const dashboardPageReadyRef = React.useRef(false);
   const [expandedMenus, setExpandedMenus] = useState({ sellers: true, products: true });
   const toggleMenu = (id) => setExpandedMenus(prev => ({...prev, [id]: !prev[id]})); // dashboard, orders, products, coupons, settings
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Product Sub Tab State
   const [productSubTab, setProductSubTab] = useState('all'); // all, category, add, attributes, digital
@@ -166,6 +172,14 @@ export default function AdminDashboard({ onTabChange }) {
   const [productCategoryFilter, setProductCategoryFilter] = useState('all');
   const [productSortOrder, setProductSortOrder] = useState('latest');
   const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [purchasesList, setPurchasesList] = useState([]);
+  const [purchaseForm, setPurchaseForm] = useState({
+    productId: '',
+    supplier: '',
+    quantity: '',
+    purchaseCost: '',
+    purchaseDate: new Date().toISOString().split('T')[0]
+  });
   const [editingPurchaseId, setEditingPurchaseId] = useState(null);
   const [editingPurchaseVal, setEditingPurchaseVal] = useState('');
   const [showPurchaseAddForm, setShowPurchaseAddForm] = useState(false);
@@ -174,6 +188,18 @@ export default function AdminDashboard({ onTabChange }) {
   const [showRoleForm, setShowRoleForm] = useState(false);
   const [roleForm, setRoleForm] = useState({ name: '', label: '', description: '', permissions: [] });
   const [editingRoleId, setEditingRoleId] = useState(null);
+
+  // Expenses
+  const [expenseList, setExpenseList] = useState([]);
+  const [expenseSummary, setExpenseSummary] = useState({ totalExpenses: 0, categories: [], dailySummary: [], monthlySummary: [] });
+  const [expenseForm, setExpenseForm] = useState({ category: '', amount: '', description: '', date: new Date().toISOString().split('T')[0] });
+  const [editingExpenseId, setEditingExpenseId] = useState(null);
+  const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [expenseFilter, setExpenseFilter] = useState({ category: '', startDate: '', endDate: '' });
+
+  // Finance
+  const [financeSummary, setFinanceSummary] = useState({ totalRevenue: 0, totalProductCost: 0, totalExpenses: 0, grossProfit: 0, netProfit: 0, orderCount: 0, revenueByPeriod: [], expenseByPeriod: [] });
+  const [financePeriod, setFinancePeriod] = useState('monthly');
 
   // Categories (API-based management)
   const [categoryList, setCategoryList] = useState([]);
@@ -260,6 +286,10 @@ export default function AdminDashboard({ onTabChange }) {
   const [editImageFile, setEditImageFile] = useState(null);
   const [editImagePreview, setEditImagePreview] = useState('');
   const [editAdditionalImageFiles, setEditAdditionalImageFiles] = useState([]);
+  const [descriptionImageFiles, setDescriptionImageFiles] = useState([]);
+  const [editDescriptionImageFiles, setEditDescriptionImageFiles] = useState([]);
+  const [pdfFile, setPdfFile] = useState(null);
+  const [editPdfFile, setEditPdfFile] = useState(null);
 
   const seoImagePreview = newProduct.metaImage || imagePreview || newProduct.image || '';
   const autoMetaTitle = newProduct.metaTitle || newProduct.name || '';
@@ -271,7 +301,7 @@ export default function AdminDashboard({ onTabChange }) {
   const [editForm, setEditForm] = useState({
     name: '', price: '', category: '', parentCategory: '', brand: '', countInStock: '',
     description: '', shortDescription: '', image: '', images: [], purchasePrice: '0', discountPercent: '0', discountType: 'percent',
-    isFlashSale: false, flashSaleStart: '', flashSaleEnd: '', isDigital: false, digitalFileUrl: '',
+    isFlashSale: false, flashSaleStart: '', flashSaleEnd: '', isDigital: false, digitalFileUrl: '', specificationPdfUrl: '',
     metaTitle: '', metaDescription: '', metaKeywords: '', metaImage: '', tags: '', youtubeUrl: '',
     unit: 'pc', minOrderQty: '1', barcode: '', slug: '',
     cashOnDelivery: true, shippingDays: '2',
@@ -376,6 +406,8 @@ export default function AdminDashboard({ onTabChange }) {
   });
   const [fbConnectionStatus, setFbConnectionStatus] = useState({ loading: false, success: '', error: '' });
   const [trackingReport, setTrackingReport] = useState(null);
+  const [displayedEventCounts, setDisplayedEventCounts] = useState(null);
+  const [trackingTick, setTrackingTick] = useState(false);
 
   // Seller Settings local state
   const [localSellerSettings, setLocalSellerSettings] = useState({
@@ -400,10 +432,15 @@ export default function AdminDashboard({ onTabChange }) {
   // User Management states
   const [allUsers, setAllUsers] = useState([]);
   const [userForm, setUserForm] = useState({ name: '', email: '', password: '', phone: '', role: 'customer', permissions: [] });
+  const [showSellerForm, setShowSellerForm] = useState(false);
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
   const [editingUserForm, setEditingUserForm] = useState({ name: '', email: '', phone: '', role: 'customer', permissions: [] });
   const [passwordResetUserId, setPasswordResetUserId] = useState(null);
   const [passwordResetValue, setPasswordResetValue] = useState('');
+  const [addingPermForStaff, setAddingPermForStaff] = useState(null);
+  const [addingPermForRole, setAddingPermForRole] = useState(null);
+  const [selectedPermValue, setSelectedPermValue] = useState('');
   // Own profile
   const [showOwnPasswordForm, setShowOwnPasswordForm] = useState(false);
   const [ownPasswordData, setOwnPasswordData] = useState({ currentPassword: '', newPassword: '' });
@@ -459,6 +496,19 @@ export default function AdminDashboard({ onTabChange }) {
   const [payoutAccount, setPayoutAccount] = useState('');
   const [payoutError, setPayoutError] = useState('');
 
+  // Fraud Checker states
+  const [fraudSubTab, setFraudSubTab] = useState('suspicious');
+  const [suspiciousOrders, setSuspiciousOrders] = useState([]);
+  const [fraudLoading, setFraudLoading] = useState(false);
+  const [selectedFraudOrder, setSelectedFraudOrder] = useState(null);
+  const [fraudCheckResult, setFraudCheckResult] = useState(null);
+  const [blockedPhonesList, setBlockedPhonesList] = useState([]);
+  const [blockedIpsList, setBlockedIpsList] = useState([]);
+  const [newBlockPhone, setNewBlockPhone] = useState('');
+  const [newBlockPhoneReason, setNewBlockPhoneReason] = useState('');
+  const [newBlockIp, setNewBlockIp] = useState('');
+  const [newBlockIpReason, setNewBlockIpReason] = useState('');
+
   // Seller profile states
   const [sellerProfileForm, setSellerProfileForm] = useState({ name: '', phone: '', owner_name: '', facebook: '', instagram: '', division: '', district: '', upazila: '', address_details: '', nid_number: '' });
   const [sellerProfileSaved, setSellerProfileSaved] = useState(false);
@@ -473,7 +523,7 @@ export default function AdminDashboard({ onTabChange }) {
   const [sellerPwSuccess, setSellerPwSuccess] = useState(false);
   const [sellerPwLoading, setSellerPwLoading] = useState(false);
   const [sellerProfileSubTab, setSellerProfileSubTab] = useState('info');
-  const [steadfastForm, setSteadfastForm] = useState({ apiKey: '', secretKey: '', enabled: true });
+  const [steadfastForm, setSteadfastForm] = useState({ apiKey: '', secretKey: '', enabled: false });
   const [steadfastSaving, setSteadfastSaving] = useState(false);
   const [steadfastMessage, setSteadfastMessage] = useState('');
   const [steadfastError, setSteadfastError] = useState('');
@@ -581,7 +631,7 @@ export default function AdminDashboard({ onTabChange }) {
     }
   };
 
-  const ALL_PERMS = ['orders', 'products', 'categories', 'brands', 'coupons', 'shipping', 'pages', 'offers', 'banners', 'chat', 'settings', 'users'];
+  const ALL_PERMS = ['orders', 'products', 'categories', 'brands', 'coupons', 'shipping', 'pages', 'offers', 'banners', 'chat', 'settings', 'users', 'expenses', 'finance'];
   const ROLE_PERMS = {
     superadmin: ALL_PERMS,
     admin: ['orders', 'products', 'categories', 'brands', 'coupons', 'shipping', 'pages', 'offers', 'banners', 'chat', 'settings'],
@@ -643,6 +693,73 @@ export default function AdminDashboard({ onTabChange }) {
     }
   };
 
+  const fetchExpenses = async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.category) params.set('category', filters.category);
+      if (filters.startDate) params.set('startDate', filters.startDate);
+      if (filters.endDate) params.set('endDate', filters.endDate);
+      const qs = params.toString();
+      const res = await fetch(`${API_URL}/expenses${qs ? '?' + qs : ''}`, {
+        headers: { Authorization: `Bearer ${user?.token || ''}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setExpenseList(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+    }
+  };
+
+  const fetchExpenseSummary = async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.category) params.set('category', filters.category);
+      if (filters.startDate) params.set('startDate', filters.startDate);
+      if (filters.endDate) params.set('endDate', filters.endDate);
+      params.set('period', 'monthly');
+      const qs = params.toString();
+      const res = await fetch(`${API_URL}/expenses/summary${qs ? '?' + qs : ''}`, {
+        headers: { Authorization: `Bearer ${user?.token || ''}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setExpenseSummary(data);
+      }
+    } catch (error) {
+      console.error('Error fetching expense summary:', error);
+    }
+  };
+
+  const fetchFinanceSummary = async (period = 'monthly') => {
+    try {
+      const res = await fetch(`${API_URL}/finance/summary?period=${period}`, {
+        headers: { Authorization: `Bearer ${user?.token || ''}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFinanceSummary(data);
+      }
+    } catch (error) {
+      console.error('Error fetching finance summary:', error);
+    }
+  };
+
+  const fetchPurchases = async () => {
+    try {
+      const res = await fetch(`${API_URL}/purchases`, {
+        headers: { Authorization: `Bearer ${user?.token || ''}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPurchasesList(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching purchases:', error);
+    }
+  };
+
   const fetchCoupons = async () => {
     if (!user) return;
     try {
@@ -673,7 +790,7 @@ export default function AdminDashboard({ onTabChange }) {
     }
   };
 
-  const fetchTrackingReport = async () => {
+  const fetchTrackingReport = useCallback(async () => {
     if (!user || !user.isAdmin) return;
     try {
       const res = await fetch(`${API_URL}/settings/tracking-report`, {
@@ -682,11 +799,37 @@ export default function AdminDashboard({ onTabChange }) {
       if (res.ok) {
         const data = await res.json();
         setTrackingReport(data);
+        // Animate event counters ticking up to new values
+        const newCounts = data.eventCounts || {};
+        setDisplayedEventCounts((prev) => {
+          if (!prev) return newCounts;
+          // Start animated tick from previous values
+          const keys = Object.keys(newCounts);
+          const start = { ...prev };
+          const end = { ...newCounts };
+          const steps = 20;
+          let step = 0;
+          const interval = setInterval(() => {
+            step++;
+            const interpolated = {};
+            keys.forEach((k) => {
+              const s = Number(start[k] || 0);
+              const e = Number(end[k] || 0);
+              interpolated[k] = Math.round(s + ((e - s) * step) / steps);
+            });
+            setDisplayedEventCounts(interpolated);
+            if (step >= steps) clearInterval(interval);
+          }, 40);
+          return start;
+        });
+        // Trigger blink indicator
+        setTrackingTick(true);
+        setTimeout(() => setTrackingTick(false), 1200);
       }
     } catch (error) {
       console.warn('Tracking report unavailable:', error);
     }
-  };
+  }, [user, API_URL]);
 
   const fetchShippingMethods = async () => {
     if (!user) return;
@@ -942,6 +1085,10 @@ export default function AdminDashboard({ onTabChange }) {
     fetchBrands();
     fetchVideos();
     fetchRoles();
+    fetchPurchases();
+    fetchExpenses();
+    fetchExpenseSummary();
+    fetchFinanceSummary(financePeriod);
     if (user) {
       fetchPayouts();
       fetchSellerSettings();
@@ -955,8 +1102,18 @@ export default function AdminDashboard({ onTabChange }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Auto-poll tracking report every 30 seconds to keep event counts live
+  useEffect(() => {
+    if (!user || !user.isAdmin) return;
+    const interval = setInterval(() => {
+      fetchTrackingReport();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [user, fetchTrackingReport]);
+
   useEffect(() => {
     if (user && (activeTab === 'users' || activeTab === 'sellers_all' || activeTab === 'staffs' || activeTab === 'rewards_set')) fetchAllUsers();
+    if (user && activeTab === 'fraud_checker') { fetchSuspiciousOrders(); fetchBlockedPhonesList(); fetchBlockedIpsList(); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, activeTab]);
 
@@ -1121,12 +1278,31 @@ export default function AdminDashboard({ onTabChange }) {
         },
         body: JSON.stringify({ status: 'Shipped', courierProvider: provider }),
       });
+      const data = await res.json();
       if (res.ok) {
-        alert(`Courier booked successfully with ${provider}!`);
+        if (data.skipped) {
+          const msg = user?.hasSteadfastIntegration
+            ? '⚠️ The seller for this order has not configured SteadFast.\n\nOnly the product owner can book SteadFast for their own orders.'
+            : '⚠️ SteadFast is not configured.\n\nGo to the SteadFast Integration tab to add your API keys.';
+          alert(msg);
+          fetchSummary();
+          return;
+        }
+        const trackingCode = data.courier_tracking_code || data.courierInfo?.trackingCode || '';
+        const courierStatus = data.courier_status || data.courierInfo?.status || '';
+        let msg = `✅ Courier booked with ${provider}!`;
+        if (trackingCode) msg += `\nTracking: ${trackingCode}`;
+        if (courierStatus) msg += `\nStatus: ${courierStatus}`;
+        alert(msg);
         fetchSummary();
+        if (selectedOrder?._id === orderId) {
+          setSelectedOrder({ ...selectedOrder, ...data });
+        }
+      } else {
+        alert(`❌ ${data?.message || `Failed to book ${provider} courier`}`);
       }
     } catch (error) {
-      console.error(error);
+      alert(error.message || 'Failed to book courier');
     }
   };
 
@@ -1191,6 +1367,38 @@ export default function AdminDashboard({ onTabChange }) {
         }
       }
 
+      // Upload description images
+      let descriptionImageUrls = [];
+      if (descriptionImageFiles.length > 0) {
+        const formData = new FormData();
+        descriptionImageFiles.forEach((f) => formData.append('images', f));
+        const res = await fetch(`${API_URL}/upload/descriptions`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${user.token}` },
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          descriptionImageUrls = data.images.map((img) => img.url);
+        }
+      }
+
+      // Upload PDF specification
+      let specificationPdfUrl = newProduct.specificationPdfUrl || '';
+      if (pdfFile) {
+        const formData = new FormData();
+        formData.append('pdf', pdfFile);
+        const res = await fetch(`${API_URL}/upload/pdf`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${user.token}` },
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          specificationPdfUrl = data.url;
+        }
+      }
+
       // Create product directly
       const createRes = await fetch(`${API_URL}/products`, {
         method: 'POST',
@@ -1209,6 +1417,8 @@ export default function AdminDashboard({ onTabChange }) {
           shortDescription: newProduct.shortDescription || '',
           image: mainImageUrl,
           images: additionalImageUrls,
+          descriptionImages: descriptionImageUrls,
+          specificationPdfUrl,
           isPublished: newProduct.isActive,
           discountPercent: Math.max(0, Number(newProduct.discountPercent || 0)),
           discountType: newProduct.discountType || 'percent',
@@ -1252,6 +1462,7 @@ export default function AdminDashboard({ onTabChange }) {
           flashSaleEnd: '',
           isDigital: false,
           digitalFileUrl: '',
+          specificationPdfUrl: '',
           shortDescription: '',
           metaTitle: '',
           metaDescription: '',
@@ -1269,6 +1480,8 @@ export default function AdminDashboard({ onTabChange }) {
         setImageFile(null);
         setImagePreview('');
         setAdditionalImageFiles([]);
+        setDescriptionImageFiles([]);
+        setPdfFile(null);
         setFormActiveTab('info');
         setProductSubTab('all');
       } else {
@@ -1308,9 +1521,46 @@ export default function AdminDashboard({ onTabChange }) {
         }
       }
 
+      // Upload description images
+      let uploadedDescriptionUrls = [];
+      if (editDescriptionImageFiles.length > 0) {
+        const formData = new FormData();
+        editDescriptionImageFiles.forEach((f) => formData.append('images', f));
+        const res = await fetch(`${API_URL}/upload/descriptions`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${user.token}` },
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          uploadedDescriptionUrls = data.images.map((img) => img.url);
+        }
+      }
+
+      // Upload PDF specification
+      let specificationPdfUrl = editForm.specificationPdfUrl || '';
+      if (editPdfFile) {
+        const formData = new FormData();
+        formData.append('pdf', editPdfFile);
+        const res = await fetch(`${API_URL}/upload/pdf`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${user.token}` },
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          specificationPdfUrl = data.url;
+        }
+      }
+
       const finalAdditionalImages = [
         ...editForm.images.filter((url) => url && url.trim()),
         ...uploadedAdditionalUrls
+      ];
+
+      const finalDescriptionImages = [
+        ...(editForm.descriptionImages || []).filter((url) => url && url.trim()),
+        ...uploadedDescriptionUrls
       ];
 
       const res = await fetch(`${API_URL}/products/${editingProduct._id}`, {
@@ -1323,6 +1573,8 @@ export default function AdminDashboard({ onTabChange }) {
           shortDescription: editForm.shortDescription || '',
           image: imageUrl,
           images: finalAdditionalImages,
+          descriptionImages: finalDescriptionImages,
+          specificationPdfUrl,
           discountPercent: Math.max(0, Number(editForm.discountPercent || 0)),
           discountType: editForm.discountType || 'percent',
           isFlashSale: editForm.isFlashSale,
@@ -1350,6 +1602,8 @@ export default function AdminDashboard({ onTabChange }) {
         setEditImageFile(null);
         setEditImagePreview('');
         setEditAdditionalImageFiles([]);
+        setEditDescriptionImageFiles([]);
+        setEditPdfFile(null);
         fetchProducts();
       } else {
         const errData = await res.json().catch(() => ({}));
@@ -1740,6 +1994,119 @@ export default function AdminDashboard({ onTabChange }) {
       });
       fetchChatMessages();
     } catch {}
+  };
+
+  // Fraud Checker API
+  const fetchSuspiciousOrders = async () => {
+    if (!user) return;
+    setFraudLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/fraud/suspicious`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) setSuspiciousOrders(await res.json());
+    } catch (e) { console.error(e); }
+    setFraudLoading(false);
+  };
+
+  const fetchFraudCheck = async (orderId) => {
+    if (!user) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/fraud/check/${orderId}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) setFraudCheckResult(await res.json());
+    } catch (e) { console.error(e); }
+  };
+
+  const fetchBlockedPhonesList = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/fraud/blocked-phones`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) setBlockedPhonesList(await res.json());
+    } catch (e) { console.error(e); }
+  };
+
+  const fetchBlockedIpsList = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/fraud/blocked-ips`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) setBlockedIpsList(await res.json());
+    } catch (e) { console.error(e); }
+  };
+
+  const handleBlockPhone = async (e) => {
+    e.preventDefault();
+    if (!newBlockPhone.trim()) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/fraud/block-phone`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${user.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: newBlockPhone.trim(), reason: newBlockPhoneReason.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('Phone blocked successfully');
+        setNewBlockPhone('');
+        setNewBlockPhoneReason('');
+        fetchBlockedPhonesList();
+      } else {
+        alert(data.message || 'Failed to block phone');
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const handleUnblockPhone = async (phone) => {
+    if (!confirm(`Unblock ${phone}?`)) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/fraud/block-phone/${encodeURIComponent(phone)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) {
+        alert('Phone unblocked');
+        fetchBlockedPhonesList();
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const handleBlockIp = async (e) => {
+    e.preventDefault();
+    if (!newBlockIp.trim()) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/fraud/block-ip`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${user.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip_address: newBlockIp.trim(), reason: newBlockIpReason.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('IP blocked successfully');
+        setNewBlockIp('');
+        setNewBlockIpReason('');
+        fetchBlockedIpsList();
+      } else {
+        alert(data.message || 'Failed to block IP');
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const handleUnblockIp = async (ip) => {
+    if (!confirm(`Unblock ${ip}?`)) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/fraud/block-ip/${encodeURIComponent(ip)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (res.ok) {
+        alert('IP unblocked');
+        fetchBlockedIpsList();
+      }
+    } catch (e) { console.error(e); }
   };
 
   // Category CRUD
@@ -2325,12 +2692,14 @@ export default function AdminDashboard({ onTabChange }) {
                         parentCategory: parentName,
                         brand: prod.brand, countInStock: String(prod.countInStock),
                         description: prod.description, image: prod.image, images: prod.images || [''],
+                        descriptionImages: prod.descriptionImages || [],
                         discountPercent: String(prod.discountPercent || 0),
                         discountType: prod.discountType || 'percent',
                         cashOnDelivery: prod.cashOnDelivery !== false,
                         shippingDays: String(prod.shippingDays || 2),
                         isFlashSale: prod.isFlashSale || false, isDigital: prod.isDigital || false,
                         digitalFileUrl: prod.digitalFileUrl || '',
+                        specificationPdfUrl: prod.specificationPdfUrl || '',
                         flashSaleStart: prod.flashSaleStart || '',
                         flashSaleEnd: prod.flashSaleEnd || '',
                         metaTitle: prod.metaTitle || '',
@@ -2347,6 +2716,7 @@ export default function AdminDashboard({ onTabChange }) {
                         isCatalog: prod.isCatalog !== false,
                         isTodaysDeal: prod.isTodaysDeal === true,
                         isFeatured: prod.isFeatured === true,
+                        shortDescription: prod.shortDescription || '',
                       });
                       setEditingProduct(prod);
                       setEditFormActiveTab('info');
@@ -2500,15 +2870,29 @@ export default function AdminDashboard({ onTabChange }) {
               
               {order.status === 'Processing' && (
                 <div className="flex gap-1.5">
-                  {['Pathao', 'SteadFast', 'RedX'].map((courier) => (
-                    <button
-                      key={courier}
-                      onClick={() => handleBookCourier(order._id, courier)}
-                      className="px-2 py-1.5 bg-white border border-slate-200 hover:border-orange-300 hover:bg-orange-50 hover:text-[#FF6600] text-[10px] font-bold rounded-lg text-gray-600 flex items-center gap-1 transition shadow-xs"
-                    >
-                      <Truck size={12} /> {courier}
-                    </button>
-                  ))}
+                  {['Pathao', 'SteadFast', 'RedX'].map((courier) => {
+                    const isSteadfast = courier === 'SteadFast';
+                    const isConnected = user?.hasSteadfastIntegration;
+                    return (
+                      <button
+                        key={courier}
+                        onClick={() => handleBookCourier(order._id, courier)}
+                        className={`px-2 py-1.5 border text-[10px] font-bold rounded-lg flex items-center gap-1 transition shadow-xs ${
+                          isSteadfast && isConnected
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                            : isSteadfast && !isConnected
+                            ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
+                            : 'bg-white border-slate-200 hover:border-orange-300 hover:bg-orange-50 hover:text-[#FF6600] text-gray-600'
+                        }`}
+                        title={isSteadfast && !isConnected ? 'Configure SteadFast in Integration tab first' : `Book ${courier} courier`}
+                        disabled={isSteadfast && !isConnected}
+                      >
+                        <Truck size={12} />
+                        {isSteadfast && isConnected && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
+                        {courier}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
@@ -2521,9 +2905,13 @@ export default function AdminDashboard({ onTabChange }) {
                 </button>
               )}
 
-              {['Pending', 'Processing'].includes(order.status) && (
+              {order.status !== 'Cancelled' && (
                 <button 
-                  onClick={() => handleUpdateStatus(order._id, 'Cancelled')}
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to cancel this order (${order.status})?`)) {
+                      handleUpdateStatus(order._id, 'Cancelled');
+                    }
+                  }}
                   className="p-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-xl transition-all duration-200 ml-1"
                   title="Cancel Order"
                 >
@@ -2677,7 +3065,7 @@ export default function AdminDashboard({ onTabChange }) {
     { name: 'GA4 Web', value: 0, color: '#F9AB00' },
     { name: 'Store Server', value: 0, color: '#10B981' },
   ];
-  const trackingEventCounts = trackingReport?.eventCounts || {
+  const trackingEventCounts = displayedEventCounts || trackingReport?.eventCounts || {
     PageView: 0,
     ViewContent: 0,
     AddToCart: 0,
@@ -2784,8 +3172,16 @@ export default function AdminDashboard({ onTabChange }) {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col md:flex-row admin-panel-root">
       
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Modern Dark Sidebar */}
-      <aside className="w-full md:w-52 bg-[#0B1329] text-white border-r border-slate-950/20 flex flex-col overflow-y-auto scrollbar-hide">
+      <aside className={`${sidebarOpen ? 'fixed inset-y-0 left-0 z-40 w-64 md:relative md:w-52' : 'hidden'} bg-[#0B1329] text-white border-r border-slate-950/20 flex-col overflow-y-auto scrollbar-hide`}>
         {/* Logo */}
         <div className="px-4 py-4 border-b border-slate-850/50">
           <div className="flex items-center justify-between">
@@ -2802,6 +3198,15 @@ export default function AdminDashboard({ onTabChange }) {
               <div className="text-2xl font-black text-white tracking-tight flex items-center gap-1" style={{ fontWeight: 900 }}>
                 Goroly<span className="text-[#FF6600] font-black" style={{ fontWeight: 900 }}>Shop</span>
               </div>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="md:hidden p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -2809,19 +3214,14 @@ export default function AdminDashboard({ onTabChange }) {
         {/* Navigation */}
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
           {[
-            { id: 'dashboard', label: 'Dashboard', icon: CircleDot },
+            { id: 'dashboard', label: 'Legacy Dashboard', icon: CircleDot },
+            { id: 'smart_dashboard', label: 'Smart Dashboard', icon: LayoutGrid },
+            { id: 'finance_dashboard', label: 'Finance & Accounts', icon: DollarSign },
+            { id: 'inventory_dashboard', label: 'Inventory (AI)', icon: Package },
+            { id: 'marketing_roi', label: 'Marketing ROI', icon: TrendingUp },
+            { id: 'bulk_orders', label: 'Bulk Orders', icon: ShoppingBag },
             { id: 'ai_marketing', label: 'AI Marketing', icon: Sparkles, adminOnly: true },
             { id: 'server_tracking', label: 'Server Tracking', icon: BarChart3, adminOnly: true },
-            { 
-              id: 'orders', label: 'Orders', icon: ShoppingBag, badge: metrics.pendingOrders,
-              subItems: [
-                { id: 'orders_all', label: 'All Orders' },
-                { id: 'orders_admin', label: 'Admin Orders' },
-                { id: 'orders_seller', label: 'Seller Orders' },
-                { id: 'orders_pickup_hub', label: 'Pickup Hub Orders' },
-                { id: 'orders_pickup', label: 'Pickup Hub' }
-              ]
-            },
             { 
               id: 'products', label: 'Products', icon: ShoppingCart,
               subItems: [
@@ -2840,6 +3240,16 @@ export default function AdminDashboard({ onTabChange }) {
                 { id: 'products_categories', label: 'Categories' },
                 { id: 'products_import', label: 'Import Products' },
                 { id: 'products_purchase', label: 'Product Purchase' }
+              ]
+            },
+            { 
+              id: 'orders', label: 'Orders', icon: ShoppingBag, badge: metrics.pendingOrders,
+              subItems: [
+                { id: 'orders_all', label: 'All Orders' },
+                { id: 'orders_admin', label: 'Admin Orders' },
+                { id: 'orders_seller', label: 'Seller Orders' },
+                { id: 'orders_pickup_hub', label: 'Pickup Hub Orders' },
+                { id: 'orders_pickup', label: 'Pickup Hub' }
               ]
             },
             { id: 'coupons', label: 'Coupons', icon: Tag, adminOnly: true },
@@ -2878,7 +3288,7 @@ export default function AdminDashboard({ onTabChange }) {
             { id: 'chat', label: 'Support Chat', icon: MessageCircle, adminOnly: true, badge: chatMessages.filter((m) => !m.isAdmin && !m.isRead).length },
             { id: 'seller_own_payouts', label: 'Payouts', icon: DollarSign, sellerOnly: true },
             { id: 'seller_api_integrations', label: 'API Integrations', icon: Server, sellerOnly: true },
-            { id: 'seller_steadfast_integration', label: 'SteadFast Integration', icon: Truck, sellerOnly: true },
+            { id: 'seller_steadfast_integration', label: 'SteadFast Integration', icon: Truck },
             { id: 'seller_custom_domain', label: 'Custom Domain', icon: Globe, sellerOnly: true },
             { id: 'seller_own_profile', label: 'My Profile', icon: Settings, sellerOnly: true },
             { id: 'videos', label: 'Videos', icon: Play, adminOnly: true },
@@ -2890,10 +3300,30 @@ export default function AdminDashboard({ onTabChange }) {
                 { id: 'rewards_set', label: 'Set Reward' }
               ]
             },
+            { id: 'fraud_checker', label: 'Fraud Checker', icon: ShieldAlert, adminOnly: true },
+            { id: 'expenses', label: 'Expenses', icon: DollarSign, adminOnly: true },
+            { id: 'finance', label: 'Finance', icon: BarChart3, adminOnly: true },
             { id: 'settings', label: 'Settings', icon: Sliders, adminOnly: true },
           ].filter(item => {
             if (user && user.role === 'seller') return !item.adminOnly;
-            if (user && user.isAdmin) return !item.sellerOnly;
+            if (user && user.isAdmin) {
+              if (item.sellerOnly) return false;
+              if (user.role === 'superadmin') return true;
+              if (['dashboard', 'seller_steadfast_integration'].includes(item.id)) return true;
+              
+              if (user.permissions && Array.isArray(user.permissions)) {
+                if (['staffs', 'staff_roles'].includes(item.id)) {
+                  return user.role === 'superadmin' || user.role === 'admin';
+                }
+                
+                let permNeeded = item.id;
+                if (['ai_marketing', 'server_tracking', 'videos', 'rewards', 'fraud_checker', 'seller_steadfast_integration'].includes(item.id)) permNeeded = 'settings';
+                if (['sellers', 'seller_package'].includes(item.id)) permNeeded = 'users';
+                
+                return user.permissions.includes(permNeeded);
+              }
+              return true;
+            }
             return true;
           }).map((item) => {
             const Icon = item.icon;
@@ -2949,8 +3379,8 @@ export default function AdminDashboard({ onTabChange }) {
                     </div>
                     <span className={`text-sm ${
                       isParentActive
-                        ? (item.id === 'orders' || item.id === 'users') ? 'font-semibold text-amber-400' : 'font-semibold text-white'
-                        : 'font-medium'
+                        ? (item.id === 'orders' || item.id === 'users') ? 'font-bold text-amber-400' : 'font-bold text-white'
+                        : 'font-bold'
                     }`}>
                       {item.label}
                     </span>
@@ -3047,11 +3477,11 @@ export default function AdminDashboard({ onTabChange }) {
                           className={`w-full text-left px-3 py-2 text-sm rounded-xl transition-all duration-200 ${
                             isSubActive
                               ? isAmberSub
-                                ? 'text-amber-400 font-semibold'
-                                : 'text-white font-semibold bg-[#FF6600]/90 shadow-xs'
+                                ? 'text-amber-400 font-bold'
+                                : 'text-white font-bold bg-[#FF6600]/90 shadow-xs'
                               : isAmberSub
-                                ? 'text-slate-400 hover:text-amber-300 hover:bg-slate-800/30'
-                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
+                                ? 'text-slate-400 font-bold hover:text-amber-300 hover:bg-slate-800/30'
+                                : 'text-slate-400 font-bold hover:text-slate-200 hover:bg-slate-800/30'
                           }`}
                         >
                           {sub.label}
@@ -3101,7 +3531,21 @@ export default function AdminDashboard({ onTabChange }) {
         <header className="h-14 bg-white border-b border-slate-200/80 px-4 md:px-5 flex items-center justify-between sticky top-0 z-10 flex-shrink-0">
           {/* Left part: Hamburger menu + Live indicator */}
           <div className="flex items-center gap-3">
-            <button className="w-10 h-10 bg-white border border-slate-200 rounded-lg text-slate-650 hover:bg-slate-50 hover:border-slate-300 transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs">
+            <button
+              onClick={() => setSidebarOpen(prev => !prev)}
+              className="w-10 h-10 bg-white border border-slate-200 rounded-lg text-slate-650 hover:bg-slate-50 hover:border-slate-300 transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs md:hidden"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            {/* Desktop menu icon */}
+            <button
+              onClick={() => setSidebarOpen(prev => !prev)}
+              className="hidden md:flex w-10 h-10 bg-white border border-slate-200 rounded-lg text-slate-650 hover:bg-slate-50 hover:border-slate-300 transition items-center justify-center flex-shrink-0 cursor-pointer shadow-xs"
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -3297,11 +3741,26 @@ export default function AdminDashboard({ onTabChange }) {
         )}
 
         {/* DASHBOARD TAB */}
+        {activeTab === 'smart_dashboard' && (
+          <SmartDashboardView API_BASE_URL={API_URL} token={user?.token} user={user} />
+        )}
+        {activeTab === 'finance_dashboard' && (
+          <FinanceSystemView API_BASE_URL={API_URL} token={user?.token} />
+        )}
+        {activeTab === 'inventory_dashboard' && (
+          <InventoryManagementView API_BASE_URL={API_URL} token={user?.token} />
+        )}
+        {activeTab === 'marketing_roi' && (
+          <MarketingRoiView API_BASE_URL={API_URL} token={user?.token} />
+        )}
+        {activeTab === 'bulk_orders' && (
+          <DashboardOrders API_BASE_URL={API_URL} token={user?.token} />
+        )}
         {activeTab === 'dashboard' && (
           <div className="animate-fade-in space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2 tracking-tight">Welcome back, Asif! <span className="animate-bounce">👋</span></h1>
+                <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2 tracking-tight">Welcome back, Goroly Shop! <span className="animate-bounce">👋</span></h1>
                 <p className="text-sm text-slate-500 font-medium">Here's what's happening with your store today.</p>
               </div>
               <div>
@@ -3419,6 +3878,8 @@ export default function AdminDashboard({ onTabChange }) {
                 { label: isSellerAccount ? 'My Orders' : 'Total Orders', val: metrics.totalOrders ? metrics.totalOrders.toLocaleString() : '0', icon: ShoppingBag, iconBg: 'bg-violet-100 text-violet-600' },
                 { label: isSellerAccount ? 'My Revenue' : 'Total Revenue', val: metrics.totalRevenue ? `${currencySymbol}${metrics.totalRevenue.toLocaleString()}` : '0', icon: DollarSign, iconBg: 'bg-emerald-100 text-emerald-600' },
                 { label: 'Total Purchase Cost', val: metrics.totalPurchaseCost ? `${currencySymbol}${metrics.totalPurchaseCost.toLocaleString()}` : '0', icon: DollarSign, iconBg: 'bg-indigo-100 text-indigo-600' },
+                { label: 'Total Expenses', val: `${currencySymbol}${(expenseSummary.totalExpenses || 0).toLocaleString()}`, icon: DollarSign, iconBg: 'bg-red-100 text-red-500' },
+                { label: 'Net Profit', val: `${currencySymbol}${(financeSummary.netProfit || 0).toLocaleString()}`, icon: TrendingUp, iconBg: 'bg-emerald-100 text-emerald-600' },
                 { label: isSellerAccount ? 'Low Stock' : 'Total Customers', val: isSellerAccount ? sellerLowStockProducts.length.toLocaleString() : (metrics.totalCustomers ? metrics.totalCustomers.toLocaleString() : '0'), icon: isSellerAccount ? AlertCircle : Users, iconBg: 'bg-orange-100 text-orange-600' },
                 { label: 'Pending Orders', val: isSellerAccount ? sellerPendingOrders.length.toLocaleString() : (metrics.pendingOrders ? metrics.pendingOrders.toLocaleString() : '0'), icon: AlertCircle, iconBg: 'bg-amber-100 text-amber-600' },
                 { label: 'Cancelled Orders', val: cancelledOrdersCount.toLocaleString(), icon: X, iconBg: 'bg-red-100 text-red-600' },
@@ -3707,20 +4168,26 @@ export default function AdminDashboard({ onTabChange }) {
               <div className="xl:col-span-12 bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-black text-slate-900">All Event Counts</h3>
-                    <p className="text-[10px] font-semibold text-slate-400">Server-side event totals prepared for Pixel, GTM and GA4 reports.</p>
+                    <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                      All Event Counts
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-black text-emerald-600">
+                        <span className={`h-1.5 w-1.5 rounded-full bg-emerald-500 ${trackingTick ? 'animate-ping' : 'animate-pulse'}`} />
+                        LIVE
+                      </span>
+                    </h3>
+                    <p className="text-[10px] font-semibold text-slate-400">Server-side event totals — auto-refreshes every 30 seconds.</p>
                   </div>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black text-slate-600">{trackingEvents.toLocaleString()} total events</span>
+                  <span className={`rounded-full px-3 py-1 text-[10px] font-black transition-all duration-500 ${trackingTick ? 'bg-emerald-100 text-emerald-700 scale-105' : 'bg-slate-100 text-slate-600'}`}>{trackingEvents.toLocaleString()} total events</span>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
                   {Object.entries(trackingEventCounts).map(([eventName, count], index) => (
-                    <div key={eventName} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <div key={eventName} className={`rounded-2xl border p-4 transition-all duration-500 ${trackingTick ? 'border-emerald-200 bg-emerald-50 shadow-sm shadow-emerald-100' : 'border-slate-100 bg-slate-50'}`}>
                       <div className={`mb-3 h-9 w-9 rounded-xl flex items-center justify-center text-white shadow-sm ${
-                        ['bg-orange-500', 'bg-cyan-500', 'bg-orange-500', 'bg-amber-500', 'bg-emerald-500', 'bg-violet-500'][index % 6]
+                        ['bg-orange-500', 'bg-cyan-500', 'bg-blue-500', 'bg-amber-500', 'bg-emerald-500', 'bg-violet-500'][index % 6]
                       }`}>
                         <BarChart3 size={15} />
                       </div>
-                      <div className="text-xl font-black text-slate-900">{Number(count || 0).toLocaleString()}</div>
+                      <div className={`text-xl font-black transition-all duration-300 ${trackingTick ? 'text-emerald-700' : 'text-slate-900'}`}>{Number(count || 0).toLocaleString()}</div>
                       <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-slate-400">{eventName}</div>
                     </div>
                   ))}
@@ -4171,9 +4638,9 @@ export default function AdminDashboard({ onTabChange }) {
                                 setReviewsList(reviewsList.filter(r => r.id !== rev.id));
                                 alert('Review deleted.');
                               }}
-                              className="px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-lg font-bold transition"
+                              className="px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-lg font-bold transition flex items-center gap-1"
                             >
-                              Delete
+                              <Trash2 size={12} /> Delete
                             </button>
                           </td>
                         </tr>
@@ -4201,9 +4668,9 @@ export default function AdminDashboard({ onTabChange }) {
                         </div>
                         <button
                           onClick={() => setColorsList(colorsList.filter(c => c.id !== col.id))}
-                          className="px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-lg font-bold transition"
+                          className="px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-lg font-bold transition flex items-center gap-1"
                         >
-                          Delete
+                          <Trash2 size={12} /> Delete
                         </button>
                       </div>
                     ))}
@@ -4580,6 +5047,236 @@ export default function AdminDashboard({ onTabChange }) {
               );
             })()}
 
+            {/* Sub-tab: PRODUCT PURCHASE */}
+            {productSubTab === 'purchase' && (() => {
+              const totalPurchases = purchasesList.length;
+              const totalQty = purchasesList.reduce((acc, curr) => acc + Number(curr.quantity || 0), 0);
+              const totalCost = purchasesList.reduce((acc, curr) => acc + (Number(curr.quantity || 0) * Number(curr.purchaseCost || 0)), 0);
+
+              const handlePurchaseSubmit = async (e) => {
+                e.preventDefault();
+                const { productId, supplier, quantity, purchaseCost, purchaseDate } = purchaseForm;
+                if (!productId || !supplier || !quantity || !purchaseCost) {
+                  alert('Please fill out all fields');
+                  return;
+                }
+
+                const selectedProd = productsList.find(p => p._id === productId || p.id === productId);
+                const productName = selectedProd ? selectedProd.name : 'Unknown Product';
+
+                try {
+                  const res = await fetch(`${API_URL}/purchases`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${user?.token || ''}`
+                    },
+                    body: JSON.stringify({
+                      productId,
+                      productName,
+                      supplier,
+                      quantity,
+                      purchaseCost,
+                      purchaseDate
+                    })
+                  });
+
+                  if (res.ok) {
+                    const result = await res.json();
+                    alert('Purchase recorded successfully!');
+                    setPurchaseForm({
+                      productId: '',
+                      supplier: '',
+                      quantity: '',
+                      purchaseCost: '',
+                      purchaseDate: new Date().toISOString().split('T')[0]
+                    });
+                    fetchPurchases();
+                    fetchProducts();
+                  } else {
+                    const errData = await res.json();
+                    alert(errData.message || 'Failed to record purchase');
+                  }
+                } catch (err) {
+                  console.error('Error submitting purchase:', err);
+                  alert('Failed to connect to server');
+                }
+              };
+
+              return (
+                <div className="w-full space-y-6">
+                  {/* Page Header */}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-1 h-5 bg-[#FF6600] rounded-full" />
+                      <h2 className="text-base font-bold text-gray-900">Product Purchase History & Entry</h2>
+                    </div>
+                  </div>
+
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
+                      <div className="w-10 h-10 bg-[#FF6600]/10 rounded-xl flex items-center justify-center text-[#FF6600]">
+                        <ShoppingBag size={20} />
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Total Purchases</div>
+                        <div className="text-xl font-bold text-gray-800 mt-0.5">{totalPurchases}</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
+                      <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
+                        <Package size={20} />
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Total Qty Purchased</div>
+                        <div className="text-xl font-bold text-gray-800 mt-0.5">{totalQty} units</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
+                      <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500">
+                        <DollarSign size={20} />
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Total Money Spent</div>
+                        <div className="text-xl font-bold text-gray-800 mt-0.5">{formatPrice(totalCost)}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Left: Purchase Form Card */}
+                    <div className="lg:col-span-4 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs">
+                      <h3 className="font-bold text-gray-900 text-sm mb-5 border-b border-slate-100 pb-3">New Purchase Entry</h3>
+
+                      <form onSubmit={handlePurchaseSubmit} className="space-y-4">
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Select Product *</label>
+                          <select
+                            value={purchaseForm.productId}
+                            onChange={(e) => setPurchaseForm({ ...purchaseForm, productId: e.target.value })}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 hover:bg-white transition text-xs"
+                            required
+                          >
+                            <option value="">Choose a product...</option>
+                            {productsList.map((prod) => (
+                              <option key={prod._id || prod.id} value={prod._id || prod.id}>
+                                {prod.name} (Stock: {prod.count_in_stock || 0})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Supplier Name *</label>
+                          <input
+                            type="text"
+                            placeholder="Supplier"
+                            value={purchaseForm.supplier}
+                            onChange={(e) => setPurchaseForm({ ...purchaseForm, supplier: e.target.value })}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 hover:bg-white transition text-xs"
+                            required
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Quantity *</label>
+                            <input
+                              type="number"
+                              min="1"
+                              placeholder="Qty"
+                              value={purchaseForm.quantity}
+                              onChange={(e) => setPurchaseForm({ ...purchaseForm, quantity: e.target.value })}
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 hover:bg-white transition text-xs"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Unit Cost ({currencySymbol}) *</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="Cost"
+                              value={purchaseForm.purchaseCost}
+                              onChange={(e) => setPurchaseForm({ ...purchaseForm, purchaseCost: e.target.value })}
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 hover:bg-white transition text-xs"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Purchase Date</label>
+                          <input
+                            type="date"
+                            value={purchaseForm.purchaseDate}
+                            onChange={(e) => setPurchaseForm({ ...purchaseForm, purchaseDate: e.target.value })}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 hover:bg-white transition text-xs"
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="w-full py-2.5 bg-[#FF6600] hover:bg-[#e65c00] text-white font-bold rounded-xl shadow-md transition cursor-pointer text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"
+                        >
+                          <Plus size={14} />
+                          Record Purchase
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Right: Purchase List Table */}
+                    <div className="lg:col-span-8 bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
+                      <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                        <h3 className="font-bold text-gray-900 text-sm">Purchase History</h3>
+                        <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">{purchasesList.length} records</span>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-slate-250/50 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                              <th className="p-3">Purchase ID</th>
+                              <th className="p-3">Product</th>
+                              <th className="p-3">Supplier</th>
+                              <th className="p-3 text-center">Qty</th>
+                              <th className="p-3 text-right">Unit Cost</th>
+                              <th className="p-3 text-right">Total</th>
+                              <th className="p-3 text-right">Date</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {purchasesList.length === 0 ? (
+                              <tr>
+                                <td colSpan="7" className="p-8 text-center text-gray-400 font-medium">
+                                  No purchase records found. Add your first purchase above.
+                                </td>
+                              </tr>
+                            ) : (
+                              purchasesList.map((pur) => (
+                                <tr key={pur.id} className="hover:bg-slate-50/50 transition">
+                                  <td className="p-3 font-semibold text-[#FF6600]">{pur.id}</td>
+                                  <td className="p-3 font-medium text-gray-800">{pur.productName}</td>
+                                  <td className="p-3 text-gray-500">{pur.supplier}</td>
+                                  <td className="p-3 text-center font-bold text-gray-750">{pur.quantity}</td>
+                                  <td className="p-3 text-right font-medium text-gray-700">{formatPrice(pur.purchaseCost)}</td>
+                                  <td className="p-3 text-right font-bold text-gray-950">{formatPrice(pur.quantity * pur.purchaseCost)}</td>
+                                  <td className="p-3 text-right text-gray-400">{pur.purchaseDate}</td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Sub-tab: CATEGORY MANAGER */}
             {productSubTab === 'category' && (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -4644,7 +5341,7 @@ export default function AdminDashboard({ onTabChange }) {
                         onClick={() => setProductSubTab('all')}
                         className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition"
                       >
-                        ΓåÉ BACK
+                        <ArrowLeft size={14} /> Back
                       </button>
                     </div>
 
@@ -5164,6 +5861,9 @@ export default function AdminDashboard({ onTabChange }) {
                                   config={{
                                     readonly: false,
                                     height: 300,
+                                    askBeforePasteHTML: false,
+                                    askBeforePasteFromWord: false,
+                                    defaultActionOnPaste: 'insert_as_html',
                                     placeholder: 'Start writing...',
                                     buttons: [
                                       'source', '|',
@@ -5192,7 +5892,11 @@ export default function AdminDashboard({ onTabChange }) {
                                 accept="image/*"
                                 multiple
                                 className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-gray-500 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-slate-100 file:text-gray-700 file:text-[11px] file:font-bold hover:file:bg-slate-200 file:cursor-pointer hover:border-slate-300 transition"
+                                onChange={(e) => setDescriptionImageFiles(Array.from(e.target.files || []))}
                               />
+                              {descriptionImageFiles.length > 0 && (
+                                <p className="text-[10px] text-emerald-600 font-semibold mt-1">{descriptionImageFiles.length} file(s) selected</p>
+                              )}
                             </div>
                           </div>
 
@@ -5202,7 +5906,7 @@ export default function AdminDashboard({ onTabChange }) {
                             <div>
                               <label className="text-[11px] font-bold text-gray-600">PDF Specification</label>
                               <div className="flex items-center gap-3 mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition">
-                                <span className="flex-1 text-[11px] text-gray-400 truncate" id="pdf-filename">file chosen</span>
+                                <span className="flex-1 text-[11px] text-gray-400 truncate" id="pdf-filename">{pdfFile ? pdfFile.name : 'file chosen'}</span>
                                 <label className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg text-[11px] font-bold text-gray-700 cursor-pointer transition flex-shrink-0">
                                   Choose File
                                   <input
@@ -5211,12 +5915,12 @@ export default function AdminDashboard({ onTabChange }) {
                                     className="hidden"
                                     onChange={(e) => {
                                       const f = e.target.files?.[0];
-                                      const el = document.getElementById('pdf-filename');
-                                      if (el) el.textContent = f ? f.name : 'file chosen';
+                                      setPdfFile(f || null);
                                     }}
                                   />
                                 </label>
                               </div>
+                              {pdfFile && <p className="text-[10px] text-emerald-600 font-semibold mt-1">PDF ready to upload</p>}
                             </div>
                           </div>
 
@@ -6133,15 +6837,15 @@ export default function AdminDashboard({ onTabChange }) {
                               setEditCouponForm({ code: cp.code, discount: String(cp.discount), expiryDate: new Date(cp.expiryDate).toISOString().split('T')[0], isActive: cp.isActive });
                               setEditingCoupon(cp);
                             }}
-                            className="text-[10px] font-bold text-blue-400 hover:text-blue-300"
+                            className="text-[10px] font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1"
                           >
-                            Edit
+                            <Edit2 size={12} /> Edit
                           </button>
                           <button
                             onClick={() => handleDeleteCoupon(cp._id)}
-                            className="text-[10px] font-bold text-orange-400 hover:text-orange-300"
+                            className="text-[10px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1"
                           >
-                            Delete
+                            <Trash2 size={12} /> Delete
                           </button>
                         </td>
                       </tr>
@@ -6934,11 +7638,54 @@ export default function AdminDashboard({ onTabChange }) {
                   <p className="text-xs text-gray-400 mt-0.5">You have total {allUsers.filter(u => u.role === 'seller').length} sellers</p>
                 </div>
               </div>
-              <button className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">
+              <button onClick={() => {
+                setShowSellerForm(!showSellerForm);
+                setShowCustomerForm(false);
+                if (!showSellerForm) setUserForm({ name: '', email: '', password: '', phone: '', role: 'seller', permissions: [] });
+              }} className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">
                 <Plus size={14} />
                 ADD SELLER
               </button>
             </div>
+
+            {showSellerForm && (
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                const result = await createUserByAdmin(userForm);
+                if (result.success) {
+                  alert('Seller created successfully!');
+                  setShowSellerForm(false);
+                  setUserForm({ name: '', email: '', password: '', phone: '', role: 'customer', permissions: [] });
+                  fetchAllUsers();
+                } else {
+                  alert(result.error);
+                }
+              }} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 max-w-lg shadow-sm animate-fade-in">
+                <h3 className="font-bold text-gray-900 text-sm">Create New Seller</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Name</label>
+                    <input required value={userForm.name} onChange={(e) => setUserForm({ ...userForm, name: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email</label>
+                    <input type="email" required value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Password</label>
+                    <input required value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone</label>
+                    <input value={userForm.phone} onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button type="submit" className="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-300">Create Seller</button>
+                  <button type="button" onClick={() => { setShowSellerForm(false); setUserForm({ ...userForm, role: 'customer' }); }} className="py-2.5 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition">Cancel</button>
+                </div>
+              </form>
+            )}
 
             {/* Main Table Card */}
             <div className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
@@ -7115,9 +7862,12 @@ export default function AdminDashboard({ onTabChange }) {
                                   if (res.success) fetchAllUsers();
                                 }
                               }}
-                              className="px-2 py-1 bg-red-100 text-rose-700 rounded-lg text-[9px] font-bold hover:bg-red-200 transition"
-                            >Delete</button>
-                            <button className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition">
+                              className="px-2 py-1 bg-red-100 text-rose-700 rounded-lg text-[9px] font-bold hover:bg-red-200 transition flex items-center gap-1"
+                            ><Trash2 size={10} /> Delete</button>
+                            <button onClick={() => {
+                              setEditingUserId(seller._id);
+                              setEditingUserForm({ name: seller.name, email: seller.email, phone: seller.phone || '', role: seller.role || 'seller', permissions: seller.permissions || [] });
+                            }} className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition">
                               <Edit2 size={12} />
                             </button>
                           </div>
@@ -7148,10 +7898,53 @@ export default function AdminDashboard({ onTabChange }) {
                   <p className="text-sm text-gray-400 mt-0.5">You have total {allUsers.filter(u => u.role !== 'admin' && u.role !== 'seller').length} customers</p>
                 </div>
               </div>
-              <button className="flex items-center gap-2 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-black hover:to-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
+              <button onClick={() => {
+                setShowCustomerForm(!showCustomerForm);
+                setShowSellerForm(false);
+                if (!showCustomerForm) setUserForm({ name: '', email: '', password: '', phone: '', role: 'customer', permissions: [] });
+              }} className="flex items-center gap-2 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-black hover:to-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
                 <Plus size={16} /> ADD CUSTOMER
               </button>
             </div>
+
+            {showCustomerForm && (
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                const result = await createUserByAdmin(userForm);
+                if (result.success) {
+                  alert('Customer created successfully!');
+                  setShowCustomerForm(false);
+                  setUserForm({ name: '', email: '', password: '', phone: '', role: 'customer', permissions: [] });
+                  fetchAllUsers();
+                } else {
+                  alert(result.error);
+                }
+              }} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 max-w-lg shadow-sm animate-fade-in">
+                <h3 className="font-bold text-gray-900 text-sm">Create New Customer</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Name</label>
+                    <input required value={userForm.name} onChange={(e) => setUserForm({ ...userForm, name: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email</label>
+                    <input type="email" required value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Password</label>
+                    <input required value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone</label>
+                    <input value={userForm.phone} onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button type="submit" className="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-300">Create Customer</button>
+                  <button type="button" onClick={() => setShowCustomerForm(false)} className="py-2.5 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition">Cancel</button>
+                </div>
+              </form>
+            )}
 
             {/* Main Content Card */}
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
@@ -7317,7 +8110,10 @@ export default function AdminDashboard({ onTabChange }) {
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center justify-start gap-2">
-                            <button className="w-9 h-9 rounded-full bg-slate-100 text-gray-400 hover:bg-[#FF6600]/10 hover:text-[#FF6600] flex items-center justify-center transform hover:scale-110 active:scale-95 transition-all duration-200">
+                            <button onClick={() => {
+                              setEditingUserId(u._id);
+                              setEditingUserForm({ name: u.name, email: u.email, phone: u.phone || '', role: u.role || 'customer', permissions: u.permissions || [] });
+                            }} className="w-9 h-9 rounded-full bg-slate-100 text-gray-400 hover:bg-[#FF6600]/10 hover:text-[#FF6600] flex items-center justify-center transform hover:scale-110 active:scale-95 transition-all duration-200">
                               <Edit size={15} />
                             </button>
                             <div className="relative group/dropdown">
@@ -7522,19 +8318,22 @@ export default function AdminDashboard({ onTabChange }) {
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Permissions</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {ALL_PERMS.map((perm) => (
-                        <label key={perm} className="flex items-center gap-1.5 text-[11px] text-gray-400 cursor-pointer">
-                          <input type="checkbox" checked={userForm.permissions.includes(perm)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setUserForm({ ...userForm, permissions: [...userForm.permissions, perm] });
-                              } else {
-                                setUserForm({ ...userForm, permissions: userForm.permissions.filter((p) => p !== perm) });
-                              }
-                            }} className="accent-blue-600" />
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {userForm.permissions.map((perm) => (
+                        <span key={perm} className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md text-[10px] font-bold border border-indigo-100">
                           {perm}
-                        </label>
+                          <button type="button" onClick={() => setUserForm({ ...userForm, permissions: userForm.permissions.filter((p) => p !== perm) })} className="text-indigo-400 hover:text-red-500 transition cursor-pointer">
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))}
+                      {userForm.permissions.length === 0 && <span className="text-[10px] text-gray-400">No permissions</span>}
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {ALL_PERMS.filter(p => !userForm.permissions.includes(p)).map((perm) => (
+                        <button key={perm} type="button" onClick={() => setUserForm({ ...userForm, permissions: [...userForm.permissions, perm] })}
+                          className="px-2 py-0.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-500 rounded text-[9px] font-bold transition cursor-pointer"
+                        >+ {perm}</button>
                       ))}
                     </div>
                   </div>
@@ -7571,11 +8370,11 @@ export default function AdminDashboard({ onTabChange }) {
                       <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 text-[10px] uppercase tracking-wider font-bold">
                         <th className="py-3.5 px-4 w-12 text-center">#</th>
                         <th className="py-3.5 px-4">Name</th>
-                        <th className="py-3.5 px-4">Phone</th>
+                        <th className="py-3.5 px-4">Role</th>
+                        <th className="py-3.5 px-4">Permissions</th>
                         <th className="py-3.5 px-4">Last Login</th>
                         <th className="py-3.5 px-4">Status</th>
-                        <th className="py-3.5 px-4">Balance</th>
-                        <th className="py-3.5 px-4 text-center">Options</th>
+                        <th className="py-3.5 px-4 text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="text-sm">
@@ -7604,8 +8403,92 @@ export default function AdminDashboard({ onTabChange }) {
                               </div>
                             </div>
                           </td>
-                          <td className="py-3.5 px-4 text-slate-650 font-medium">
-                            {maskPhone(u.phone)}
+                          <td className="py-3.5 px-4">
+                            <span className="px-2 py-0.5 bg-purple-50 text-purple-600 rounded-md text-[9px] font-bold uppercase">
+                              {u.role}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <div className="flex flex-wrap gap-1 items-center max-w-[200px]">
+                              {(u.permissions || []).length === 0 ? (
+                                <span className="text-[9px] text-gray-400">None</span>
+                              ) : (
+                                (u.permissions || []).map((perm) => (
+                                  <span key={perm} className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[8px] font-bold">
+                                    {perm}
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        const updatedPerms = (u.permissions || []).filter(p => p !== perm);
+                                        try {
+                                          const res = await fetch(`${API_URL}/users/${u._id}`, {
+                                            method: 'PUT',
+                                            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                                            body: JSON.stringify({ permissions: updatedPerms }),
+                                          });
+                                          if (res.ok) fetchAllUsers();
+                                          else { const err = await res.json(); alert(err.message || 'Failed to remove permission'); }
+                                        } catch (err) { alert(err.message); }
+                                      }}
+                                      className="text-indigo-300 hover:text-red-500 transition cursor-pointer"
+                                    >
+                                      <X size={9} />
+                                    </button>
+                                  </span>
+                                ))
+                              )}
+                              {ALL_PERMS.filter(p => !(u.permissions || []).includes(p)).length > 0 && (
+                                addingPermForStaff === u._id ? (
+                                  <span className="inline-flex items-center gap-0.5">
+                                    <select
+                                      value={selectedPermValue}
+                                      onChange={(e) => setSelectedPermValue(e.target.value)}
+                                      className="text-[8px] border border-slate-300 rounded px-1 py-0.5 w-20 focus:outline-none focus:border-indigo-400"
+                                    >
+                                      <option value="">Pick...</option>
+                                      {ALL_PERMS.filter(p => !(u.permissions || []).includes(p)).map(p => (
+                                        <option key={p} value={p}>{p}</option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        if (!selectedPermValue) return;
+                                        try {
+                                          const res = await fetch(`${API_URL}/users/${u._id}`, {
+                                            method: 'PUT',
+                                            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                                            body: JSON.stringify({ permissions: [...(u.permissions || []), selectedPermValue] }),
+                                          });
+                                          if (res.ok) fetchAllUsers();
+                                          else { const err = await res.json(); alert(err.message || 'Failed to add permission'); }
+                                        } catch (err) { alert(err.message); }
+                                        setAddingPermForStaff(null);
+                                        setSelectedPermValue('');
+                                      }}
+                                      className="px-1 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[8px] font-bold cursor-pointer hover:bg-indigo-100 transition"
+                                    >
+                                      <Check size={9} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => { setAddingPermForStaff(null); setSelectedPermValue(''); }}
+                                      className="px-1 py-0.5 bg-slate-100 text-slate-500 rounded text-[8px] font-bold cursor-pointer hover:bg-red-50 hover:text-red-500 transition"
+                                    >
+                                      <X size={9} />
+                                    </button>
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => { setAddingPermForStaff(u._id); setSelectedPermValue(''); }}
+                                    className="px-1.5 py-0.5 bg-slate-100 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 rounded text-[8px] font-bold transition cursor-pointer"
+                                  >
+                                    + Add
+                                  </button>
+                                )
+                              )}
+                            </div>
                           </td>
                           <td className="py-3.5 px-4 text-slate-500 font-medium">
                             {formatLastLogin(u.created_at)}
@@ -7615,9 +8498,6 @@ export default function AdminDashboard({ onTabChange }) {
                               <input type="checkbox" checked={true} readOnly className="sr-only peer" />
                               <div className="w-8 h-4 bg-slate-200 rounded-full peer peer-focus:outline-none peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#f59e0b]"></div>
                             </label>
-                          </td>
-                          <td className="py-3.5 px-4 font-bold text-slate-700">
-                            DT0.00
                           </td>
                           <td className="py-3.5 px-4 text-center">
                             <div className="flex items-center justify-center gap-2">
@@ -7639,10 +8519,10 @@ export default function AdminDashboard({ onTabChange }) {
                                     alert("Cannot delete your own account");
                                   }
                                 }}
-                                className="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full flex items-center justify-center transition"
+                                className="w-7 h-7 bg-red-50 hover:bg-red-100 text-red-400 rounded-full flex items-center justify-center transition"
                                 title="Delete Staff"
                               >
-                                <MoreVertical size={12} />
+                                <Trash2 size={12} />
                               </button>
                             </div>
                           </td>
@@ -7660,81 +8540,86 @@ export default function AdminDashboard({ onTabChange }) {
                 </div>
               </div>
 
-              {/* Edit Staff Modal */}
-              {editingUserId && (
-                <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setEditingUserId(null)}>
-                  <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
-                    <h3 className="font-bold text-gray-900 text-sm">Edit Staff</h3>
-                    <form onSubmit={handleUpdateUser} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Name</label>
-                          <input required value={editingUserForm.name} onChange={(e) => setEditingUserForm({ ...editingUserForm, name: e.target.value })}
-                            className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email</label>
-                          <input type="email" required value={editingUserForm.email} onChange={(e) => setEditingUserForm({ ...editingUserForm, email: e.target.value })}
-                            className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone</label>
-                          <input value={editingUserForm.phone} onChange={(e) => setEditingUserForm({ ...editingUserForm, phone: e.target.value })}
-                            className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm" />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Role</label>
-                          <select value={editingUserForm.role} onChange={(e) => {
-                            const role = e.target.value;
-                            const found = roleList.find(r => r.name === role);
-                            setEditingUserForm({ ...editingUserForm, role, permissions: found ? found.permissions : (ROLE_PERMS[role] || []) });
-                          }} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner text-sm">
-                            {(roleList.length > 0 ? roleList.filter(r => r.name !== 'customer' && r.name !== 'seller') : Object.keys(ROLE_PERMS).filter((r) => ['superadmin', 'admin', 'manager', 'moderator'].includes(r))).map((r) => {
-                              const name = typeof r === 'string' ? r : r.name;
-                              const label = typeof r === 'string' ? r : r.label;
-                              return <option key={name} value={name}>{label}</option>;
-                            })}
-                          </select>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Permissions</label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {ALL_PERMS.map((perm) => (
-                            <label key={perm} className="flex items-center gap-1.5 text-[11px] text-gray-400 cursor-pointer">
-                              <input type="checkbox" checked={editingUserForm.permissions.includes(perm)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setEditingUserForm({ ...editingUserForm, permissions: [...editingUserForm.permissions, perm] });
-                                  } else {
-                                    setEditingUserForm({ ...editingUserForm, permissions: editingUserForm.permissions.filter((p) => p !== perm) });
-                                  }
-                                }} className="accent-blue-600" />
-                              {perm}
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button type="submit" className="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl text-sm">Save Changes</button>
-                        <button type="button" onClick={() => { setEditingUserId(null); setEditingUserForm({ name: '', email: '', phone: '', role: 'customer', permissions: [] }); }}
-                          className="py-2.5 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-sm">Cancel</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              )}
             </div>
           );
         })()}
 
+        {/* Edit User Modal (global - works for any tab) */}
+        {editingUserId && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setEditingUserId(null)}>
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+              <h3 className="font-bold text-gray-900 text-sm">Edit User</h3>
+              <form onSubmit={handleUpdateUser} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Name</label>
+                    <input required value={editingUserForm.name} onChange={(e) => setEditingUserForm({ ...editingUserForm, name: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email</label>
+                    <input type="email" required value={editingUserForm.email} onChange={(e) => setEditingUserForm({ ...editingUserForm, email: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone</label>
+                    <input value={editingUserForm.phone} onChange={(e) => setEditingUserForm({ ...editingUserForm, phone: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Role</label>
+                    <select value={editingUserForm.role} onChange={(e) => {
+                      const role = e.target.value;
+                      const found = roleList.find(r => r.name === role);
+                      setEditingUserForm({ ...editingUserForm, role, permissions: found ? found.permissions : (ROLE_PERMS[role] || []) });
+                    }} className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400">
+                      {(roleList.length > 0 ? roleList : Object.keys(ROLE_PERMS)).map((r) => {
+                        const name = typeof r === 'string' ? r : r.name;
+                        const label = typeof r === 'string' ? r : r.label;
+                        return <option key={name} value={name}>{label}</option>;
+                      })}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Permissions</label>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {editingUserForm.permissions.map((perm) => (
+                      <span key={perm} className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md text-[10px] font-bold border border-indigo-100">
+                        {perm}
+                        <button type="button" onClick={() => setEditingUserForm({ ...editingUserForm, permissions: editingUserForm.permissions.filter((p) => p !== perm) })} className="text-indigo-400 hover:text-red-500 transition cursor-pointer">
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))}
+                    {editingUserForm.permissions.length === 0 && <span className="text-[10px] text-gray-400">No permissions</span>}
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {ALL_PERMS.filter(p => !editingUserForm.permissions.includes(p)).map((perm) => (
+                      <button key={perm} type="button" onClick={() => setEditingUserForm({ ...editingUserForm, permissions: [...editingUserForm.permissions, perm] })}
+                        className="px-2 py-0.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-500 rounded text-[9px] font-bold transition cursor-pointer"
+                      >+ {perm}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-[#FF6600] hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-bold rounded-xl text-sm">Save Changes</button>
+                  <button type="button" onClick={() => { setEditingUserId(null); setEditingUserForm({ name: '', email: '', phone: '', role: 'customer', permissions: [] }); }}
+                    className="py-2.5 px-4 border border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-100 text-sm">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* STAFF ROLES TAB */}
         {activeTab === 'staff_roles' && (() => {
-          const ALL_PERMISSIONS = ['orders', 'products', 'categories', 'brands', 'coupons', 'shipping', 'pages', 'offers', 'banners', 'chat', 'settings', 'users'];
+          const ALL_PERMISSIONS = ['orders', 'products', 'categories', 'brands', 'coupons', 'shipping', 'pages', 'offers', 'banners', 'chat', 'settings', 'users', 'expenses', 'finance'];
           const PERMISSION_LABELS = {
             orders: 'Orders', products: 'Products', categories: 'Categories', brands: 'Brands',
             coupons: 'Coupons', shipping: 'Shipping', pages: 'Pages', offers: 'Offers',
-            banners: 'Banners', chat: 'Support Chat', settings: 'Settings', users: 'Users'
+            banners: 'Banners', chat: 'Support Chat', settings: 'Settings', users: 'Users',
+            expenses: 'Expenses', finance: 'Finance'
           };
 
           return (
@@ -7798,24 +8683,33 @@ export default function AdminDashboard({ onTabChange }) {
                   </div>
 
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-3">Permissions</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-5">
-                    {ALL_PERMISSIONS.map((perm) => (
-                      <label key={perm} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition">
-                        <input
-                          type="checkbox"
-                          checked={roleForm.permissions.includes(perm)}
-                          onChange={() => {
-                            setRoleForm(prev => ({
-                              ...prev,
-                              permissions: prev.permissions.includes(perm)
-                                ? prev.permissions.filter(p => p !== perm)
-                                : [...prev.permissions, perm]
-                            }));
-                          }}
-                          className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500/30 cursor-pointer"
-                        />
-                        <span className="text-xs font-bold text-gray-700">{PERMISSION_LABELS[perm]}</span>
-                      </label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {roleForm.permissions.map((perm) => (
+                      <span key={perm} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold border border-indigo-100">
+                        {PERMISSION_LABELS[perm] || perm}
+                        <button
+                          type="button"
+                          onClick={() => setRoleForm(prev => ({ ...prev, permissions: prev.permissions.filter(p => p !== perm) }))}
+                          className="text-indigo-400 hover:text-red-500 transition cursor-pointer"
+                        >
+                          <X size={14} />
+                        </button>
+                      </span>
+                    ))}
+                    {roleForm.permissions.length === 0 && (
+                      <span className="text-xs text-gray-400 py-1">No permissions selected</span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mb-5">
+                    {ALL_PERMISSIONS.filter(p => !roleForm.permissions.includes(p)).map((perm) => (
+                      <button
+                        key={perm}
+                        type="button"
+                        onClick={() => setRoleForm(prev => ({ ...prev, permissions: [...prev.permissions, perm] }))}
+                        className="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-500 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                      >
+                        + {PERMISSION_LABELS[perm] || perm}
+                      </button>
                     ))}
                   </div>
 
@@ -7890,15 +8784,87 @@ export default function AdminDashboard({ onTabChange }) {
                             </td>
                             <td className="py-3 px-4 text-gray-500 text-xs max-w-[200px]">{role.description || '-'}</td>
                             <td className="py-3 px-4">
-                              <div className="flex flex-wrap gap-1">
+                              <div className="flex flex-wrap gap-1 items-center">
                                 {(role.permissions || []).length === 0 ? (
                                   <span className="text-[10px] text-gray-400">No permissions</span>
                                 ) : (
                                   (role.permissions || []).map((perm) => (
-                                    <span key={perm} className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[9px] font-bold">
+                                    <span key={perm} className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[9px] font-bold">
                                       {PERMISSION_LABELS[perm] || perm}
+                                      {!role.is_system && (
+                                        <button
+                                          onClick={async () => {
+                                            const updatedPerms = (role.permissions || []).filter(p => p !== perm);
+                                            try {
+                                              const res = await fetch(`${API_URL}/users/roles/${role.id}`, {
+                                                method: 'PUT',
+                                                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                                                body: JSON.stringify({ permissions: updatedPerms }),
+                                              });
+                                              if (res.ok) fetchRoles();
+                                              else { const err = await res.json(); alert(err.message || 'Failed to remove permission'); }
+                                            } catch (err) { alert(err.message); }
+                                          }}
+                                          className="text-indigo-300 hover:text-red-500 transition cursor-pointer"
+                                        >
+                                          <X size={11} />
+                                        </button>
+                                      )}
                                     </span>
                                   ))
+                                )}
+                                {!role.is_system && ALL_PERMISSIONS.filter(p => !(role.permissions || []).includes(p)).length > 0 && (
+                                  <div className="relative inline-block">
+                                    {addingPermForRole === role.id ? (
+                                      <span className="inline-flex items-center gap-0.5">
+                                        <select
+                                          value={selectedPermValue}
+                                          onChange={(e) => setSelectedPermValue(e.target.value)}
+                                          className="text-[8px] border border-slate-300 rounded px-1 py-0.5 w-20 focus:outline-none focus:border-indigo-400"
+                                        >
+                                          <option value="">Pick...</option>
+                                          {ALL_PERMISSIONS.filter(p => !(role.permissions || []).includes(p)).map(p => (
+                                            <option key={p} value={p}>{PERMISSION_LABELS[p] || p}</option>
+                                          ))}
+                                        </select>
+                                        <button
+                                          type="button"
+                                          onClick={async () => {
+                                            if (!selectedPermValue) return;
+                                            try {
+                                              const res = await fetch(`${API_URL}/users/roles/${role.id}`, {
+                                                method: 'PUT',
+                                                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                                                body: JSON.stringify({ permissions: [...(role.permissions || []), selectedPermValue] }),
+                                              });
+                                              if (res.ok) fetchRoles();
+                                              else { const err = await res.json(); alert(err.message || 'Failed to add permission'); }
+                                            } catch (err) { alert(err.message); }
+                                            setAddingPermForRole(null);
+                                            setSelectedPermValue('');
+                                          }}
+                                          className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[9px] font-bold cursor-pointer hover:bg-indigo-100 transition"
+                                        >
+                                          <Check size={10} />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => { setAddingPermForRole(null); setSelectedPermValue(''); }}
+                                          className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[9px] font-bold cursor-pointer hover:bg-red-50 hover:text-red-500 transition"
+                                        >
+                                          <X size={10} />
+                                        </button>
+                                      </span>
+                                    ) : (
+                                      <button
+                                        onClick={() => { setAddingPermForRole(role.id); setSelectedPermValue(''); }}
+                                        className="px-2 py-0.5 bg-slate-100 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 rounded-md text-[9px] font-bold transition cursor-pointer"
+                                        title="Add permission"
+                                      >
+                                        + Add
+                                      </button>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             </td>
@@ -7918,9 +8884,9 @@ export default function AdminDashboard({ onTabChange }) {
                                       setEditingRoleId(role.id);
                                       setShowRoleForm(true);
                                     }}
-                                    className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                                    className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1"
                                   >
-                                    Edit
+                                    <Edit2 size={12} /> Edit
                                   </button>
                                   <button
                                     onClick={async () => {
@@ -7941,9 +8907,9 @@ export default function AdminDashboard({ onTabChange }) {
                                         alert(err.message);
                                       }
                                     }}
-                                    className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                                    className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1"
                                   >
-                                    Delete
+                                    <Trash2 size={12} /> Delete
                                   </button>
                                 </>
                               )}
@@ -7954,6 +8920,393 @@ export default function AdminDashboard({ onTabChange }) {
                     </table>
                   </div>
                 )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* EXPENSES TAB */}
+        {activeTab === 'expenses' && (() => {
+          const EXPENSE_CATEGORIES = ['Ads', 'Delivery', 'Packaging', 'Utilities', 'Rent', 'Salaries', 'Marketing', 'Maintenance', 'Office Supplies', 'Software', 'Travel', 'Food', 'Tax', 'Insurance', 'Other'];
+          const totalCatExpenses = expenseSummary.categories.reduce((s, c) => s + Number(c.total), 0);
+
+          return (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="bg-white p-6 border border-slate-200 rounded-2xl shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="w-1.5 h-6 bg-amber-500 rounded-full"></span>
+                    <div>
+                      <h1 className="text-xl font-bold text-gray-900">Expenses</h1>
+                      <p className="text-[10px] text-gray-500 mt-0.5">Track and manage all business expenses</p>
+                    </div>
+                  </div>
+                  <button onClick={() => { setExpenseForm({ category: '', amount: '', description: '', date: new Date().toISOString().split('T')[0] }); setEditingExpenseId(null); setShowExpenseForm(true); }}
+                    className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-sm">
+                    <Plus size={14} /> ADD EXPENSE
+                  </button>
+                </div>
+              </div>
+
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Expenses</span>
+                  <div className="text-2xl font-black text-slate-900 mt-1">{formatPrice(expenseSummary.totalExpenses, currencySymbol)}</div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">This Month</span>
+                  <div className="text-2xl font-black text-slate-900 mt-1">
+                    {formatPrice(expenseSummary.monthlySummary?.[0]?.total || 0, currencySymbol)}
+                  </div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Categories</span>
+                  <div className="text-2xl font-black text-slate-900 mt-1">{expenseSummary.categories.length}</div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Avg / Month</span>
+                  <div className="text-2xl font-black text-slate-900 mt-1">
+                    {formatPrice(expenseSummary.monthlySummary.length > 0
+                      ? Math.round(expenseSummary.monthlySummary.reduce((s, m) => s + Number(m.total), 0) / expenseSummary.monthlySummary.length)
+                      : 0, currencySymbol)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Add/Edit Expense Form */}
+              {showExpenseForm && (
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                  <h3 className="font-bold text-gray-900 text-sm mb-4">{editingExpenseId ? 'Edit Expense' : 'Add New Expense'}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Category</label>
+                      <select value={expenseForm.category} onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400">
+                        <option value="">Select category</option>
+                        {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Amount</label>
+                      <input type="number" step="0.01" value={expenseForm.amount} onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Date</label>
+                      <input type="date" value={expenseForm.date} onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Description</label>
+                      <input type="text" value={expenseForm.description} onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <button onClick={() => { setShowExpenseForm(false); setEditingExpenseId(null); }}
+                      className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-gray-700 text-sm font-bold rounded-xl transition cursor-pointer">
+                      Cancel
+                    </button>
+                    <button onClick={async () => {
+                      if (!expenseForm.category || !expenseForm.amount) { alert('Category and amount are required'); return; }
+                      try {
+                        const url = editingExpenseId ? `${API_URL}/expenses/${editingExpenseId}` : `${API_URL}/expenses`;
+                        const method = editingExpenseId ? 'PUT' : 'POST';
+                        const res = await fetch(url, {
+                          method,
+                          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                          body: JSON.stringify(expenseForm),
+                        });
+                        if (res.ok) {
+                          setShowExpenseForm(false); setEditingExpenseId(null);
+                          setExpenseForm({ category: '', amount: '', description: '', date: new Date().toISOString().split('T')[0] });
+                          fetchExpenses(expenseFilter); fetchExpenseSummary(expenseFilter);
+                        } else {
+                          const err = await res.json(); alert(err.message || 'Failed to save expense');
+                        }
+                      } catch (err) { alert(err.message); }
+                    }}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition cursor-pointer">
+                      <Check size={14} className="inline mr-1" /> {editingExpenseId ? 'UPDATE' : 'SAVE'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Filters */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                <div className="flex flex-wrap items-center gap-3">
+                  <select value={expenseFilter.category} onChange={(e) => { const f = { ...expenseFilter, category: e.target.value }; setExpenseFilter(f); fetchExpenses(f); fetchExpenseSummary(f); }}
+                    className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400">
+                    <option value="">All Categories</option>
+                    {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <input type="date" value={expenseFilter.startDate} onChange={(e) => { const f = { ...expenseFilter, startDate: e.target.value }; setExpenseFilter(f); fetchExpenses(f); fetchExpenseSummary(f); }}
+                    className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  <span className="text-gray-400 text-sm font-bold">to</span>
+                  <input type="date" value={expenseFilter.endDate} onChange={(e) => { const f = { ...expenseFilter, endDate: e.target.value }; setExpenseFilter(f); fetchExpenses(f); fetchExpenseSummary(f); }}
+                    className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-hidden focus:border-orange-400" />
+                  <button onClick={() => { setExpenseFilter({ category: '', startDate: '', endDate: '' }); fetchExpenses(); fetchExpenseSummary(); }}
+                    className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold rounded-xl transition cursor-pointer">
+                    Clear
+                  </button>
+                </div>
+              </div>
+
+              {/* Main Content: Expense List + Category Breakdown */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Expense List */}
+                <div className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                  <div className="overflow-x-auto p-2">
+                    {expenseList.length === 0 ? (
+                      <div className="p-8 text-center text-gray-500 text-sm">No expenses found</div>
+                    ) : (
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 text-gray-500 text-[10px] uppercase tracking-widest font-bold">
+                            <th className="py-3 px-4 rounded-l-xl">#</th>
+                            <th className="py-3 px-4">Category</th>
+                            <th className="py-3 px-4">Amount</th>
+                            <th className="py-3 px-4">Description</th>
+                            <th className="py-3 px-4">Date</th>
+                            <th className="py-3 px-4 text-right rounded-r-xl">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-sm">
+                          {expenseList.map((exp, idx) => (
+                            <tr key={exp.id} className="border-b border-transparent hover:bg-slate-50 transition">
+                              <td className="py-3 px-4 text-gray-500 font-medium">{idx + 1}</td>
+                              <td className="py-3 px-4">
+                                <span className="px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[10px] font-bold">{exp.category}</span>
+                              </td>
+                              <td className="py-3 px-4 font-extrabold text-slate-900">{formatPrice(exp.amount, currencySymbol)}</td>
+                              <td className="py-3 px-4 text-slate-500 text-xs max-w-[200px] truncate">{exp.description || '-'}</td>
+                              <td className="py-3 px-4 text-slate-500 font-medium text-xs">{exp.date}</td>
+                              <td className="py-3 px-4 text-right space-x-1 whitespace-nowrap">
+                                <button onClick={() => {
+                                  setExpenseForm({ category: exp.category, amount: String(exp.amount), description: exp.description || '', date: exp.date });
+                                  setEditingExpenseId(exp.id);
+                                  setShowExpenseForm(true);
+                                }}
+                                  className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1 inline-flex">
+                                  <Edit2 size={11} /> Edit
+                                </button>
+                                <button onClick={async () => {
+                                  if (!confirm('Delete this expense?')) return;
+                                  try {
+                                    const res = await fetch(`${API_URL}/expenses/${exp.id}`, {
+                                      method: 'DELETE',
+                                      headers: { Authorization: `Bearer ${user.token}` },
+                                    });
+                                    if (res.ok) { fetchExpenses(expenseFilter); fetchExpenseSummary(expenseFilter); }
+                                    else { const err = await res.json(); alert(err.message || 'Failed to delete'); }
+                                  } catch (err) { alert(err.message); }
+                                }}
+                                  className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1 inline-flex">
+                                  <Trash2 size={11} /> Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </div>
+
+                {/* Category Breakdown */}
+                <div className="lg:col-span-4 space-y-6">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                    <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider mb-4">By Category</h3>
+                    {expenseSummary.categories.length === 0 ? (
+                      <p className="text-sm text-slate-400 font-semibold text-center py-4">No expenses yet</p>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {expenseSummary.categories.map((cat) => {
+                          const pct = totalCatExpenses > 0 ? (Number(cat.total) / totalCatExpenses * 100) : 0;
+                          return (
+                            <div key={cat.category}>
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-[11px] font-bold text-slate-700">{cat.category}</span>
+                                <span className="text-[11px] font-black text-slate-900">{formatPrice(cat.total, currencySymbol)}</span>
+                              </div>
+                              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Monthly Summary */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                    <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider mb-4">Monthly Totals</h3>
+                    {expenseSummary.monthlySummary.length === 0 ? (
+                      <p className="text-sm text-slate-400 font-semibold text-center py-4">No data</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {expenseSummary.monthlySummary.map((m) => (
+                          <div key={m.month} className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0">
+                            <span className="text-xs font-bold text-slate-600">{m.month}</span>
+                            <div className="text-right">
+                              <div className="text-xs font-black text-slate-900">{formatPrice(m.total, currencySymbol)}</div>
+                              <div className="text-[9px] text-slate-400">{m.count} entries</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* FINANCE TAB */}
+        {activeTab === 'finance' && (() => {
+          const fs = financeSummary;
+          const chartData = (fs.revenueByPeriod || []).slice().reverse().map((r) => {
+            const periodExpense = fs.expenseByPeriod?.find(e => (e.month || e.date) === (r.month || r.date));
+            const rev = Number(r.revenue);
+            const cost = Number(r.cost);
+            const exp = Number(periodExpense?.total || 0);
+            return {
+              period: r.month || r.date,
+              revenue: rev,
+              cost,
+              expenses: exp,
+              profit: rev - cost - exp,
+            };
+          });
+
+          return (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="bg-white p-6 border border-slate-200 rounded-2xl shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
+                    <div>
+                      <h1 className="text-xl font-bold text-gray-900">Finance & Profit</h1>
+                      <p className="text-[10px] text-gray-500 mt-0.5">Revenue — Cost — Expenses = Profit</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {['monthly', 'daily'].map(p => (
+                      <button key={p} onClick={() => { setFinancePeriod(p); fetchFinanceSummary(p); }}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${financePeriod === p ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                        {p === 'monthly' ? 'Monthly' : 'Daily'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* KPI Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Revenue</span>
+                  <div className="text-xl font-black text-emerald-600 mt-1">{formatPrice(fs.totalRevenue, currencySymbol)}</div>
+                  <div className="text-[10px] text-slate-400 mt-1">{fs.orderCount} orders</div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Product Cost</span>
+                  <div className="text-xl font-black text-orange-600 mt-1">{formatPrice(fs.totalProductCost, currencySymbol)}</div>
+                  <div className="text-[10px] text-slate-400 mt-1">
+                    {fs.totalRevenue > 0 ? `${((fs.totalProductCost / fs.totalRevenue) * 100).toFixed(1)}% of revenue` : '-'}
+                  </div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Expenses</span>
+                  <div className="text-xl font-black text-red-500 mt-1">{formatPrice(fs.totalExpenses, currencySymbol)}</div>
+                  <div className="text-[10px] text-slate-400 mt-1">
+                    {fs.totalRevenue > 0 ? `${((fs.totalExpenses / fs.totalRevenue) * 100).toFixed(1)}% of revenue` : '-'}
+                  </div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gross Profit</span>
+                  <div className={`text-xl font-black mt-1 ${fs.grossProfit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {formatPrice(fs.grossProfit, currencySymbol)}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-1">Revenue - Product Cost</div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Net Profit</span>
+                  <div className={`text-xl font-black mt-1 ${fs.netProfit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {formatPrice(fs.netProfit, currencySymbol)}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-1">
+                    {fs.totalRevenue > 0 ? `${((fs.netProfit / fs.totalRevenue) * 100).toFixed(1)}% margin` : '-'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Profit Trend Chart */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider mb-4">Profit Trend</h3>
+                {chartData.length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 font-semibold text-sm">No data available yet</div>
+                ) : (
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                        <XAxis dataKey="period" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 700 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10, fill: '#64748b', fontWeight: 700 }} axisLine={false} tickLine={false} />
+                        <Tooltip
+                          formatter={(value) => formatPrice(value, currencySymbol)}
+                          contentStyle={{ borderRadius: 14, border: '1px solid #e2e8f0', fontSize: 12, fontWeight: 700 }}
+                        />
+                        <Bar dataKey="revenue" name="Revenue" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={20} />
+                        <Bar dataKey="cost" name="Product Cost" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={20} />
+                        <Bar dataKey="expenses" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />
+                        <Bar dataKey="profit" name="Profit" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+
+              {/* Summary Table */}
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                <div className="p-5 border-b border-slate-100">
+                  <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">Period Breakdown</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  {chartData.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500 text-sm">No data</div>
+                  ) : (
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 text-gray-500 text-[10px] uppercase tracking-widest font-bold">
+                          <th className="py-3 px-4 rounded-l-xl">Period</th>
+                          <th className="py-3 px-4">Revenue</th>
+                          <th className="py-3 px-4">Cost</th>
+                          <th className="py-3 px-4">Expenses</th>
+                          <th className="py-3 px-4 rounded-r-xl">Profit</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-sm">
+                        {chartData.map((row, idx) => (
+                          <tr key={idx} className="border-b border-transparent hover:bg-slate-50 transition">
+                            <td className="py-3 px-4 font-bold text-slate-800">{row.period}</td>
+                            <td className="py-3 px-4 font-extrabold text-emerald-600">{formatPrice(row.revenue, currencySymbol)}</td>
+                            <td className="py-3 px-4 font-bold text-amber-600">{formatPrice(row.cost, currencySymbol)}</td>
+                            <td className="py-3 px-4 font-bold text-red-500">{formatPrice(row.expenses, currencySymbol)}</td>
+                            <td className={`py-3 px-4 font-extrabold ${row.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                              {formatPrice(row.profit, currencySymbol)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
               </div>
             </div>
           );
@@ -8447,8 +9800,8 @@ export default function AdminDashboard({ onTabChange }) {
                         <div className="text-[10px] text-gray-500 font-mono mt-0.5">/{page.slug}</div>
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={() => startEditPage(page)} className="text-blue-400 hover:text-blue-300 font-bold">Edit</button>
-                        <button onClick={() => handleDeletePage(page._id)} className="text-orange-400 hover:text-orange-300 font-bold">Delete</button>
+                        <button onClick={() => startEditPage(page)} className="text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"><Edit2 size={12} /> Edit</button>
+                        <button onClick={() => handleDeletePage(page._id)} className="text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1"><Trash2 size={12} /> Delete</button>
                       </div>
                     </div>
                   ))}
@@ -8528,8 +9881,8 @@ export default function AdminDashboard({ onTabChange }) {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={() => startEditOffer(offer)} className="text-blue-400 hover:text-blue-300 font-bold">Edit</button>
-                        <button onClick={() => handleDeleteOffer(offer._id)} className="text-orange-400 hover:text-orange-300 font-bold">Delete</button>
+                        <button onClick={() => startEditOffer(offer)} className="text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"><Edit2 size={12} /> Edit</button>
+                        <button onClick={() => handleDeleteOffer(offer._id)} className="text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1"><Trash2 size={12} /> Delete</button>
                       </div>
                     </div>
                   ))}
@@ -8618,8 +9971,8 @@ export default function AdminDashboard({ onTabChange }) {
                         <div className="text-[10px] text-gray-500">Order: {b.order}</div>
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
-                        <button onClick={() => startEditBanner(b)} className="text-blue-400 hover:text-blue-300 font-bold">Edit</button>
-                        <button onClick={() => handleDeleteBanner(b._id)} className="text-orange-400 hover:text-orange-300 font-bold">Delete</button>
+                        <button onClick={() => startEditBanner(b)} className="text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"><Edit2 size={12} /> Edit</button>
+                        <button onClick={() => handleDeleteBanner(b._id)} className="text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1"><Trash2 size={12} /> Delete</button>
                       </div>
                     </div>
                   ))}
@@ -9631,6 +10984,362 @@ export default function AdminDashboard({ onTabChange }) {
           </div>
         )}
 
+        {/* FRAUD CHECKER TAB */}
+        {activeTab === 'fraud_checker' && (
+          <div className="space-y-6 max-w-7xl w-full animate-fade-in">
+            <div className="border-b border-slate-200 pb-5">
+              <h1 className="text-xl font-bold text-gray-900">Fraud Checker</h1>
+              <p className="text-sm text-gray-400 mt-1">Detect suspicious orders, block fraudulent phone numbers and IP addresses.</p>
+            </div>
+
+            {/* Sub-tabs */}
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { id: 'suspicious', label: 'Suspicious Orders', icon: ShieldAlert },
+                { id: 'blocked_phones', label: 'Blocked Phones', icon: Ban },
+                { id: 'blocked_ips', label: 'Blocked IPs', icon: Ban },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setFraudSubTab(tab.id); if (tab.id === 'blocked_phones') fetchBlockedPhonesList(); if (tab.id === 'blocked_ips') fetchBlockedIpsList(); if (tab.id === 'suspicious') fetchSuspiciousOrders(); }}
+                  className={`px-4 py-2 text-sm font-bold rounded-xl transition flex items-center gap-2 ${
+                    fraudSubTab === tab.id
+                      ? 'bg-[#FF6600] text-white shadow-md'
+                      : 'bg-white border border-slate-200 hover:text-gray-900'
+                  }`}
+                >
+                  <tab.icon size={14} />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* SUSPICIOUS ORDERS */}
+            {fraudSubTab === 'suspicious' && (
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-slate-100 bg-white flex items-center justify-between">
+                  <h3 className="font-bold text-gray-900 text-sm">Orders with Fraud Signals</h3>
+                  <button
+                    onClick={fetchSuspiciousOrders}
+                    className="text-xs text-[#FF6600] hover:text-orange-700 font-bold flex items-center gap-1"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    Refresh
+                  </button>
+                </div>
+                {fraudLoading ? (
+                  <div className="p-8 text-center text-sm text-gray-400">Loading...</div>
+                ) : suspiciousOrders.length === 0 ? (
+                  <div className="p-8 text-center text-sm text-gray-400">No suspicious orders found.</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-50 text-[10px] text-gray-500 uppercase tracking-wider">
+                        <tr>
+                          <th className="text-left px-4 py-3 font-bold">Order ID</th>
+                          <th className="text-left px-4 py-3 font-bold">Customer</th>
+                          <th className="text-left px-4 py-3 font-bold">Phone</th>
+                          <th className="text-left px-4 py-3 font-bold">Amount</th>
+                          <th className="text-left px-4 py-3 font-bold">Status</th>
+                          <th className="text-left px-4 py-3 font-bold">Risk</th>
+                          <th className="text-left px-4 py-3 font-bold">Date</th>
+                          <th className="text-left px-4 py-3 font-bold">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {suspiciousOrders.map((o) => (
+                          <tr key={o.id} className="hover:bg-slate-50 transition text-gray-700">
+                            <td className="px-4 py-3 font-mono text-[10px]">{o.id?.slice(0, 8)}...</td>
+                            <td className="px-4 py-3">
+                              <div className="font-semibold text-gray-900">{o.users?.name || 'N/A'}</div>
+                              <div className="text-[10px] text-gray-400">{o.users?.email || ''}</div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-xs">{o.shipping_phone || '-'}</span>
+                              {o.ip_address && (
+                                <div className="text-[10px] text-gray-400 font-mono mt-0.5">{o.ip_address}</div>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 font-semibold">{o.total_price ? formatPrice(o.total_price, currencySymbol) : '-'}</td>
+                            <td className="px-4 py-3">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                o.status === 'Delivered' ? 'bg-green-100 text-green-700' :
+                                o.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                                o.status === 'Shipped' ? 'bg-blue-100 text-blue-700' :
+                                'bg-yellow-100 text-yellow-700'
+                              }`}>{o.status}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex flex-wrap gap-1">
+                                {o.signals?.map((s, i) => (
+                                  <span key={i} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                                    s.includes('BLOCKED') ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
+                                  }`}>{s}</span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-gray-400">{new Date(o.created_at).toLocaleDateString()}</td>
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={() => { setSelectedFraudOrder(o); fetchFraudCheck(o.id); }}
+                                className="text-[10px] font-bold text-[#FF6600] hover:text-orange-700 border border-[#FF6600] px-2 py-1 rounded-lg hover:bg-orange-50 transition"
+                              >
+                                Inspect
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* FRAUD INSPECT MODAL */}
+            {selectedFraudOrder && fraudCheckResult && (
+              <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 pb-10 overflow-y-auto bg-black/40" onClick={() => { setSelectedFraudOrder(null); setFraudCheckResult(null); }}>
+                <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-3xl mx-4 p-6 space-y-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h2 className="text-sm font-bold text-gray-900">Fraud Inspection</h2>
+                    <button onClick={() => { setSelectedFraudOrder(null); setFraudCheckResult(null); }} className="text-gray-400 hover:text-red-500 transition"><X size={16} /></button>
+                  </div>
+
+                  {/* Current Order Info */}
+                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 space-y-1 text-sm">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert size={14} className="text-orange-600" />
+                      <span className="font-bold text-gray-900">Order #{selectedFraudOrder.id?.slice(0, 8)}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                      <div><span className="text-gray-500">Customer:</span> <span className="font-semibold">{fraudCheckResult.order?.users?.name || 'N/A'}</span></div>
+                      <div><span className="text-gray-500">Phone:</span> <span className="font-semibold">{fraudCheckResult.order?.shipping_phone || '-'}</span></div>
+                      <div><span className="text-gray-500">IP:</span> <span className="font-mono">{fraudCheckResult.order?.ip_address || '-'}</span></div>
+                      <div><span className="text-gray-500">Device:</span> <span className="font-mono text-[10px]">{fraudCheckResult.order?.device_fingerprint || '-'}</span></div>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      {fraudCheckResult.blocks?.phone && <span className="text-[10px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Phone Blocked</span>}
+                      {fraudCheckResult.blocks?.ip && <span className="text-[10px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">IP Blocked</span>}
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      {!fraudCheckResult.blocks?.phone && (
+                        <button onClick={async () => {
+                          await fetch(`${API_URL}/admin/fraud/block-phone`, {
+                            method: 'POST',
+                            headers: { Authorization: `Bearer ${user.token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ phone: fraudCheckResult.order.shipping_phone, reason: 'Blocked from fraud inspection' }),
+                          });
+                          alert('Phone blocked');
+                          fetchFraudCheck(selectedFraudOrder.id);
+                          fetchBlockedPhonesList();
+                        }} className="text-[10px] font-bold text-red-600 border border-red-300 px-2 py-1 rounded-lg hover:bg-red-50 transition">Block Phone</button>
+                      )}
+                      {fraudCheckResult.blocks?.phone && (
+                        <button onClick={async () => {
+                          await fetch(`${API_URL}/admin/fraud/block-phone/${encodeURIComponent(fraudCheckResult.order.shipping_phone)}`, {
+                            method: 'DELETE',
+                            headers: { Authorization: `Bearer ${user.token}` },
+                          });
+                          alert('Phone unblocked');
+                          fetchFraudCheck(selectedFraudOrder.id);
+                          fetchBlockedPhonesList();
+                        }} className="text-[10px] font-bold text-green-600 border border-green-300 px-2 py-1 rounded-lg hover:bg-green-50 transition">Unblock Phone</button>
+                      )}
+                      {!fraudCheckResult.blocks?.ip && fraudCheckResult.order?.ip_address && (
+                        <button onClick={async () => {
+                          await fetch(`${API_URL}/admin/fraud/block-ip`, {
+                            method: 'POST',
+                            headers: { Authorization: `Bearer ${user.token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ip_address: fraudCheckResult.order.ip_address, reason: 'Blocked from fraud inspection' }),
+                          });
+                          alert('IP blocked');
+                          fetchFraudCheck(selectedFraudOrder.id);
+                          fetchBlockedIpsList();
+                        }} className="text-[10px] font-bold text-red-600 border border-red-300 px-2 py-1 rounded-lg hover:bg-red-50 transition">Block IP</button>
+                      )}
+                      {fraudCheckResult.blocks?.ip && (
+                        <button onClick={async () => {
+                          await fetch(`${API_URL}/admin/fraud/block-ip/${encodeURIComponent(fraudCheckResult.order.ip_address)}`, {
+                            method: 'DELETE',
+                            headers: { Authorization: `Bearer ${user.token}` },
+                          });
+                          alert('IP unblocked');
+                          fetchFraudCheck(selectedFraudOrder.id);
+                          fetchBlockedIpsList();
+                        }} className="text-[10px] font-bold text-green-600 border border-green-300 px-2 py-1 rounded-lg hover:bg-green-50 transition">Unblock IP</button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Duplicate Orders by Phone */}
+                  {fraudCheckResult.duplicates?.phone?.length > 0 && (
+                    <div>
+                      <h3 className="text-xs font-bold text-gray-700 mb-2 flex items-center gap-1.5">
+                        <AlertCircle size={12} className="text-orange-500" />
+                        Same Phone ({fraudCheckResult.duplicates.phone.length} other orders)
+                      </h3>
+                      <div className="bg-red-50 border border-red-200 rounded-xl overflow-hidden">
+                        <table className="w-full text-xs">
+                          <thead className="bg-red-100 text-[10px] text-red-700 uppercase">
+                            <tr><th className="text-left px-3 py-2">Order</th><th className="text-left px-3 py-2">Customer</th><th className="text-left px-3 py-2">Amount</th><th className="text-left px-3 py-2">Status</th><th className="text-left px-3 py-2">Date</th></tr>
+                          </thead>
+                          <tbody className="divide-y divide-red-100">
+                            {fraudCheckResult.duplicates.phone.map((d) => (
+                              <tr key={d.id} className="text-gray-700">
+                                <td className="px-3 py-2 font-mono">{d.id?.slice(0, 8)}...</td>
+                                <td className="px-3 py-2">{d.users?.name || 'N/A'}</td>
+                                <td className="px-3 py-2 font-semibold">{d.total_price ? formatPrice(d.total_price, currencySymbol) : '-'}</td>
+                                <td className="px-3 py-2"><span className={`font-bold ${d.status === 'Cancelled' ? 'text-red-600' : 'text-yellow-600'}`}>{d.status}</span></td>
+                                <td className="px-3 py-2 text-gray-400">{new Date(d.created_at).toLocaleDateString()}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Duplicate Orders by IP */}
+                  {fraudCheckResult.duplicates?.ip?.length > 0 && (
+                    <div>
+                      <h3 className="text-xs font-bold text-gray-700 mb-2 flex items-center gap-1.5">
+                        <AlertCircle size={12} className="text-orange-500" />
+                        Same IP ({fraudCheckResult.duplicates.ip.length} other orders)
+                      </h3>
+                      <div className="bg-orange-50 border border-orange-200 rounded-xl overflow-hidden">
+                        <table className="w-full text-xs">
+                          <thead className="bg-orange-100 text-[10px] text-orange-700 uppercase">
+                            <tr><th className="text-left px-3 py-2">Order</th><th className="text-left px-3 py-2">Customer</th><th className="text-left px-3 py-2">Amount</th><th className="text-left px-3 py-2">Status</th><th className="text-left px-3 py-2">Date</th></tr>
+                          </thead>
+                          <tbody className="divide-y divide-orange-100">
+                            {fraudCheckResult.duplicates.ip.map((d) => (
+                              <tr key={d.id} className="text-gray-700">
+                                <td className="px-3 py-2 font-mono">{d.id?.slice(0, 8)}...</td>
+                                <td className="px-3 py-2">{d.users?.name || 'N/A'}</td>
+                                <td className="px-3 py-2 font-semibold">{d.total_price ? formatPrice(d.total_price, currencySymbol) : '-'}</td>
+                                <td className="px-3 py-2"><span className={`font-bold ${d.status === 'Cancelled' ? 'text-red-600' : 'text-yellow-600'}`}>{d.status}</span></td>
+                                <td className="px-3 py-2 text-gray-400">{new Date(d.created_at).toLocaleDateString()}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {fraudCheckResult.duplicates?.phone?.length === 0 && fraudCheckResult.duplicates?.ip?.length === 0 && (
+                    <div className="text-center py-4 text-sm text-gray-400">No duplicates found for this order.</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* BLOCKED PHONES */}
+            {fraudSubTab === 'blocked_phones' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="lg:col-span-4 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                  <h3 className="font-bold text-gray-900 text-sm mb-4">Block a Phone Number</h3>
+                  <form onSubmit={handleBlockPhone} className="space-y-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone Number</label>
+                      <input type="text" required placeholder="e.g. 017XXXXXXXX" value={newBlockPhone} onChange={(e) => setNewBlockPhone(e.target.value)}
+                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Reason</label>
+                      <input type="text" placeholder="Why is this blocked?" value={newBlockPhoneReason} onChange={(e) => setNewBlockPhoneReason(e.target.value)}
+                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    </div>
+                    <button type="submit" className="w-full py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-sm transition shadow-md">Block Phone</button>
+                  </form>
+                </div>
+
+                <div className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="p-4 border-b border-slate-100 bg-white">
+                    <h3 className="font-bold text-gray-900 text-sm">Blocked Phone Numbers ({blockedPhonesList.length})</h3>
+                  </div>
+                  {blockedPhonesList.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-gray-400">No blocked phones.</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-slate-50 text-[10px] text-gray-500 uppercase tracking-wider">
+                          <tr><th className="text-left px-4 py-3 font-bold">Phone</th><th className="text-left px-4 py-3 font-bold">Reason</th><th className="text-left px-4 py-3 font-bold">Blocked By</th><th className="text-left px-4 py-3 font-bold">Date</th><th className="text-left px-4 py-3 font-bold">Action</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {blockedPhonesList.map((bp) => (
+                            <tr key={bp.id} className="hover:bg-slate-50 transition text-gray-700">
+                              <td className="px-4 py-3 font-mono text-xs font-semibold">{bp.phone}</td>
+                              <td className="px-4 py-3 text-xs text-gray-500">{bp.reason || '-'}</td>
+                              <td className="px-4 py-3 text-xs">{bp.users?.name || 'N/A'}</td>
+                              <td className="px-4 py-3 text-xs text-gray-400">{new Date(bp.created_at).toLocaleDateString()}</td>
+                              <td className="px-4 py-3">
+                                <button onClick={() => handleUnblockPhone(bp.phone)} className="text-[10px] font-bold text-green-600 border border-green-300 px-2 py-1 rounded-lg hover:bg-green-50 transition">Unblock</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* BLOCKED IPS */}
+            {fraudSubTab === 'blocked_ips' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="lg:col-span-4 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                  <h3 className="font-bold text-gray-900 text-sm mb-4">Block an IP Address</h3>
+                  <form onSubmit={handleBlockIp} className="space-y-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">IP Address</label>
+                      <input type="text" required placeholder="e.g. 192.168.1.1" value={newBlockIp} onChange={(e) => setNewBlockIp(e.target.value)}
+                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Reason</label>
+                      <input type="text" placeholder="Why is this blocked?" value={newBlockIpReason} onChange={(e) => setNewBlockIpReason(e.target.value)}
+                        className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner" />
+                    </div>
+                    <button type="submit" className="w-full py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-sm transition shadow-md">Block IP</button>
+                  </form>
+                </div>
+
+                <div className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="p-4 border-b border-slate-100 bg-white">
+                    <h3 className="font-bold text-gray-900 text-sm">Blocked IP Addresses ({blockedIpsList.length})</h3>
+                  </div>
+                  {blockedIpsList.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-gray-400">No blocked IPs.</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-slate-50 text-[10px] text-gray-500 uppercase tracking-wider">
+                          <tr><th className="text-left px-4 py-3 font-bold">IP Address</th><th className="text-left px-4 py-3 font-bold">Reason</th><th className="text-left px-4 py-3 font-bold">Blocked By</th><th className="text-left px-4 py-3 font-bold">Date</th><th className="text-left px-4 py-3 font-bold">Action</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {blockedIpsList.map((bi) => (
+                            <tr key={bi.id} className="hover:bg-slate-50 transition text-gray-700">
+                              <td className="px-4 py-3 font-mono text-xs font-semibold">{bi.ip_address}</td>
+                              <td className="px-4 py-3 text-xs text-gray-500">{bi.reason || '-'}</td>
+                              <td className="px-4 py-3 text-xs">{bi.users?.name || 'N/A'}</td>
+                              <td className="px-4 py-3 text-xs text-gray-400">{new Date(bi.created_at).toLocaleDateString()}</td>
+                              <td className="px-4 py-3">
+                                <button onClick={() => handleUnblockIp(bi.ip_address)} className="text-[10px] font-bold text-green-600 border border-green-300 px-2 py-1 rounded-lg hover:bg-green-50 transition">Unblock</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* SETTINGS TAB */}
         {activeTab === 'settings' && (
           <div className="space-y-8 max-w-4xl">
@@ -10064,45 +11773,91 @@ export default function AdminDashboard({ onTabChange }) {
 
                 {/* SAS Bulk SMS Credentials */}
                 {settings.otpGateway === 'SMS' && (
-                  <div className="border-t border-slate-100 pt-4 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gateway URL</label>
-                      <input
-                        value={settings.sasSmsGatewayUrl || ''}
-                        onChange={(e) => setSettings({ ...settings, sasSmsGatewayUrl: e.target.value })}
-                        placeholder="http://sms.sasbulksms.com"
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                      />
+                  <div>
+                    <div className="border-t border-slate-100 pt-4 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Gateway URL</label>
+                        <input
+                          value={settings.sasSmsGatewayUrl || ''}
+                          onChange={(e) => setSettings({ ...settings, sasSmsGatewayUrl: e.target.value })}
+                          placeholder="http://sms.sasbulksms.com"
+                          className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">API Token</label>
+                        <input
+                          type="text"
+                          value={settings.sasSmsApiKey || ''}
+                          onChange={(e) => setSettings({ ...settings, sasSmsApiKey: e.target.value })}
+                          placeholder="API Token (e.g. 7639814fe75b2cbd)"
+                          className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Secret Key</label>
+                        <input
+                          type="text"
+                          value={settings.sasSmsSecretKey || ''}
+                          onChange={(e) => setSettings({ ...settings, sasSmsSecretKey: e.target.value })}
+                          placeholder="Secret Key (e.g. 13382300000000)"
+                          className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Sender ID</label>
+                        <input
+                          type="text"
+                          value={settings.sasSmsSenderId || ''}
+                          onChange={(e) => setSettings({ ...settings, sasSmsSenderId: e.target.value })}
+                          placeholder="Sender ID (e.g. 8809617633299)"
+                          className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">API Token</label>
-                      <input
-                        type="text"
-                        value={settings.sasSmsApiKey || ''}
-                        onChange={(e) => setSettings({ ...settings, sasSmsApiKey: e.target.value })}
-                        placeholder="API Token (e.g. 7639814fe75b2cbd)"
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Secret Key</label>
-                      <input
-                        type="text"
-                        value={settings.sasSmsSecretKey || ''}
-                        onChange={(e) => setSettings({ ...settings, sasSmsSecretKey: e.target.value })}
-                        placeholder="Secret Key (e.g. 13382300000000)"
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Sender ID</label>
-                      <input
-                        type="text"
-                        value={settings.sasSmsSenderId || ''}
-                        onChange={(e) => setSettings({ ...settings, sasSmsSenderId: e.target.value })}
-                        placeholder="Sender ID (e.g. 8809617633299)"
-                        className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 hover:bg-white transition-all duration-300 shadow-inner font-semibold"
-                      />
+                    <div className="mt-4 p-4 bg-orange-50 border border-orange-100 rounded-xl">
+                      <p className="text-[11px] font-bold text-orange-800 mb-3">&#128241; Live Test - Send SMS to your phone now</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="tel"
+                          id="sms-test-phone"
+                          placeholder="01XXXXXXXXX"
+                          className="flex-1 px-3 py-2 bg-white border border-orange-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400"
+                        />
+                        <button
+                          type="button"
+                          id="sms-test-btn"
+                          onClick={async () => {
+                            const phoneInput = document.getElementById('sms-test-phone');
+                            const phone = phoneInput?.value?.trim();
+                            if (!phone) { alert('Please enter your mobile number'); return; }
+                            const btn = document.getElementById('sms-test-btn');
+                            btn.disabled = true; btn.textContent = 'Sending...';
+                            const resultDiv = document.getElementById('sms-test-result');
+                            resultDiv.textContent = ''; resultDiv.className = 'mt-2 text-xs font-semibold';
+                            try {
+                              const res = await fetch(API_URL + '/settings/test-sms', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + user.token },
+                                body: JSON.stringify({ toNumber: phone, apiKey: settings.sasSmsApiKey, secretKey: settings.sasSmsSecretKey, senderId: settings.sasSmsSenderId, gatewayUrl: settings.sasSmsGatewayUrl }),
+                              });
+                              const data = await res.json();
+                              if (data.success) {
+                                resultDiv.className = 'mt-2 text-xs font-bold text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-200';
+                                resultDiv.textContent = 'SUCCESS: ' + data.message;
+                              } else {
+                                resultDiv.className = 'mt-2 text-xs font-bold text-red-700 bg-red-50 px-3 py-2 rounded-lg border border-red-200 whitespace-pre-wrap';
+                                resultDiv.textContent = 'FAILED: ' + data.message + (data.raw ? ' | Gateway: ' + data.raw : '');
+                              }
+                            } catch (err) {
+                              resultDiv.className = 'mt-2 text-xs font-bold text-red-700 bg-red-50 px-3 py-2 rounded-lg border border-red-200';
+                              resultDiv.textContent = 'Error: ' + err.message;
+                            } finally { btn.disabled = false; btn.textContent = 'Test SMS'; }
+                          }}
+                          className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl text-xs transition-all whitespace-nowrap"
+                        >Test SMS</button>
+                      </div>
+                      <div id="sms-test-result" className="mt-2 text-xs font-semibold"></div>
                     </div>
                   </div>
                 )}
@@ -11012,8 +12767,8 @@ export default function AdminDashboard({ onTabChange }) {
                         </div>
                       </div>
                       <div className="flex gap-2 flex-shrink-0 ml-4">
-                        <button onClick={() => startEditVideo(vid)} className="text-[#FF6600] hover:text-blue-400 font-bold">Edit</button>
-                        <button onClick={() => handleDeleteVideo(vid._id)} className="text-orange-500 hover:text-orange-400 font-bold">Delete</button>
+                        <button onClick={() => startEditVideo(vid)} className="text-[#FF6600] hover:text-blue-400 font-bold flex items-center gap-1"><Edit2 size={12} /> Edit</button>
+                        <button onClick={() => handleDeleteVideo(vid._id)} className="text-orange-500 hover:text-orange-400 font-bold flex items-center gap-1"><Trash2 size={12} /> Delete</button>
                       </div>
                     </div>
                   ))}
@@ -11619,6 +13374,9 @@ export default function AdminDashboard({ onTabChange }) {
                           config={{
                             readonly: false,
                             height: 300,
+                            askBeforePasteHTML: false,
+                            askBeforePasteFromWord: false,
+                            defaultActionOnPaste: 'insert_as_html',
                             placeholder: 'Start writing...',
                             buttons: [
                               'source', '|',
@@ -11642,12 +13400,34 @@ export default function AdminDashboard({ onTabChange }) {
                     {/* Description Image */}
                     <div>
                       <label className="text-[11px] font-bold text-gray-600">Description Image</label>
+                      {/* Existing description images */}
+                      {(editForm.descriptionImages || []).length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap gap-2">
+                          {(editForm.descriptionImages || []).map((url, idx) => (
+                            <div key={idx} className="relative group w-20 h-20">
+                              <img src={url} alt={`desc-${idx}`} className="w-20 h-20 object-cover rounded-lg border border-slate-200" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = editForm.descriptionImages.filter((_, i) => i !== idx);
+                                  setEditForm({ ...editForm, descriptionImages: updated });
+                                }}
+                                className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity"
+                              >×</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <input
                         type="file"
                         accept="image/*"
                         multiple
                         className="w-full mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-gray-500 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-slate-100 file:text-gray-700 file:text-[11px] file:font-bold hover:file:bg-slate-200 file:cursor-pointer hover:border-slate-300 transition"
+                        onChange={(e) => setEditDescriptionImageFiles(Array.from(e.target.files || []))}
                       />
+                      {editDescriptionImageFiles.length > 0 && (
+                        <p className="text-[10px] text-emerald-600 font-semibold mt-1">{editDescriptionImageFiles.length} new file(s) selected (will be added)</p>
+                      )}
                     </div>
                   </div>
 
@@ -11657,7 +13437,7 @@ export default function AdminDashboard({ onTabChange }) {
                     <div>
                       <label className="text-[11px] font-bold text-gray-600">PDF Specification</label>
                       <div className="flex items-center gap-3 mt-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition">
-                        <span className="flex-1 text-[11px] text-gray-400 truncate" id="pdf-filename-edit">file chosen</span>
+                        <span className="flex-1 text-[11px] text-gray-400 truncate" id="pdf-filename-edit">{editPdfFile ? editPdfFile.name : 'file chosen'}</span>
                         <label className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg text-[11px] font-bold text-gray-700 cursor-pointer transition flex-shrink-0">
                           Choose File
                           <input
@@ -11666,12 +13446,15 @@ export default function AdminDashboard({ onTabChange }) {
                             className="hidden"
                             onChange={(e) => {
                               const f = e.target.files?.[0];
-                              const el = document.getElementById('pdf-filename-edit');
-                              if (el) el.textContent = f ? f.name : 'file chosen';
+                              setEditPdfFile(f || null);
                             }}
                           />
                         </label>
                       </div>
+                      {editPdfFile && <p className="text-[10px] text-emerald-600 font-semibold mt-1">PDF ready to upload</p>}
+                      {editForm.specificationPdfUrl && !editPdfFile && (
+                        <p className="text-[10px] text-blue-600 font-semibold mt-1">Current: {editForm.specificationPdfUrl.split('/').pop()}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -12489,7 +14272,7 @@ export default function AdminDashboard({ onTabChange }) {
                   localStorage.setItem('shop_admin_user', JSON.stringify(updatedUser));
                   localStorage.setItem('shop_user', JSON.stringify(updatedUser));
                   setUser(updatedUser);
-                  setSteadfastForm({ apiKey: '', secretKey: '', enabled: data.steadfast_enabled !== false });
+                  setSteadfastForm((prev) => ({ ...prev, enabled: data.steadfast_enabled !== false }));
                   setSteadfastMessage(data.message || 'SteadFast integration saved successfully');
                 } catch (err) {
                   setSteadfastError(err.message || 'Failed to save SteadFast integration');
@@ -13373,6 +15156,36 @@ export default function AdminDashboard({ onTabChange }) {
                       <p className="text-sm font-bold text-slate-700">{new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
+                  {(selectedOrder.courierInfo?.provider || selectedOrder.courier_provider) && (
+                    <div className="mt-3 bg-indigo-50 border border-indigo-100 p-4 rounded-xl">
+                      <h4 className="font-bold text-[10px] uppercase tracking-wider text-indigo-600 mb-2">Courier Tracking</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">Provider</p>
+                          <p className="text-sm font-black text-slate-800 flex items-center gap-1">
+                            <Truck size={14} className="text-indigo-500" />
+                            {selectedOrder.courierInfo?.provider || selectedOrder.courier_provider}
+                          </p>
+                        </div>
+                        {(selectedOrder.courierInfo?.trackingCode || selectedOrder.courier_tracking_code) && (
+                          <div>
+                            <p className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">Tracking Code</p>
+                            <p className="font-mono text-sm font-bold text-slate-800 select-all bg-white px-2 py-1 rounded border border-indigo-200 inline-block">
+                              {selectedOrder.courierInfo?.trackingCode || selectedOrder.courier_tracking_code}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      {(selectedOrder.courierInfo?.status || selectedOrder.courier_status) && (
+                        <div className="mt-2 pt-2 border-t border-indigo-200/50">
+                          <p className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">Delivery Status</p>
+                          <span className="text-xs font-bold text-slate-700 bg-white px-2 py-0.5 rounded-full border border-indigo-200 inline-block">
+                            {selectedOrder.courierInfo?.status || selectedOrder.courier_status}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               

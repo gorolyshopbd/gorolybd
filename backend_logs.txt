@@ -1,0 +1,21 @@
+shopio-backend  | Server running in production mode on port 5000
+shopio-backend  | PostgreSQL connected to shopio
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function
+shopio-backend  | [getTrackingReport] DB unavailable, trying local cache: db.database.from(...).select(...).limit(...).single(...).catch is not a function

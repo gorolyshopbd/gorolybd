@@ -32,11 +32,8 @@ export const createCategory = async (req, res) => {
     const insertData = {
       name,
       image_url: image || '',
-      sort_order: order || 0,
-      subcategories: subcategories || [],
-      root_category: rootCategory || '',
-      featured: featured || false,
-      status: status !== undefined ? status : true,
+      banner_url: banner || '',
+      sort_order: order || 0
     };
     
     if (banner !== undefined) {
@@ -74,10 +71,6 @@ export const updateCategory = async (req, res) => {
     if (image !== undefined) updateData.image_url = image;
     if (banner !== undefined) updateData.banner_url = banner;
     if (order !== undefined) updateData.sort_order = order;
-    if (subcategories !== undefined) updateData.subcategories = subcategories;
-    if (rootCategory !== undefined) updateData.root_category = rootCategory;
-    if (featured !== undefined) updateData.featured = featured;
-    if (status !== undefined) updateData.status = status;
     
     let result = await db.database.from('categories').update(updateData).eq('id', req.params.id).select().single();
     let { data: category, error } = result;

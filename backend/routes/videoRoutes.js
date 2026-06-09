@@ -6,15 +6,28 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const { data: videos, error } = await db.database.from('videos').select('*, products(id, name, image_url)').order('created_at', { ascending: false });
+    const { data: videos, error } = await db.database.from('videos').select('*').order('created_at', { ascending: false });
     if (error) throw error;
     
-    const formatted = videos.map(v => ({
-      ...v,
-      _id: v.id,
-      videoUrl: v.video_url,
-      product: v.products ? { _id: v.products.id, name: v.products.name, image: v.products.image_url } : null
-    }));
+    // Fetch products manually since QueryBuilder doesn't support PostgREST joins
+    const productIds = videos.filter(v => v.product_id).map(v => v.product_id);
+    let productsMap = {};
+    if (productIds.length > 0) {
+      const { data: products } = await db.query(`SELECT id, name, image_url FROM products WHERE id = ANY($1)`, [productIds]);
+      if (products && products.rows) {
+        products.rows.forEach(p => productsMap[p.id] = p);
+      }
+    }
+    
+    const formatted = videos.map(v => {
+      const prod = v.product_id ? productsMap[v.product_id] : null;
+      return {
+        ...v,
+        _id: v.id,
+        videoUrl: v.video_url,
+        product: prod ? { _id: prod.id, name: prod.name, image: prod.image_url } : null
+      };
+    });
     res.json(formatted);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching videos' });

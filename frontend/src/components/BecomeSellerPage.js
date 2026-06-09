@@ -491,7 +491,7 @@ export default function BecomeSellerPage({ onBackToHome }) {
     <div className="min-h-screen bg-white flex flex-col font-sans">
       
       {/* ── HEADER ── */}
-      <header className="flex justify-between items-center px-6 sm:px-12 py-4 border-b border-slate-100 bg-white sticky top-0 z-50">
+      <header className="flex justify-between items-center px-3 sm:px-12 py-2.5 sm:py-4 border-b border-slate-100 bg-white sticky top-0 z-50">
         
         {/* Left Side: Logo */}
         <div className="flex items-center gap-6">
@@ -500,38 +500,38 @@ export default function BecomeSellerPage({ onBackToHome }) {
             className="cursor-pointer flex items-center gap-3"
           >
             {/* Shopping Bag Icon */}
-            <div className="relative w-10 h-10 flex items-center justify-center bg-gradient-to-br from-[#EC4899] to-[#D946EF] rounded-xl shadow-md">
+            <div className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-gradient-to-br from-[#EC4899] to-[#D946EF] rounded-lg sm:rounded-xl shadow-md">
               <div className="absolute top-1.5 w-4 h-4 border-2 border-white rounded-t-full opacity-90" style={{ borderBottom: 'none' }} />
               <svg className="w-5 h-5 text-white mt-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
             </div>
             <div className="leading-none text-left">
-              <span className="text-2xl font-black text-[#00A8E8] tracking-tight">Goroly Shop</span>
-              <span className="block text-[10px] font-bold text-slate-400 tracking-wider uppercase mt-0.5">{t('sellerCenter')}</span>
+              <span className="text-lg sm:text-2xl font-black text-[#00A8E8] tracking-tight">Goroly Shop</span>
+              <span className="block text-[8px] sm:text-[10px] font-bold text-slate-400 tracking-wider uppercase mt-0.5">{t('sellerCenter')}</span>
             </div>
           </div>
         </div>
 
         {/* Right Side: Log in, Sign up, Country, Language */}
-        <div className="flex items-center gap-4 sm:gap-6">
+        <div className="flex items-center gap-2 sm:gap-6">
           {user ? (
-            <div className="flex items-center gap-4">
-              <div className="text-right">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="hidden sm:block text-right">
                 <span className="block text-sm font-extrabold text-slate-800">{user.name}</span>
                 <span className="block text-[10px] font-bold text-slate-400 capitalize">{user.role}</span>
               </div>
               {user.role === 'seller' || user.isAdmin ? (
                 <button 
                   onClick={() => window.location.href = '/admin'}
-                  className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-6 py-2 rounded-full font-bold text-sm transition shadow-md shadow-[#FF6600]/10 flex items-center gap-1.5 cursor-pointer"
+                  className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm transition shadow-md shadow-[#FF6600]/10 flex items-center gap-1.5 cursor-pointer"
                 >
-                  <LayoutGrid size={13} /> {t('sellerDashboard')}
+                  <LayoutGrid size={12} /> <span className="hidden sm:inline">{t('sellerDashboard')}</span><span className="sm:hidden">Dashboard</span>
                 </button>
               ) : (
                 <button 
                   onClick={logout}
-                  className="border-2 border-[#FF6600] text-[#FF6600] hover:bg-[#FF6600]/5 px-5 py-1.5 rounded-full font-bold text-sm transition cursor-pointer"
+                  className="border-2 border-[#FF6600] text-[#FF6600] hover:bg-[#FF6600]/5 px-3 sm:px-5 py-1 rounded-full font-bold text-xs sm:text-sm transition cursor-pointer"
                 >
                   {t('logOut')}
                 </button>
@@ -541,18 +541,18 @@ export default function BecomeSellerPage({ onBackToHome }) {
             <>
               <button 
                 onClick={() => handleModeChange('login')}
-                className={`flex items-center gap-1.5 px-5 py-1.5 rounded-full font-bold text-sm transition cursor-pointer ${
+                className={`flex items-center gap-1 px-3 sm:px-5 py-1 rounded-full font-bold text-xs sm:text-sm transition cursor-pointer ${
                   authMode === 'login' 
                     ? 'bg-[#FF6600]/10 border-2 border-[#FF6600] text-[#FF6600]' 
                     : 'border-2 border-[#FF6600] text-[#FF6600] hover:bg-[#FF6600]/5'
                 }`}
               >
-                <Lock size={13} /> {t('logIn')}
+                <Lock size={11} /> {t('logIn')}
               </button>
               
               <button 
                 onClick={() => handleModeChange('packages')}
-                className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-6 py-2 rounded-full font-bold text-sm transition shadow-md shadow-[#FF6600]/10 cursor-pointer"
+                className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm transition shadow-md shadow-[#FF6600]/10 cursor-pointer"
               >
                 {t('signUp')}
               </button>

@@ -1,0 +1,8 @@
+shopio-frontend  | 
+shopio-frontend  | > frontend@0.1.0 start
+shopio-frontend  | > next start -H 0.0.0.0 -p 3000
+shopio-frontend  | 
+shopio-frontend  | ▲ Next.js 16.2.6
+shopio-frontend  | - Local:         http://localhost:3000
+shopio-frontend  | - Network:       http://0.0.0.0:3000
+shopio-frontend  | ✓ Ready in 338ms

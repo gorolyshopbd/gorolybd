@@ -5,15 +5,14 @@ import { db } from '../config/db.js';
 // @access  Private/Admin
 export const getRewardSettings = async (req, res) => {
   try {
-    const { data, error } = await db
-      .from('reward_settings')
-      .select('*')
-      .single();
-
+    const { data, error } = await db.database.from('rewards_settings').select('*').limit(1).single();
+    if (error && error.message && error.message.includes('does not exist')) {
+      return res.json({ is_active: false, points_per_amount: 1, min_points_to_redeem: 100, redemption_value: 1 });
+    }
     if (error) throw error;
-    res.json(data);
+    res.json(data || { is_active: false, points_per_amount: 1, min_points_to_redeem: 100, redemption_value: 1 });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.json({ is_active: false, points_per_amount: 1, min_points_to_redeem: 100, redemption_value: 1 });
   }
 };
 
@@ -21,38 +20,22 @@ export const getRewardSettings = async (req, res) => {
 // @route   PUT /api/rewards/settings
 // @access  Private/Admin
 export const updateRewardSettings = async (req, res) => {
-  const { is_enabled, earn_rate, redeem_rate, min_redeem_points } = req.body;
+  const { is_enabled, earn_rate, redeem_rate, min_redeem_points, is_active, points_per_amount, redemption_value } = req.body;
   try {
-    const { data: current } = await db
-      .from('reward_settings')
-      .select('id')
-      .single();
+    const { data: current } = await db.database.from('rewards_settings').select('id').limit(1).single();
 
     let result;
+    const updateData = {
+      is_active: is_active !== undefined ? is_active : (is_enabled !== undefined ? is_enabled : false),
+      points_per_amount: Number(points_per_amount || earn_rate || 1),
+      redemption_value: Number(redemption_value || redeem_rate || 1),
+      min_points_to_redeem: Number(min_redeem_points || 100),
+    };
+
     if (current) {
-      result = await db
-        .from('reward_settings')
-        .update({
-          is_enabled,
-          earn_rate: Number(earn_rate),
-          redeem_rate: Number(redeem_rate),
-          min_redeem_points: Number(min_redeem_points),
-          updated_at: new Date()
-        })
-        .eq('id', current.id)
-        .select()
-        .single();
+      result = await db.database.from('rewards_settings').update(updateData).eq('id', current.id).select().single();
     } else {
-      result = await db
-        .from('reward_settings')
-        .insert({
-          is_enabled,
-          earn_rate: Number(earn_rate),
-          redeem_rate: Number(redeem_rate),
-          min_redeem_points: Number(min_redeem_points)
-        })
-        .select()
-        .single();
+      result = await db.database.from('rewards_settings').insert([updateData]).select().single();
     }
 
     if (result.error) throw result.error;
@@ -67,24 +50,24 @@ export const updateRewardSettings = async (req, res) => {
 // @access  Private/Admin
 export const getUserPointsSummary = async (req, res) => {
   try {
-    const { data, error } = await db
-      .from('user_points')
-      .select(`
-        *,
-        users:user_id (name, email)
-      `)
-      .order('updated_at', { ascending: false });
-
+    const { data, error } = await db.database.from('rewards_user_points').select('*').order('updated_at', { ascending: false });
     if (error) throw error;
+
+    const userIds = (data || []).filter(r => r.user_id).map(r => r.user_id);
+    let usersMap = {};
+    if (userIds.length > 0) {
+      const { rows } = await db.query(`SELECT id, name, email FROM users WHERE id = ANY($1)`, [userIds]);
+      if (rows) rows.forEach(u => usersMap[u.id] = u);
+    }
 
     const formatted = (data || []).map(row => ({
       _id: row.id,
       user_id: row.user_id,
-      name: row.users?.name || 'Customer',
-      email: row.users?.email || '',
-      total_points: row.total_points,
-      redeemed_points: row.redeemed_points,
-      current_balance: row.current_balance,
+      name: usersMap[row.user_id]?.name || 'Customer',
+      email: usersMap[row.user_id]?.email || '',
+      total_points: row.total_earned || 0,
+      redeemed_points: row.total_redeemed || 0,
+      current_balance: row.points || 0,
       updated_at: row.updated_at,
       created_at: row.created_at
     }));
@@ -100,21 +83,21 @@ export const getUserPointsSummary = async (req, res) => {
 // @access  Private/Admin
 export const getPointLogs = async (req, res) => {
   try {
-    const { data, error } = await db
-      .from('point_logs')
-      .select(`
-        *,
-        users:user_id (name, email)
-      `)
-      .order('created_at', { ascending: false });
-
+    const { data, error } = await db.database.from('rewards_logs').select('*').order('created_at', { ascending: false });
     if (error) throw error;
+
+    const userIds = (data || []).filter(r => r.user_id).map(r => r.user_id);
+    let usersMap = {};
+    if (userIds.length > 0) {
+      const { rows } = await db.query(`SELECT id, name, email FROM users WHERE id = ANY($1)`, [userIds]);
+      if (rows) rows.forEach(u => usersMap[u.id] = u);
+    }
 
     const formatted = (data || []).map(row => ({
       _id: row.id,
       user_id: row.user_id,
-      name: row.users?.name || 'Customer',
-      email: row.users?.email || '',
+      name: usersMap[row.user_id]?.name || 'Customer',
+      email: usersMap[row.user_id]?.email || '',
       points: row.points,
       type: row.type,
       description: row.description,
@@ -138,64 +121,44 @@ export const adjustUserPoints = async (req, res) => {
   }
 
   try {
-    // 1. Fetch current points row or create if it doesn't exist
-    const { data: current, error: fetchErr } = await db
-      .from('user_points')
-      .select('*')
-      .eq('user_id', user_id)
-      .maybeSingle();
-
-    if (fetchErr) throw fetchErr;
-
-    let updatedPoints;
+    const { data: current } = await db.database.from('rewards_user_points').select('*').eq('user_id', user_id).single();
     const diff = Number(points);
+    let updatedPoints;
 
     if (current) {
-      const newBalance = current.current_balance + diff;
-      const newTotal = diff > 0 ? current.total_points + diff : current.total_points;
-      const newRedeemed = diff < 0 ? current.redeemed_points + Math.abs(diff) : current.redeemed_points;
+      const newBalance = (current.points || 0) + diff;
+      const newTotal = diff > 0 ? (current.total_earned || 0) + diff : current.total_earned || 0;
+      const newRedeemed = diff < 0 ? (current.total_redeemed || 0) + Math.abs(diff) : current.total_redeemed || 0;
 
-      const { data, error } = await db
-        .from('user_points')
-        .update({
-          total_points: newTotal,
-          redeemed_points: newRedeemed,
-          current_balance: newBalance,
-          updated_at: new Date()
-        })
-        .eq('id', current.id)
-        .select()
-        .single();
+      const { data, error } = await db.database.from('rewards_user_points').update({
+        total_earned: newTotal,
+        total_redeemed: newRedeemed,
+        points: Math.max(0, newBalance),
+        updated_at: new Date()
+      }).eq('id', current.id).select().single();
 
       if (error) throw error;
       updatedPoints = data;
     } else {
       const newBalance = diff > 0 ? diff : 0;
-      const newTotal = diff > 0 ? diff : 0;
-      const newRedeemed = diff < 0 ? Math.abs(diff) : 0;
-
-      const { data, error } = await db
-        .from('user_points')
-        .insert({
-          user_id,
-          total_points: newTotal,
-          redeemed_points: newRedeemed,
-          current_balance: newBalance
-        })
-        .select()
-        .single();
+      const { data, error } = await db.database.from('rewards_user_points').insert([{
+        user_id,
+        total_earned: Math.max(0, diff),
+        total_redeemed: 0,
+        points: newBalance
+      }]).select().single();
 
       if (error) throw error;
       updatedPoints = data;
     }
 
-    // 2. Add log entry
-    await db.database.from('point_logs').insert({
+    // Add log entry
+    await db.database.from('rewards_logs').insert([{
       user_id,
       points: diff,
       type: 'admin_adjustment',
       description: description || 'Admin manual point adjustment'
-    });
+    }]);
 
     res.json({ message: 'User points adjusted successfully', data: updatedPoints });
   } catch (err) {
@@ -208,23 +171,15 @@ export const adjustUserPoints = async (req, res) => {
 // @access  Private/Admin
 export const getRewardProducts = async (req, res) => {
   try {
-    const { data, error } = await db
-      .from('products')
-      .select(`
-        *,
-        users:user_id (name)
-      `)
-      .gt('reward_points', 0)
-      .order('name', { ascending: true });
-
+    const { data, error } = await db.database.from('products').select('id, name, price, reward_points, user_id').order('name', { ascending: true });
     if (error) throw error;
 
-    const formatted = (data || []).map(p => ({
+    const formatted = (data || []).filter(p => p.reward_points > 0).map(p => ({
       _id: p.id,
       name: p.name,
       price: p.price,
       reward_points: p.reward_points,
-      seller_name: p.users?.name || 'Admin Product'
+      seller_name: 'Admin Product'
     }));
 
     res.json(formatted);
@@ -242,11 +197,7 @@ export const setRewardByCategory = async (req, res) => {
     return res.status(400).json({ message: 'Category and points are required' });
   }
   try {
-    const { error } = await db
-      .from('products')
-      .update({ reward_points: Number(points) })
-      .ilike('category', category);
-
+    const { error } = await db.database.from('products').update({ reward_points: Number(points) }).ilike('category', category);
     if (error) throw error;
     res.json({ message: `Reward points set to ${points} for category ${category}` });
   } catch (err) {
@@ -263,11 +214,7 @@ export const setRewardBySeller = async (req, res) => {
     return res.status(400).json({ message: 'Seller ID and points are required' });
   }
   try {
-    const { error } = await db
-      .from('products')
-      .update({ reward_points: Number(points) })
-      .eq('user_id', seller_id);
-
+    const { error } = await db.database.from('products').update({ reward_points: Number(points) }).eq('user_id', seller_id);
     if (error) throw error;
     res.json({ message: `Reward points set to ${points} for seller` });
   } catch (err) {
@@ -284,11 +231,7 @@ export const setRewardByProduct = async (req, res) => {
     return res.status(400).json({ message: 'Product ID and points are required' });
   }
   try {
-    const { error } = await db
-      .from('products')
-      .update({ reward_points: Number(points) })
-      .eq('id', product_id);
-
+    const { error } = await db.database.from('products').update({ reward_points: Number(points) }).eq('id', product_id);
     if (error) throw error;
     res.json({ message: `Reward points set to ${points} for product` });
   } catch (err) {

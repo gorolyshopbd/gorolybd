@@ -287,8 +287,7 @@ CREATE TABLE IF NOT EXISTS pages (
 CREATE TABLE IF NOT EXISTS settings (
   id                           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   -- OTP
-  otp_gateway                  TEXT DEFAULT 'Simulated'
-                                 CHECK (otp_gateway IN ('Simulated','Twilio','Firebase','GreenwebSMS','SAS_BULK_SMS')),
+  otp_gateway                  TEXT DEFAULT 'SMS',
   otp_length                   INT DEFAULT 6,
   otp_expiry                   INT DEFAULT 5,
   -- SAS Bulk SMS
@@ -506,7 +505,7 @@ INSERT INTO users (name, email, password_hash, is_admin, role, permissions)
 VALUES (
   'Admin',
   'admin@shopio.com',
-  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lT9i',
+  '$2a$10$cHZOvoggX7hVGYM9MbbFwerQLF1PU2NbQQTrt3d/1HmrgscjJLn36',
   true,
   'superadmin',
   ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat','settings','users']
@@ -532,6 +531,29 @@ ON CONFLICT (email) DO NOTHING;
 -- ============================================================
 -- Run these only after you have set up your RLS policies:
 --
+-- ============================================================
+-- FRAUD CHECKER TABLES
+-- ============================================================
+
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS ip_address TEXT DEFAULT '';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS device_fingerprint TEXT DEFAULT '';
+
+CREATE TABLE IF NOT EXISTS blocked_phones (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  phone TEXT NOT NULL UNIQUE,
+  reason TEXT DEFAULT '',
+  blocked_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS blocked_ips (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  ip_address TEXT NOT NULL UNIQUE,
+  reason TEXT DEFAULT '',
+  blocked_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ALTER TABLE users          ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE images         ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE products       ENABLE ROW LEVEL SECURITY;

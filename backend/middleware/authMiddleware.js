@@ -32,19 +32,7 @@ const protect = async (req, res, next) => {
         error = e;
       }
 
-      // Hardcoded bypass for testing without database
-      if ((error || !user) && decoded.id === 'hardcoded-admin-123') {
-        req.user = {
-          _id: 'hardcoded-admin-123',
-          id: 'hardcoded-admin-123',
-          name: 'Admin',
-          email: 'admin@gorolyshop.com',
-          is_admin: true,
-          isAdmin: true,
-          role: 'superadmin'
-        };
-        return next();
-      }
+
 
       if (error || !user) {
         return res.status(401).json({ message: 'Not authorized, user not found' });

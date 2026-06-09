@@ -562,7 +562,7 @@ INSERT INTO users (name, email, password_hash, is_admin, role, permissions)
 VALUES (
   'Admin',
   'admin@shopio.com',
-  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lT9i',
+  '$2a$10$cHZOvoggX7hVGYM9MbbFwerQLF1PU2NbQQTrt3d/1HmrgscjJLn36',
   true,
   'superadmin',
   ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat','settings','users']

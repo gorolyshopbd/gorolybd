@@ -14,6 +14,10 @@ const pool = new Pool({
   connectionString,
 });
 
+pool.on('error', (err) => {
+  console.error('Unexpected pool error:', err.message);
+});
+
 class QueryBuilder {
   constructor(table) {
     this.table = table;
@@ -23,7 +27,9 @@ class QueryBuilder {
     this.values = [];
     this.isSingle = false;
     this.limitCount = null;
+    this.offsetCount = null;
     this.orderCol = null;
+    this.isHead = false;
     this.orderAsc = true;
     this.insertData = null;
     this.updateData = null;
@@ -39,6 +45,7 @@ class QueryBuilder {
       this.cols = cols;
     }
     if (options.count) this.isCount = true;
+    if (options.head) this.isHead = true;  // head:true = count only, no data
     return this;
   }
 
@@ -95,6 +102,24 @@ class QueryBuilder {
     this.wheres.push(`${col} <= $${this.values.length}`);
     return this;
   }
+
+  gt(col, val) {
+    this.values.push(val);
+    this.wheres.push(`${col} > $${this.values.length}`);
+    return this;
+  }
+
+  lt(col, val) {
+    this.values.push(val);
+    this.wheres.push(`${col} < $${this.values.length}`);
+    return this;
+  }
+
+  maybeSingle() {
+    this.isSingle = true;
+    this.limitCount = 1;
+    return this;
+  }
   
   ilike(col, val) {
     this.values.push(val);
@@ -128,6 +153,12 @@ class QueryBuilder {
     return this;
   }
 
+  range(from, to) {
+    this.limitCount = to - from + 1;
+    this.offsetCount = from;
+    return this;
+  }
+
   order(col, opts = { ascending: false }) {
     this.orderCol = col;
     this.orderAsc = opts.ascending;
@@ -138,15 +169,28 @@ class QueryBuilder {
     let sql = '';
     
     if (this.action === 'select') {
-      sql = `SELECT ${this.isCount ? 'count(*)' : this.cols} FROM ${this.table}`;
-      if (this.wheres.length > 0) {
-        sql += ` WHERE ${this.wheres.join(' AND ')}`;
-      }
-      if (this.orderCol) {
-        sql += ` ORDER BY ${this.orderCol} ${this.orderAsc ? 'ASC' : 'DESC'}`;
-      }
-      if (this.limitCount) {
-        sql += ` LIMIT ${this.limitCount}`;
+      if (this.isHead) {
+        // head: true - only need total count, no data
+        sql = `SELECT COUNT(*) AS _total_count FROM ${this.table}`;
+        if (this.wheres.length > 0) {
+          sql += ` WHERE ${this.wheres.join(' AND ')}`;
+        }
+      } else {
+        // If isCount requested along with actual columns (count: 'exact' mode), use window function
+        const colExpr = this.isCount ? `${this.cols}, COUNT(*) OVER() AS _total_count` : this.cols;
+        sql = `SELECT ${colExpr} FROM ${this.table}`;
+        if (this.wheres.length > 0) {
+          sql += ` WHERE ${this.wheres.join(' AND ')}`;
+        }
+        if (this.orderCol) {
+          sql += ` ORDER BY ${this.orderCol} ${this.orderAsc ? 'ASC' : 'DESC'}`;
+        }
+        if (this.limitCount) {
+          sql += ` LIMIT ${this.limitCount}`;
+        }
+        if (this.offsetCount) {
+          sql += ` OFFSET ${this.offsetCount}`;
+        }
       }
     } else if (this.action === 'insert') {
       if (!this.insertData || this.insertData.length === 0) {
@@ -194,8 +238,19 @@ class QueryBuilder {
 
     try {
       const res = await pool.query(sql, this.values);
+      if (this.isHead) {
+        // head: true - count only, no data
+        const total = res.rows.length > 0 ? parseInt(res.rows[0]._total_count || 0) : 0;
+        return { data: null, count: total, error: null };
+      }
       if (this.isCount) {
-        return { data: null, count: parseInt(res.rows[0].count), error: null };
+        // count: 'exact' mode - data rows have _total_count window column
+        const total = res.rows.length > 0 ? parseInt(res.rows[0]._total_count || 0) : 0;
+        const rows = res.rows.map(r => { const { _total_count, ...rest } = r; return rest; });
+        if (this.isSingle) {
+          return { data: rows[0] || null, count: total, error: null };
+        }
+        return { data: rows, count: total, error: null };
       }
       if (this.action === 'delete' || (this.action === 'update' && !this.returningCols && !this.isSingle)) {
         return { data: null, error: null };
@@ -261,23 +316,141 @@ const connectDB = async () => {
       )
     `);
     
+    // Migration: add is_system column if it doesn't exist (old tables created before column was added)
+    await client.query(`
+      ALTER TABLE roles ADD COLUMN IF NOT EXISTS is_system BOOLEAN DEFAULT false
+    `);
+    
     // Seed default roles if table is empty
     const { rows: existing } = await client.query('SELECT count(*)::int as cnt FROM roles');
     if (existing[0].cnt === 0) {
       await client.query(`
         INSERT INTO roles (name, label, permissions, description, is_system) VALUES
-        ('superadmin', 'Super Admin', ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat','settings','users'], 'Full system access with user management', true),
-        ('admin', 'Admin', ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat','settings'], 'Admin access without user management', true),
+        ('superadmin', 'Super Admin', ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat','settings','users','expenses','finance'], 'Full system access with user management', true),
+        ('admin', 'Admin', ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat','settings','expenses','finance'], 'Admin access without user management', true),
         ('manager', 'Manager', ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat'], 'Manager access without settings and users', true),
         ('moderator', 'Moderator', ARRAY['orders','chat','products'], 'Limited access to orders, chat and products', true),
         ('seller', 'Seller', ARRAY['products','orders','chat'], 'Seller access to their own products and orders', true),
         ('customer', 'Customer', ARRAY[]::TEXT[], 'Regular customer with no admin access', true)
+      `);
+    } else {
+      // Ensure existing system roles are flagged (handles legacy rows where is_system was NULL)
+      await client.query(`
+        UPDATE roles SET is_system = true WHERE is_system IS NOT true AND name IN ('superadmin','admin','manager','moderator','seller','customer')
+      `);
+      // Migrate existing superadmin and admin roles to include new permissions
+      await client.query(`
+        UPDATE roles SET permissions = ARRAY(SELECT DISTINCT unnest(permissions || ARRAY['expenses','finance'])) WHERE name IN ('superadmin','admin')
       `);
     }
     
     // Remove CHECK constraint on users.role to allow custom roles
     await client.query(`
       ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check
+    `);
+    
+    // Remove CHECK constraint on settings.otp_gateway to allow 'Email' gateway
+    await client.query(`
+      ALTER TABLE settings DROP CONSTRAINT IF EXISTS settings_otp_gateway_check
+    `);
+    
+    // Fraud Checker: add ip_address + device_fingerprint columns to orders
+    await client.query(`
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS ip_address TEXT DEFAULT ''
+    `);
+    await client.query(`
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS device_fingerprint TEXT DEFAULT ''
+    `);
+    
+    // Fraud Checker: blocked_phones table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS blocked_phones (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        phone TEXT NOT NULL UNIQUE,
+        reason TEXT DEFAULT '',
+        blocked_by UUID REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    
+    // Fraud Checker: blocked_ips table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS blocked_ips (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        ip_address TEXT NOT NULL UNIQUE,
+        reason TEXT DEFAULT '',
+        blocked_by UUID REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    
+    // Expense System table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS expenses (
+        id SERIAL PRIMARY KEY,
+        category VARCHAR(100) NOT NULL,
+        amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+        description TEXT DEFAULT '',
+        date DATE NOT NULL DEFAULT CURRENT_DATE,
+        created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    // Marketing Campaigns
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ad_campaigns (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        platform TEXT NOT NULL,
+        campaign_name TEXT NOT NULL,
+        spend NUMERIC(10,2) DEFAULT 0,
+        revenue NUMERIC(10,2) DEFAULT 0,
+        clicks INT DEFAULT 0,
+        conversions INT DEFAULT 0,
+        start_date TIMESTAMPTZ,
+        end_date TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    // Suppliers
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS suppliers (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        name TEXT NOT NULL,
+        contact_email TEXT,
+        contact_phone TEXT,
+        lead_time_days INT DEFAULT 3,
+        rating NUMERIC(3,2) DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    // Inventory Logs
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS inventory_logs (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+        type TEXT CHECK (type IN ('restock', 'sale', 'return', 'adjustment', 'damage')),
+        quantity INT NOT NULL,
+        reason TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    // Product supplier link
+    await client.query(`
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_id UUID REFERENCES suppliers(id) ON DELETE SET NULL
+    `);
+
+    // Fraud & Risk Tracking columns
+    await client.query(`
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS risk_score INT DEFAULT 0;
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS is_fraud BOOLEAN DEFAULT FALSE;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS fraud_score INT DEFAULT 0;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN DEFAULT FALSE;
     `);
     
     client.release();

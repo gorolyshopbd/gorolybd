@@ -552,7 +552,7 @@ export const ShopProvider = ({ children }) => {
       }
 
       setLoading(false);
-      return { success: true, otp: data.otp };
+      return { success: true };
     } catch (error) {
       setLoading(false);
       return { success: false, error: error.message };
@@ -657,7 +657,7 @@ export const ShopProvider = ({ children }) => {
       const data = await res.json();
       setLoading(false);
       if (!res.ok) throw new Error(data.message || 'Failed to request reset');
-      return { success: true, token: data.token };
+      return { success: true };
     } catch (error) {
       setLoading(false);
       return { success: false, error: error.message };

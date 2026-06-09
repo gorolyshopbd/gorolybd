@@ -30,6 +30,8 @@ services:
       - DATABASE_URL=postgres://postgres:shopio_password_123@db:5432/shopio
     volumes:
       - backend_uploads:/app/uploads
+      - backend_data:/app/data
+      - backend_config:/app/config
     depends_on:
       - db
     networks:
@@ -69,6 +71,8 @@ services:
 
 volumes:
   backend_uploads:
+  backend_data:
+  backend_config:
   postgres_data:
 
 networks:

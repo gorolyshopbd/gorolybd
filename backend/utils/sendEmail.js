@@ -22,7 +22,7 @@ export const sendEmail = async (to, subject, text, html) => {
     });
 
     const mailOptions = {
-      from: `"${settings.site_title || 'Goroly Shop'}" <${settings.smtp_from_email || settings.smtp_user}>`,
+      from: `"${settings.site_title || 'GoroShop'}" <${settings.smtp_from_email || settings.smtp_user}>`,
       to,
       subject,
       text,

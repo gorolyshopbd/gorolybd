@@ -4,8 +4,22 @@ import { saveOTP, verifyOTP as checkOTP } from '../config/otpStore.js';
 import bcrypt from 'bcryptjs';
 import twilio from 'twilio';
 import fs from 'fs';
+import path from 'path';
 import csv from 'csv-parser';
 import { sendEmail } from '../utils/sendEmail.js';
+
+const SETTINGS_FILE = path.join(process.cwd(), 'data', 'settings.json');
+
+function readLocalSettings() {
+  try {
+    if (fs.existsSync(SETTINGS_FILE)) {
+      return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
+    }
+  } catch (e) {
+    console.warn('[readLocalSettings] Failed to read settings.json:', e.message);
+  }
+  return null;
+}
 
 const resetTokens = new Map();
 
@@ -130,14 +144,7 @@ const registerUser = async (req, res) => {
       phone: phone || '',
       is_admin: false,
       role: assignedRole,
-      permissions: [],
-      owner_name: owner_name || '',
-      facebook: facebook || '',
-      instagram: instagram || '',
-      division: division || '',
-      district: district || '',
-      upazila: upazila || '',
-      address_details: address_details || ''
+      permissions: []
     }).select().single();
 
     if (error) throw error;
@@ -242,9 +249,9 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-// @desc    Update seller SteadFast integration
+// @desc    Update SteadFast integration (seller or admin)
 // @route   PUT /api/users/profile/steadfast
-// @access  Private/Seller
+// @access  Private/SellerOrAdmin
 const updateSteadfastIntegration = async (req, res) => {
   const { apiKey, secretKey, enabled } = req.body;
 
@@ -257,7 +264,7 @@ const updateSteadfastIntegration = async (req, res) => {
 
     if (userError || !user) return res.status(404).json({ message: 'User not found' });
     if (user.role !== 'seller' && !user.is_admin) {
-      return res.status(403).json({ message: 'Only sellers can configure SteadFast integration' });
+      return res.status(403).json({ message: 'Only sellers and admins can configure SteadFast integration' });
     }
 
     const updateData = {
@@ -371,125 +378,126 @@ const sendOTP = async (req, res) => {
     return res.status(400).json({ message: 'Target email/phone is required' });
   }
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  saveOTP(target, otp);
-
-  // Fetch gateway settings from DB with a 3-second timeout
-  let gateway = 'Simulated';
-  let settings = null;
-  
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('Database query timeout')), 3000)
-  );
+  let settings = readLocalSettings();
 
   try {
-    const dbPromise = db.database.from('settings').select('*').limit(1).single();
-    const result = await Promise.race([dbPromise, timeoutPromise]);
+    const result = await db.database.from('settings').select('*').limit(1).single();
     if (result && result.data) {
       settings = result.data;
-      gateway = settings.otp_gateway || 'Simulated';
     }
   } catch (err) {
-    console.warn('[sendOTP] Settings query timed out or failed, falling back to Simulated:', err.message);
+    console.warn('[sendOTP] DB settings query failed, using local cache:', err.message);
   }
 
+  const otpLength = settings?.otp_length || 6;
+  const otpExpiry = settings?.otp_expiry || 5;
+  const gateway = settings?.otp_gateway || 'SMS';
+
+  const min = Math.pow(10, otpLength - 1);
+  const max = Math.pow(10, otpLength) - 1;
+  const otp = (Math.floor(Math.random() * (max - min + 1)) + min).toString();
+  saveOTP(target, otp, otpExpiry);
+
   if (type === 'email') {
-    // If it's an email, try SMTP if enabled, otherwise simulate
-    if (settings && settings.smtp_enabled) {
-      try {
-        const emailSent = await sendEmail(target, 'Your OTP Code', `Your OTP code is ${otp}`);
-        if (emailSent) {
-          return res.json({ message: `OTP sent successfully to ${target} via Email` });
-        } else {
-          return res.status(500).json({ message: 'Failed to send OTP via Email. Check SMTP settings.' });
-        }
-      } catch (emailError) {
-        console.error('[Email OTP Send Failed]', emailError.message);
+    if (!settings?.smtp_enabled) {
+      return res.status(500).json({ message: 'Email service is not enabled. Configure SMTP in Settings.' });
+    }
+    try {
+      const emailSent = await sendEmail(
+        target,
+        'Your OTP Code - GoroShop',
+        `Your OTP code is: ${otp}\n\nThis code will expire in ${otpExpiry} minutes.\n\nIf you did not request this, please ignore this email.\n\n- GoroShop Team`,
+        `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;border:1px solid #e0e0e0;border-radius:8px;">
+          <h2 style="color:#1a1a1a;margin:0 0 16px;">Welcome to <span style="color:#2563eb;">GoroShop</span></h2>
+          <p style="color:#555;font-size:15px;line-height:1.5;">Use the following OTP to verify your account:</p>
+          <div style="background:#f4f4f4;text-align:center;padding:16px;border-radius:6px;font-size:28px;letter-spacing:6px;font-weight:700;color:#1a1a1a;margin:16px 0;">${otp}</div>
+          <p style="color:#888;font-size:13px;">This code will expire in ${otpExpiry} minutes. If you did not request this, please ignore this email.</p>
+          <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+          <p style="color:#aaa;font-size:12px;text-align:center;">GoroShop &mdash; All rights reserved.</p>
+        </div>`
+      );
+      if (emailSent) {
+        return res.json({ message: `OTP sent successfully to ${target} via Email` });
+      } else {
         return res.status(500).json({ message: 'Failed to send OTP via Email. Check SMTP settings.' });
       }
-    } else {
-      console.log(`[OTP Simulated for Email] to ${target}. Code: ${otp}`);
-      return res.json({ message: `OTP sent successfully to ${target}` });
+    } catch (emailError) {
+      console.error('[Email OTP Send Failed]', emailError.message);
+      return res.status(500).json({ message: 'Failed to send OTP via Email. Check SMTP settings.' });
     }
   } else if (type === 'phone') {
-    // If it's a phone, try SMS if not Simulated
-    if (gateway !== 'Simulated' && gateway !== 'Email') {
-      try {
-        if (gateway === 'Custom') {
-          if (settings?.custom_sms_api_url && settings.custom_sms_api_url.length > 5) {
-            let reqUrl = settings.custom_sms_api_url
-              .replace('[NUMBER]', target)
-              .replace('[MESSAGE]', encodeURIComponent(`Your OTP code is ${otp}`));
-            
-            const resp = await fetch(reqUrl);
-            const result = await resp.text();
-            console.log(`[OTP Sent via Custom SMS] to ${target}: ${result}`);
-            
-            if (!resp.ok) {
-              throw new Error(`Custom SMS API Error: ${result}`);
-            }
-            return res.json({ message: `OTP sent successfully to ${target}` });
-          } else {
-            return res.status(500).json({ message: 'Custom SMS Gateway URL is not configured properly' });
+    try {
+      if (gateway === 'Custom') {
+        if (settings?.custom_sms_api_url && settings.custom_sms_api_url.length > 5) {
+          let reqUrl = settings.custom_sms_api_url
+            .replace('[NUMBER]', target)
+            .replace('[MESSAGE]', encodeURIComponent(`Your OTP code is ${otp}`));
+
+          const resp = await fetch(reqUrl);
+          const result = await resp.text();
+          console.log(`[OTP Sent via Custom SMS] to ${target}: ${result}`);
+
+          if (!resp.ok) {
+            throw new Error(`Custom SMS API Error: ${result}`);
           }
-        } else if (gateway === 'SAS_BULK_SMS' || !gateway || gateway === 'SMS') {
-          if (settings?.sas_sms_api_key && settings?.sas_sms_sender_id) {
-            let baseUrl = (settings.sas_sms_gateway_url || 'http://sms.sasbulksms.com:3040').trim();
-            if (baseUrl === 'https://sms.sasbulksms.com/') baseUrl = 'http://sms.sasbulksms.com:3040';
-            const url = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-            
-            let toUser = target.replace(/\D/g, '');
-            if (toUser.startsWith('01') && toUser.length === 11) {
-              toUser = '88' + toUser;
-            } else if (toUser.startsWith('1') && toUser.length === 10) {
-              toUser = '880' + toUser;
-            }
-
-            const params = new URLSearchParams({
-              apikey: settings.sas_sms_api_key ? settings.sas_sms_api_key.trim() : '',
-              secretkey: settings.sas_sms_secret_key ? settings.sas_sms_secret_key.trim() : '',
-              callerID: settings.sas_sms_sender_id ? settings.sas_sms_sender_id.trim() : '',
-              toUser: toUser,
-              messageContent: `Your OTP code is ${otp}`
-            });
-            
-            const reqUrl = `${url}/sendtext?${params.toString()}`;
-            const resp = await fetch(reqUrl, { method: 'GET' });
-            const result = await resp.text();
-            console.log(`[OTP Sent via SAS Bulk SMS] to ${target}: ${result}`);
-            
-            let isError = false;
-            if (!resp.ok) isError = true;
-            try {
-              const jsonResult = JSON.parse(result);
-              if (jsonResult.Status === "-1" || jsonResult.Text === "REJECTD") {
-                isError = true;
-              }
-            } catch (e) {
-              if (result.toLowerCase().includes('error')) isError = true;
-            }
-
-            if (isError) {
-              throw new Error(`SAS Bulk SMS API Error: ${result}`);
-            }
-
-            return res.json({ message: `OTP sent successfully to ${target}` });
-          } else {
-            return res.status(500).json({ message: 'SMS Gateway is not configured properly' });
-          }
+          return res.json({ message: `OTP sent successfully to ${target}` });
+        } else {
+          return res.status(500).json({ message: 'Custom SMS Gateway URL is not configured properly' });
         }
-      } catch (smsError) {
-        console.error('[OTP Send Failed]', smsError.message);
-        return res.status(500).json({ message: `Failed to send SMS: ${smsError.message}` });
+      } else {
+        // Default to SAS_BULK_SMS for phone OTP (includes 'SMS', 'Email', or any other gateway setting)
+        if (settings?.sas_sms_api_key && settings?.sas_sms_sender_id) {
+          const baseUrl = (settings.sas_sms_gateway_url || 'http://sms.sasbulksms.com:3040').trim().replace(/\/+$/, '');
+          let toUser = target.replace(/\D/g, '');
+          if (toUser.startsWith('880') && toUser.length === 13) {
+          } else if (toUser.startsWith('01') && toUser.length === 11) {
+            toUser = '88' + toUser;
+          } else if (toUser.startsWith('1') && toUser.length === 10) {
+            toUser = '880' + toUser;
+          } else if (toUser.startsWith('8801') && toUser.length === 13) {
+          } else {
+            toUser = '88' + toUser.replace(/^0+/, '');
+          }
+
+          const params = new URLSearchParams({
+            apikey: settings.sas_sms_api_key.trim(),
+            secretkey: (settings.sas_sms_secret_key || '').trim(),
+            callerID: settings.sas_sms_sender_id.trim(),
+            toUser: toUser,
+            messageContent: `Your OTP code is ${otp}`
+          });
+
+          const reqUrl = `${baseUrl}/sendtext?${params.toString()}`;
+          const resp = await fetch(reqUrl, { method: 'GET' });
+          const result = await resp.text();
+          console.log(`[OTP Sent via SAS Bulk SMS] to ${target}: ${result}`);
+
+          let isError = false;
+          if (!resp.ok) isError = true;
+          try {
+            const jsonResult = JSON.parse(result);
+            if (jsonResult.Status === '-1' || jsonResult.Text === 'REJECTD') {
+              isError = true;
+            }
+          } catch (e) {
+            if (result.toLowerCase().includes('error')) isError = true;
+          }
+
+          if (isError) {
+            throw new Error(`SAS Bulk SMS API Error: ${result}`);
+          }
+
+          return res.json({ message: `OTP sent successfully to ${target}` });
+        } else {
+          return res.status(500).json({ message: 'SMS Gateway is not configured properly. Set API Key and Sender ID in OTP Settings.' });
+        }
       }
-    } else {
-      console.log(`[OTP Simulated for Phone] to ${target}. Code: ${otp}`);
-      return res.json({ message: `OTP sent successfully to ${target}` });
+    } catch (smsError) {
+      console.error('[OTP Send Failed]', smsError.message);
+      return res.status(500).json({ message: `Failed to send SMS: ${smsError.message}` });
     }
   } else {
-    // unknown type
-    console.log(`[OTP Simulated] to ${target}. Code: ${otp}`);
-    return res.json({ message: `OTP sent successfully to ${target}` });
+    return res.status(400).json({ message: 'Invalid OTP type. Use "email" or "phone".' });
   }
 };
 
@@ -627,12 +635,27 @@ const forgotPassword = async (req, res) => {
     const token = `RESET-${Math.floor(100000 + Math.random() * 900005)}`;
     resetTokens.set(email, token);
 
-    console.log(`[PASSWORD RESET TOKEN] requested for ${email}. Token: ${token}`);
+    const emailSent = await sendEmail(
+      email,
+      'Reset Your Password - GoroShop',
+      `Your password reset code is: ${token}\n\nEnter this code in the app to reset your password. This code will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.\n\n- GoroShop Team`,
+      `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;border:1px solid #e0e0e0;border-radius:8px;">
+        <h2 style="color:#1a1a1a;margin:0 0 16px;">Reset Your <span style="color:#2563eb;">GoroShop</span> Password</h2>
+        <p style="color:#555;font-size:15px;line-height:1.5;">Use the following code to reset your password:</p>
+        <div style="background:#f4f4f4;text-align:center;padding:16px;border-radius:6px;font-size:28px;letter-spacing:6px;font-weight:700;color:#1a1a1a;margin:16px 0;">${token}</div>
+        <p style="color:#888;font-size:13px;">This code will expire in 10 minutes. If you did not request a password reset, please ignore this email.</p>
+        <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+        <p style="color:#aaa;font-size:12px;text-align:center;">GoroShop &mdash; All rights reserved.</p>
+      </div>`
+    );
 
-    res.json({
-      message: `Verification code sent to ${email}`,
-      token,
-    });
+    if (emailSent) {
+      console.log(`[PASSWORD RESET EMAIL SENT] to ${email}`);
+      return res.json({ message: `Verification code sent to ${email}. Please check your inbox.` });
+    } else {
+      console.log(`[PASSWORD RESET TOKEN] for ${email}. Token: ${token}. Email delivery failed.`);
+      return res.status(500).json({ message: 'Failed to send reset email. SMTP not configured. Please contact support.' });
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -1024,13 +1047,56 @@ const importSellers = async (req, res) => {
 // @desc    Get all roles
 // @route   GET /api/users/roles
 // @access  Private/Admin
+const ensureRolesTable = async () => {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS roles (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL UNIQUE,
+      label VARCHAR(100) NOT NULL,
+      permissions TEXT[] DEFAULT '{}',
+      description TEXT DEFAULT '',
+      is_system BOOLEAN DEFAULT false,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  // Migration: add is_system column if it doesn't exist (old tables created before column was added)
+  await db.query(`
+    ALTER TABLE roles ADD COLUMN IF NOT EXISTS is_system BOOLEAN DEFAULT false
+  `);
+  const { rows } = await db.query('SELECT count(*)::int as cnt FROM roles');
+  if (rows[0].cnt === 0) {
+    await db.query(`
+      INSERT INTO roles (name, label, permissions, description, is_system) VALUES
+      ('superadmin', 'Super Admin', ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat','settings','users','expenses','finance'], 'Full system access with user management', true),
+      ('admin', 'Admin', ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat','settings','expenses','finance'], 'Admin access without user management', true),
+      ('manager', 'Manager', ARRAY['orders','products','categories','brands','coupons','shipping','pages','offers','banners','chat'], 'Manager access without settings and users', true),
+      ('moderator', 'Moderator', ARRAY['orders','chat','products'], 'Limited access to orders, chat and products', true),
+      ('seller', 'Seller', ARRAY['products','orders','chat'], 'Seller access to their own products and orders', true),
+      ('customer', 'Customer', ARRAY[]::TEXT[], 'Regular customer with no admin access', true)
+    `);
+  } else {
+    // Ensure existing system roles are flagged (handles legacy rows where is_system was NULL)
+    await db.query(`
+      UPDATE roles SET is_system = true WHERE is_system IS NOT true AND name IN ('superadmin','admin','manager','moderator','seller','customer')
+    `);
+    // Migrate existing superadmin and admin roles to include new permissions
+    await db.query(`
+      UPDATE roles SET permissions = ARRAY(SELECT DISTINCT unnest(permissions || ARRAY['expenses','finance'])) WHERE name IN ('superadmin','admin')
+    `);
+  }
+};
+
 const getRoles = async (req, res) => {
   try {
-    const result = await db.database.from('roles').select('*').execute();
-    if (result.error) throw result.error;
+    let result = await db.database.from('roles').select('*').order('id', { ascending: true }).execute();
+    if (result.error) {
+      await ensureRolesTable();
+      result = await db.database.from('roles').select('*').order('id', { ascending: true }).execute();
+      if (result.error) return res.json({ data: [] });
+    }
     res.json({ data: result.data });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.json({ data: [] });
   }
 };
 
@@ -1043,14 +1109,24 @@ const createRole = async (req, res) => {
     if (!name || !label) {
       return res.status(400).json({ message: 'Name and label are required' });
     }
-    const result = await db.database.from('roles').insert({
+    let result = await db.database.from('roles').insert({
       name: name.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
       label,
       permissions: permissions || [],
       description: description || '',
       is_system: false,
     }).select('*').execute();
-    if (result.error) throw result.error;
+    if (result.error) {
+      await ensureRolesTable();
+      result = await db.database.from('roles').insert({
+        name: name.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+        label,
+        permissions: permissions || [],
+        description: description || '',
+        is_system: false,
+      }).select('*').execute();
+      if (result.error) throw result.error;
+    }
     res.status(201).json({ data: result.data[0] });
   } catch (error) {
     if (error.constraint === 'roles_name_key') {
@@ -1066,8 +1142,12 @@ const createRole = async (req, res) => {
 const updateRole = async (req, res) => {
   try {
     const { name, label, permissions, description } = req.body;
-    const existing = await db.database.from('roles').select('*').eq('id', req.params.id).single().execute();
-    if (existing.error) throw existing.error;
+    let existing = await db.database.from('roles').select('*').eq('id', req.params.id).single().execute();
+    if (existing.error) {
+      await ensureRolesTable();
+      existing = await db.database.from('roles').select('*').eq('id', req.params.id).single().execute();
+      if (existing.error) throw existing.error;
+    }
     if (!existing.data) return res.status(404).json({ message: 'Role not found' });
     if (existing.data.is_system) return res.status(400).json({ message: 'System roles cannot be edited' });
 
@@ -1090,8 +1170,12 @@ const updateRole = async (req, res) => {
 // @access  Private/Admin
 const deleteRole = async (req, res) => {
   try {
-    const existing = await db.database.from('roles').select('*').eq('id', req.params.id).single().execute();
-    if (existing.error) throw existing.error;
+    let existing = await db.database.from('roles').select('*').eq('id', req.params.id).single().execute();
+    if (existing.error) {
+      await ensureRolesTable();
+      existing = await db.database.from('roles').select('*').eq('id', req.params.id).single().execute();
+      if (existing.error) throw existing.error;
+    }
     if (!existing.data) return res.status(404).json({ message: 'Role not found' });
     if (existing.data.is_system) return res.status(400).json({ message: 'System roles cannot be deleted' });
 

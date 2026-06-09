@@ -48,6 +48,8 @@ router.post('/admin-login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
 
+
+    // Look up user in DB
     let user;
     let error;
     try {
@@ -58,29 +60,12 @@ router.post('/admin-login', async (req, res) => {
       error = e;
     }
 
-    // Fallback for missing DB to allow viewing the admin panel UI
-    if ((error || !user) && username === 'admin@gorolyshop.com' && password === 'password') {
-      console.log('Database connection failed or user not found. Falling back to hardcoded admin bypass.');
-      return res.json({
-        success: true,
-        token: generateToken('hardcoded-admin-123'),
-        user: {
-          _id: 'hardcoded-admin-123',
-          name: 'Admin',
-          email: 'admin@gorolyshop.com',
-          isAdmin: true,
-          role: 'superadmin',
-          permissions: ['orders', 'products', 'categories', 'brands', 'coupons', 'shipping', 'pages', 'offers', 'banners', 'chat', 'settings', 'users']
-        }
-      });
-    }
-
     if (error || !user) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch && !(username === 'admin@gorolyshop.com' && password === 'password')) {
+    if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 

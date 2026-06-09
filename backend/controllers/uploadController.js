@@ -84,4 +84,42 @@ const uploadCategoryImage = async (req, res) => {
   }
 };
 
-export { uploadImage, uploadMultipleImages, uploadCategoryImage };
+const uploadPdf = async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+  try {
+    const result = await uploadToInsForge(req.file, 'specifications');
+    res.json({
+      message: 'PDF uploaded successfully',
+      url: result.url,
+      filename: result.key,
+      key: result.key,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const uploadDescriptionImages = async (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ message: 'No files uploaded' });
+  }
+  try {
+    const results = await Promise.all(
+      req.files.map((file) => uploadToInsForge(file, 'descriptions'))
+    );
+    res.json({
+      message: `${results.length} image(s) uploaded successfully`,
+      images: results.map((r) => ({
+        url: r.url,
+        filename: r.key,
+        key: r.key,
+      })),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export { uploadImage, uploadMultipleImages, uploadCategoryImage, uploadPdf, uploadDescriptionImages };
