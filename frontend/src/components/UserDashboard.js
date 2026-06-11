@@ -305,7 +305,7 @@ export default function UserDashboard() {
                           </div>
                           <div>
                             <span className="text-[10px] font-bold text-slate-400 block mb-0.5 sm:text-right">{lang === 'bn' ? 'অর্ডার করার তারিখ' : 'Ordered On'}</span>
-                            <span className="text-xs text-slate-600 font-semibold">{new Date(order.createdAt).toLocaleDateString()}</span>
+                            <span className="text-xs text-slate-600 font-semibold">{new Date(order.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}</span>
                           </div>
                           <div>
                             <span className="text-[10px] font-bold text-slate-400 block mb-0.5 sm:text-right">{lang === 'bn' ? 'অর্ডারের অবস্থা' : 'Order Status'}</span>

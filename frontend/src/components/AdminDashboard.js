@@ -2811,7 +2811,7 @@ export default function AdminDashboard({ onTabChange }) {
           </td>
           <td className="py-4">
             <div className="font-bold text-gray-900">{order.shippingAddress?.name || 'Customer'}</div>
-            <div className="text-[10px] text-gray-400 font-medium">{new Date(order.createdAt).toLocaleDateString()}</div>
+            <div className="text-[10px] text-gray-400 font-medium">{new Date(order.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}</div>
           </td>
           <td className="py-4">
             <div className="font-black text-gray-900 text-sm tracking-tight">{formatPrice(order.totalPrice, currencySymbol)}</div>
@@ -4035,7 +4035,7 @@ export default function AdminDashboard({ onTabChange }) {
                             <tr key={index} className="border-b border-slate-55 hover:bg-slate-50 transition group">
                               <td className="py-3 px-4 font-mono font-bold text-slate-800 text-[10px]">#{order._id?.substring(0, 8)}</td>
                               <td className="py-3 px-4"><span className="font-bold text-slate-800">{order.shippingAddress?.name || order.customer || 'Customer'}</span></td>
-                              <td className="py-3 px-4 text-slate-500 font-medium">{new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                              <td className="py-3 px-4 text-slate-500 font-medium">{new Date(order.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}</td>
                               <td className="py-3 px-4 font-extrabold text-slate-850">৳{order.totalPrice?.toLocaleString()}</td>
                               <td className="py-3 px-4"><span className="px-2 py-0.5 rounded text-[10px] font-bold inline-block capitalize bg-slate-100 text-slate-600 border">{order.paymentMethod || 'COD'}</span></td>
                               <td className="py-3 px-4"><span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide inline-block ${statusStyles[displayStatus] || 'bg-slate-100 text-slate-500'}`}>{displayStatus}</span></td>
@@ -11069,8 +11069,10 @@ export default function AdminDashboard({ onTabChange }) {
                                 'bg-yellow-100 text-yellow-700'
                               }`}>{o.status}</span>
                             </td>
-                            <td className="px-4 py-3">
-                              <div className="flex flex-wrap gap-1">
+</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex flex-wrap gap-1">
                                 {o.signals?.map((s, i) => (
                                   <span key={i} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
                                     s.includes('BLOCKED') ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
@@ -11078,7 +11080,7 @@ export default function AdminDashboard({ onTabChange }) {
                                 ))}
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-xs text-gray-400">{new Date(o.created_at).toLocaleDateString()}</td>
+                            <td className="px-4 py-3 text-xs text-gray-400">{new Date(o.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}</td>
                             <td className="px-4 py-3">
                               <button
                                 onClick={() => { setSelectedFraudOrder(o); fetchFraudCheck(o.id); }}
@@ -13692,7 +13694,7 @@ export default function AdminDashboard({ onTabChange }) {
                     {(pointLogs || []).slice(0, 50).map((log, idx) => (
                       <tr key={log._id || idx} className="hover:bg-slate-50/60 transition-colors">
                         <td className="py-3 px-5 text-gray-400 whitespace-nowrap">
-                          {new Date(log.created_at || log.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {new Date(log.created_at || log.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
                         </td>
                         <td className="py-3 px-5 font-medium text-gray-800">{log.name || log.user_name || '-'}</td>
                         <td className="py-3 px-5">

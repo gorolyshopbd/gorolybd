@@ -141,7 +141,7 @@ export default function DashboardOrders({ API_BASE_URL, token }) {
                     />
                   </td>
                   <td className="py-3 px-4 font-mono text-sm text-gray-500">#{order._id.slice(-6)}</td>
-                  <td className="py-3 px-4 text-sm">{new Date(order.createdAt).toLocaleDateString()}</td>
+                  <td className="py-3 px-4 text-sm">{new Date(order.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}</td>
                   <td className="py-3 px-4">{order.user?.name || order.shippingAddress?.address || 'Guest'}</td>
                   <td className="py-3 px-4 font-semibold text-blue-600">৳{Number(order.totalPrice).toLocaleString()}</td>
                   <td className="py-3 px-4">
