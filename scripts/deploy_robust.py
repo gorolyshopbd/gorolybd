@@ -22,6 +22,7 @@ files_to_upload = [
     ('backend/controllers/inventoryController.js',          REMOTE_BASE + '/backend/controllers/inventoryController.js'),
     ('backend/controllers/financeController.js',            REMOTE_BASE + '/backend/controllers/financeController.js'),
     ('backend/controllers/marketingController.js',          REMOTE_BASE + '/backend/controllers/marketingController.js'),
+    ('backend/controllers/categoryController.js',           REMOTE_BASE + '/backend/controllers/categoryController.js'),
     ('backend/controllers/fraudController.js',              REMOTE_BASE + '/backend/controllers/fraudController.js'),
     ('backend/controllers/expenseController.js',            REMOTE_BASE + '/backend/controllers/expenseController.js'),
     ('backend/routes/inventoryRoutes.js',                   REMOTE_BASE + '/backend/routes/inventoryRoutes.js'),
@@ -33,6 +34,7 @@ files_to_upload = [
     ('backend/config/db.js',                                REMOTE_BASE + '/backend/config/db.js'),
     ('backend/server.js',                                   REMOTE_BASE + '/backend/server.js'),
     ('backend/controllers/orderController.js',              REMOTE_BASE + '/backend/controllers/orderController.js'),
+    ('frontend/src/app/page.js',                            REMOTE_BASE + '/frontend/src/app/page.js'),
 ]
 
 c = paramiko.SSHClient()

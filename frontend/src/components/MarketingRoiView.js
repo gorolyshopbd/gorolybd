@@ -24,7 +24,7 @@ export default function MarketingRoiView({ API_BASE_URL, token }) {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      setCampaigns(data);
+      setCampaigns(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     } finally {

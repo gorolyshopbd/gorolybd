@@ -291,6 +291,9 @@ const connectDB = async () => {
     const client = await pool.connect();
     console.log(`PostgreSQL connected to ${client.connectionParameters.database}`);
     
+    // Enable uuid-ossp extension for UUID generation
+    await client.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
+    
     // Auto-create chat_messages table if missing
     await client.query(`
       CREATE TABLE IF NOT EXISTS chat_messages (
@@ -443,6 +446,15 @@ const connectDB = async () => {
     // Product supplier link
     await client.query(`
       ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_id UUID REFERENCES suppliers(id) ON DELETE SET NULL
+    `);
+
+    // Add missing category columns for subcategories and root category
+    await client.query(`
+      ALTER TABLE categories 
+      ADD COLUMN IF NOT EXISTS root_category TEXT DEFAULT '',
+      ADD COLUMN IF NOT EXISTS subcategories TEXT[] DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS status BOOLEAN DEFAULT TRUE;
     `);
 
     // Fraud & Risk Tracking columns

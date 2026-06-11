@@ -7321,7 +7321,7 @@ export default function AdminDashboard({ onTabChange }) {
                     >
                       <option value="">Select Category</option>
                       <option value="--">--</option>
-                      {categoryList.filter(c => !c.rootCategory || c.rootCategory === '--').map((cat, cIdx) => (
+                      {categoryList.map((cat, cIdx) => (
                         <option key={cIdx} value={cat.name}>{cat.name}</option>
                       ))}
                     </select>
@@ -12934,7 +12934,7 @@ export default function AdminDashboard({ onTabChange }) {
                         className="w-full mt-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden text-gray-900 font-semibold"
                       >
                         <option value="">Select Category</option>
-                        {categoryList.filter(c => !c.rootCategory || c.rootCategory === '--' || !categoryList.some(p => p.name === c.rootCategory)).map((cat) => (
+                        {categoryList.map((cat) => (
                           <option key={cat._id} value={cat.name}>{cat.name}</option>
                         ))}
                       </select>

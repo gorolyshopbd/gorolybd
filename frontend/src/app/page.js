@@ -85,7 +85,21 @@ export default function Storefront() {
   const loadShopCategories = useCallback(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`)
       .then((r) => r.ok ? r.json() : [])
-      .then((d) => setShopCategories(Array.isArray(d) ? dedupeCategoriesByName(d) : []))
+      .then((d) => {
+        const cats = Array.isArray(d) ? dedupeCategoriesByName(d) : [];
+        setShopCategories(cats);
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          const catUrl = params.get('category');
+          if (catUrl) {
+            const matchedCat = cats.find(c => c.url === catUrl);
+            if (matchedCat) {
+              setSelectedCategory(matchedCat.name);
+              setActiveTab('shop');
+            }
+          }
+        }
+      })
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -96,8 +110,14 @@ export default function Storefront() {
   // Load products, branding, brands and categories on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const catUrl = params.get('category');
     const savedPage = params.get('page') || localStorage.getItem('goroly_frontend_active_page');
-    if (savedPage) setActiveTab(savedPage);
+    
+    if (catUrl) {
+      setActiveTab('shop');
+    } else if (savedPage) {
+      setActiveTab(savedPage);
+    }
     frontendPageReadyRef.current = true;
 
     fetchProducts({ all: 'true' });
@@ -130,11 +150,22 @@ export default function Storefront() {
     const url = new URL(window.location.href);
     if (activeTab === 'home') {
       url.searchParams.delete('page');
+      url.searchParams.delete('category');
+    } else if (activeTab === 'shop' && selectedCategory) {
+      const activeCat = shopCategories.find(c => c.name === selectedCategory);
+      if (activeCat && activeCat.url) {
+        url.searchParams.delete('page');
+        url.searchParams.set('category', activeCat.url);
+      } else {
+        url.searchParams.set('page', 'shop');
+        url.searchParams.delete('category');
+      }
     } else {
       url.searchParams.set('page', activeTab);
+      url.searchParams.delete('category');
     }
     window.history.replaceState({}, '', url.toString());
-  }, [activeTab]);
+  }, [activeTab, selectedCategory, shopCategories]);
 
   // Update document title and favicon from branding settings
   useEffect(() => {
