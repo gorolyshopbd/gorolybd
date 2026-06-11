@@ -403,6 +403,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                     placeholder={lang === 'bn' ? 'পণ্য, ক্যাটাগরি খুঁজুন...' : 'Search products, categories...'}
                     value={currentSearch}
                     onChange={(e) => onSearchChange(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') onTabChange('shop'); }}
                     className="flex-1 bg-transparent outline-none text-xs font-semibold text-slate-700 placeholder-slate-400 py-1.5 dark:text-slate-100 dark:placeholder-slate-500"
                   />
                   {currentSearch && (
@@ -414,6 +415,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                     </button>
                   )}
                   <button
+                    onClick={() => { if (currentSearch) onTabChange('shop'); }}
                     className="bg-[#FF6600] hover:bg-[#e05a00] text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all duration-200 shadow-xs active:scale-95 flex items-center gap-1.5 cursor-pointer border-0"
                   >
                     <span>Search</span>
@@ -826,6 +828,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 placeholder="Search products..."
                 value={currentSearch}
                 onChange={(e) => onSearchChange(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { onTabChange('shop'); if (typeof setMobileMenuOpen === 'function') setMobileMenuOpen(false); } }}
                 className="w-full pl-10 pr-12 bg-transparent text-sm font-medium text-slate-200 placeholder-gray-400 focus:outline-none"
               />
               {currentSearch && (
@@ -837,6 +840,7 @@ export default function Header({ onCartClick, onAuthClick, onSearchChange, curre
                 </button>
               )}
               <button
+                onClick={() => { if (currentSearch) { onTabChange('shop'); if (typeof setMobileMenuOpen === 'function') setMobileMenuOpen(false); } }}
                 className="ml-2 bg-[#FF6600] hover:bg-[#e05a00] text-white px-4 py-1.5 rounded-lg text-sm font-bold border-0 shadow-md hover:shadow-lg transition-all"
               >
                 Go
