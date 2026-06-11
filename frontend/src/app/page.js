@@ -545,13 +545,7 @@ export default function Storefront() {
                       {displayImage ? (
                         <>
                           <img src={getImageUrl(displayImage)} alt={activeCat?.name || displayName} className="w-full h-full object-cover" />
-                          {/* Optional text overlay for images, if they don't have text burned in */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent flex items-center px-8">
-                            <div>
-                              <div className="text-white/50 text-xs font-black uppercase tracking-[0.18em] mb-1">{lang === 'bn' ? 'ক্যাটাগরি' : 'Category'}</div>
-                              <div className="text-white text-2xl font-black drop-shadow-lg leading-tight">{displayName}</div>
-                            </div>
-                          </div>
+                          {/* Removed text overlay per request */}
                         </>
                       ) : (
                         <div className="w-full h-full flex items-center px-8 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%)' }}>

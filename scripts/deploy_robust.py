@@ -21,6 +21,7 @@ files_to_upload = [
     ('frontend/src/components/UserDashboard.js',            REMOTE_BASE + '/frontend/src/components/UserDashboard.js'),
     ('frontend/src/components/AdminDashboard.js',           REMOTE_BASE + '/frontend/src/components/AdminDashboard.js'),
     ('frontend/src/components/Header.js',                   REMOTE_BASE + '/frontend/src/components/Header.js'),
+    ('frontend/src/components/CategoryBannerCarousel.js',   REMOTE_BASE + '/frontend/src/components/CategoryBannerCarousel.js'),
     ('backend/controllers/inventoryController.js',          REMOTE_BASE + '/backend/controllers/inventoryController.js'),
     ('backend/controllers/financeController.js',            REMOTE_BASE + '/backend/controllers/financeController.js'),
     ('backend/controllers/marketingController.js',          REMOTE_BASE + '/backend/controllers/marketingController.js'),
