@@ -11069,8 +11069,6 @@ export default function AdminDashboard({ onTabChange }) {
                                 'bg-yellow-100 text-yellow-700'
                               }`}>{o.status}</span>
                             </td>
-</div>
-                          </td>
                           <td className="px-4 py-3">
                             <div className="flex flex-wrap gap-1">
                                 {o.signals?.map((s, i) => (

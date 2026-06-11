@@ -18,6 +18,7 @@ files_to_upload = [
     ('frontend/src/components/InventoryManagementView.js',  REMOTE_BASE + '/frontend/src/components/InventoryManagementView.js'),
     ('frontend/src/components/MarketingRoiView.js',         REMOTE_BASE + '/frontend/src/components/MarketingRoiView.js'),
     ('frontend/src/components/DashboardOrders.js',          REMOTE_BASE + '/frontend/src/components/DashboardOrders.js'),
+    ('frontend/src/components/UserDashboard.js',            REMOTE_BASE + '/frontend/src/components/UserDashboard.js'),
     ('frontend/src/components/AdminDashboard.js',           REMOTE_BASE + '/frontend/src/components/AdminDashboard.js'),
     ('backend/controllers/inventoryController.js',          REMOTE_BASE + '/backend/controllers/inventoryController.js'),
     ('backend/controllers/financeController.js',            REMOTE_BASE + '/backend/controllers/financeController.js'),
