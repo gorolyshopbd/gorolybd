@@ -550,11 +550,7 @@ export default function Storefront() {
                       ) : (
                         <div className="w-full h-full flex items-center px-8 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%)' }}>
                           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 15% 50%, #FF6600 0%, transparent 55%), radial-gradient(circle at 85% 30%, #f59e0b 0%, transparent 45%)' }} />
-                          <div className="relative z-10">
-                            <div className="text-white/40 text-xs font-black uppercase tracking-[0.2em] mb-1">{lang === 'bn' ? 'ব্রাউজ করুন' : 'Browse'}</div>
-                            <div className="text-white text-3xl font-black leading-tight">{displayName}</div>
-                            <div className="mt-2 w-12 h-1 rounded-full bg-[#FF6600]" />
-                          </div>
+                          {/* Removed text per user request */}
                         </div>
                       )}
                     </div>
