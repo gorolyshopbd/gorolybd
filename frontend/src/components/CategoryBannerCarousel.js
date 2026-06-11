@@ -83,9 +83,6 @@ export default function CategoryBannerCarousel({ onCategoryClick }) {
 
             {/* Category Info */}
             <div className="absolute inset-0 flex flex-col items-start justify-end p-4 sm:p-6 lg:p-8">
-              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white mb-2">
-                {currentCat?.name}
-              </h3>
               <button
                 onClick={() => onCategoryClick(currentCat?.name)}
                 className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6600] hover:bg-[#E55A00] text-white font-bold rounded-lg transition text-sm sm:text-base"
