@@ -148,6 +148,13 @@ export default function Storefront() {
     if (!frontendPageReadyRef.current) return;
     localStorage.setItem('goroly_frontend_active_page', activeTab);
     const url = new URL(window.location.href);
+    
+    // Check if we are still processing initial URL params
+    // activeTab might still be 'home' during the first render even if we queued setActiveTab('shop')
+    if (url.searchParams.get('category') && shopCategories.length === 0 && !selectedCategory) {
+      return; // Do not wipe URL, wait for categories to load
+    }
+
     if (activeTab === 'home') {
       url.searchParams.delete('page');
       url.searchParams.delete('category');
