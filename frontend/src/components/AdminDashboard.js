@@ -7195,7 +7195,7 @@ export default function AdminDashboard({ onTabChange }) {
                               </button>
                             </td>
                             <td className="py-3.5 px-3 text-right pr-4 whitespace-nowrap">
-                              <div className="flex items-center justify-end gap-1.5">
+                              <div className="flex items-center justify-end gap-2">
                                 <button
                                   onClick={() => {
                                     setEditingCat(cat);
@@ -7214,17 +7214,15 @@ export default function AdminDashboard({ onTabChange }) {
                                       status: cat.status !== false
                                     });
                                   }}
-                                  className="w-7 h-7 flex items-center justify-center bg-blue-50 hover:bg-blue-100 text-blue-500 rounded-full transition-colors cursor-pointer"
-                                  title="Edit"
+                                  className="px-2.5 py-1 flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded transition-colors cursor-pointer font-bold text-[11px]"
                                 >
-                                  <Edit size={12} />
+                                  <Edit size={12} /> Edit
                                 </button>
                                 <button
                                   onClick={() => handleDeleteCategory(cat._id)}
-                                  className="w-7 h-7 flex items-center justify-center bg-orange-50 hover:bg-orange-100 text-orange-500 rounded-full transition-colors cursor-pointer"
-                                  title="Delete"
+                                  className="px-2.5 py-1 flex items-center gap-1.5 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded transition-colors cursor-pointer font-bold text-[11px]"
                                 >
-                                  <Trash2 size={12} />
+                                  <Trash2 size={12} /> Delete
                                 </button>
                               </div>
                             </td>
